@@ -46,20 +46,38 @@ export function NewListingForm() {
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+      {/* Field box is brand-50 at 40%, which resolves to roughly #C6DFC7 over
+          the #B1D3B9 card, and the placeholder sits at 50% for a see-through
+          hint. #2E2E2E at 50% measures 2.65:1 against that box -- under the
+          4.5:1 AA floor, so raise the placeholder modifier if the hints need
+          to be read comfortably. Scoped to this form; the shared Input and
+          Textarea keep their default transparent fill. */}
       <Field label="Title" error={errors.title}>
-        <FieldInput name="title" placeholder="Calculus: Early Transcendentals, 9th ed." />
+        <FieldInput
+          name="title"
+          placeholder="Calculus: Early Transcendentals, 9th ed."
+          className="bg-brand-50/40 placeholder:text-foreground/50"
+        />
       </Field>
       <Field label="Description" error={errors.description}>
         <FieldTextarea
           name="description"
           rows={5}
           placeholder="Condition, defects, and what is included."
+          className="bg-brand-50/40 placeholder:text-foreground/50"
         />
       </Field>
 
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label="Price (USD)" error={errors.price}>
-          <FieldInput name="price" type="number" min={0} step="1" inputMode="decimal" />
+          <FieldInput
+            name="price"
+            type="number"
+            min={0}
+            step="1"
+            inputMode="decimal"
+            className="bg-brand-50/40 placeholder:text-foreground/50"
+          />
         </Field>
         <div className="flex flex-col gap-1.5">
           <span className="text-sm font-medium">Category</span>

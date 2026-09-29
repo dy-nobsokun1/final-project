@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="400" height="300" role="img" aria-label="Textbook illustration">
+  <rect width="400" height="300" fill="#e6f2dd"/>
+  <g fill="none" stroke="#22312d" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M110 92h180v132H110z" fill="#b1d3b9"/>
+    <path d="M110 92h34v132h-34" fill="#659287"/>
+    <path d="M168 132h92M168 156h92M168 180h60" stroke-width="5"/>
+  </g>
+  <circle cx="200" cy="240" r="6" fill="#931621"/>
+</svg>

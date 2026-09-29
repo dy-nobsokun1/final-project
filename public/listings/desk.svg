@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="400" height="300" role="img" aria-label="Standing desk illustration">
+  <rect width="400" height="300" fill="#e6f2dd"/>
+  <g fill="none" stroke="#22312d" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="80" y="110" width="240" height="18" rx="4" fill="#b1d3b9"/>
+    <path d="M104 128v76M296 128v76" />
+    <path d="M104 150h192" stroke-width="5"/>
+    <path d="M126 110V84h148v26" fill="#659287"/>
+  </g>
+</svg>

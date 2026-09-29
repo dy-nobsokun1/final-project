@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="400" height="300" role="img" aria-label="Mini fridge illustration">
+  <rect width="400" height="300" fill="#e6f2dd"/>
+  <g fill="none" stroke="#22312d" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="140" y="74" width="120" height="168" rx="8" fill="#b1d3b9"/>
+    <path d="M140 140h120" />
+    <path d="M162 116v18M162 158v22" stroke-width="5"/>
+  </g>
+  <circle cx="238" cy="116" r="5" fill="#931621"/>
+</svg>

@@ -11,6 +11,26 @@ const DAY = 24 * HOUR;
 
 const ago = (ms: number) => new Date(Date.now() - ms).toISOString();
 
+/**
+ * Listing photos, resolved from `public/listings`. The first entry of each
+ * listing's `imageUrls` is what the card and detail view render.
+ *
+ * Local paths keep the demo working offline and need no `images.remotePatterns`
+ * in `next.config.ts`, which is why `ListingImage` uses a plain `<img>`.
+ * Filenames must not contain spaces -- they would need percent-encoding in the
+ * URL, so the files use hyphens.
+ */
+const MOCK_IMAGES = {
+  textbooks: "/listings/calculus-book.jpg",
+  electronics: "/listings/used-macbook.jpg",
+  furniture: "/listings/desk.svg",
+  bikes: "/listings/bike.jpg",
+  clothing: "/listings/jacket.svg",
+  other: "/listings/fridge.svg",
+  /** l6 is filed under furniture but is an appliance, so it gets its own art. */
+  fridge: "/listings/mini-fridge.avif",
+} as const;
+
 export const mockUsers: User[] = [
   {
     id: "u1",
@@ -59,7 +79,7 @@ export const mockListings: Listing[] = [
     price: 45,
     category: "textbooks",
     condition: "good",
-    imageUrls: [],
+    imageUrls: [MOCK_IMAGES.textbooks],
     sellerId: "u1",
     status: "active",
     createdAt: ago(6 * HOUR),
@@ -72,7 +92,7 @@ export const mockListings: Listing[] = [
     price: 520,
     category: "electronics",
     condition: "like_new",
-    imageUrls: [],
+    imageUrls: [MOCK_IMAGES.electronics],
     sellerId: "u2",
     status: "active",
     createdAt: ago(2 * DAY),
@@ -85,7 +105,7 @@ export const mockListings: Listing[] = [
     price: 90,
     category: "furniture",
     condition: "good",
-    imageUrls: [],
+    imageUrls: [MOCK_IMAGES.furniture],
     sellerId: "u2",
     status: "reserved",
     createdAt: ago(4 * DAY),
@@ -97,7 +117,7 @@ export const mockListings: Listing[] = [
     price: 180,
     category: "bikes",
     condition: "good",
-    imageUrls: [],
+    imageUrls: [MOCK_IMAGES.bikes],
     sellerId: "u3",
     status: "active",
     createdAt: ago(9 * DAY),
@@ -109,7 +129,7 @@ export const mockListings: Listing[] = [
     price: 25,
     category: "clothing",
     condition: "fair",
-    imageUrls: [],
+    imageUrls: [MOCK_IMAGES.clothing],
     sellerId: "u3",
     status: "sold",
     createdAt: ago(15 * DAY),
@@ -121,7 +141,7 @@ export const mockListings: Listing[] = [
     price: 70,
     category: "furniture",
     condition: "good",
-    imageUrls: [],
+    imageUrls: [MOCK_IMAGES.fridge],
     sellerId: "u1",
     status: "active",
     createdAt: ago(3 * DAY),

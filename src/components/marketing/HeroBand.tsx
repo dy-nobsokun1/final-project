@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { ArrowRight, Recycle } from "lucide-react";
+import { HeroHeading } from "@/components/marketing/HeroHeading";
+import { HeroSubheading } from "@/components/marketing/HeroSubheading";
 
 /** Brand banner that sits above the browse filters on the home page. */
 export function HeroBand() {
@@ -14,17 +16,11 @@ export function HeroBand() {
           Campus-only marketplace
         </span>
 
-        {/* Bebas Neue: the big condensed display line. */}
-        <h1 className="font-heading text-5xl leading-[0.9] tracking-tight text-brand-ink sm:text-7xl">
-          Buy &amp; Sell
-          <br />
-          On Campus
-        </h1>
+        {/* Bebas Neue: the big condensed display line, animated per word. */}
+        <HeroHeading />
 
-        <p className="max-w-md text-base text-brand-ink">
-          Textbooks, bikes, furniture and more from students you share a campus
-          with. List an item in under a minute.
-        </p>
+        {/* Subheading, typed out on load. */}
+        <HeroSubheading />
 
         <div className="flex flex-wrap items-center gap-3">
           <Link
