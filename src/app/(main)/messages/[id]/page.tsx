@@ -24,10 +24,10 @@ export default async function MessageThreadPage({
   ]);
 
   return (
-    <div className="flex h-full flex-col gap-4">
+    <div className="light-surface flex h-full flex-col gap-4 rounded-xl bg-card p-4">
       <Link
         href="/messages"
-        className="flex items-center gap-1 text-sm text-zinc-500 hover:text-zinc-900"
+        className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
       >
         <ArrowLeft aria-hidden="true" className="size-4" />
         All conversations

@@ -103,9 +103,9 @@ export function RegisterForm() {
         Create account
       </Button>
 
-      <p className="text-center text-sm text-zinc-500">
+      <p className="text-center text-sm text-muted-foreground">
         Already registered?{" "}
-        <Link href="/login" className="font-medium text-zinc-900 underline">
+        <Link href="/login" className="font-semibold text-foreground underline">
           Sign in
         </Link>
       </p>

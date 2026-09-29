@@ -55,8 +55,13 @@ export function Field({ label, error, className, children }: FieldProps) {
 
 export function FieldLabel({ children }: { children: ReactNode }) {
   const { controlId, hasError } = useField();
+  // Text stays black everywhere; the error state is signalled by a red
+  // underline instead, since red text failed contrast on the green field.
   return (
-    <Label htmlFor={controlId} className={hasError ? "text-destructive" : undefined}>
+    <Label
+      htmlFor={controlId}
+      className={hasError ? "underline decoration-brand-danger decoration-2 underline-offset-4" : undefined}
+    >
       {children}
     </Label>
   );
@@ -66,7 +71,7 @@ export function FieldError({ message }: { message?: string }) {
   const { errorId, hasError } = useField();
   if (!hasError) return null;
   return (
-    <p id={errorId} role="alert" className="text-sm text-destructive">
+    <p id={errorId} role="alert" className="text-sm text-foreground">
       {message}
     </p>
   );

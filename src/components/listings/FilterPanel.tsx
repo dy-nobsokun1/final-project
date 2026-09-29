@@ -51,7 +51,7 @@ export function FilterPanel() {
   return (
     <section
       aria-label="Filters"
-      className="flex flex-col gap-4 rounded-xl border bg-card p-4 sm:flex-row sm:items-end"
+      className="light-surface flex flex-col gap-4 rounded-xl border bg-card p-4 sm:flex-row sm:items-end"
     >
       <FilterSelect
         label="Category"

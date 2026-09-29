@@ -24,7 +24,7 @@ export function ListingCard({ listing }: ListingCardProps) {
   return (
     <Link
       href={`/listings/${listing.id}`}
-      className="group flex flex-col overflow-hidden rounded-xl border border-zinc-200 bg-white transition-shadow hover:shadow-md"
+      className="light-surface group flex flex-col overflow-hidden rounded-xl border border-border bg-card transition-all hover:-translate-y-0.5 hover:border-brand-600 hover:shadow-lg hover:shadow-brand-600/20"
     >
       <div className="relative">
         <ListingImage
@@ -43,7 +43,7 @@ export function ListingCard({ listing }: ListingCardProps) {
 
       <div className="flex flex-1 flex-col gap-2 p-3">
         <div className="flex items-start justify-between gap-2">
-          <h3 className="line-clamp-2 font-medium text-zinc-900 group-hover:underline">
+          <h3 className="line-clamp-2 font-medium text-foreground group-hover:underline">
             {listing.title}
           </h3>
           <p className="shrink-0 font-semibold">{formatPrice(listing.price)}</p>
@@ -51,10 +51,10 @@ export function ListingCard({ listing }: ListingCardProps) {
 
         <div className="mt-auto flex flex-wrap items-center gap-2">
           {category ? <span className={category.accent + " rounded-full px-2 py-0.5 text-xs"}>{category.label}</span> : null}
-          <span className="text-xs text-zinc-500">{conditionLabel(listing.condition)}</span>
+          <span className="text-xs text-muted-foreground">{conditionLabel(listing.condition)}</span>
         </div>
 
-        <p className="flex items-center gap-1 text-xs text-zinc-500">
+        <p className="flex items-center gap-1 text-xs text-muted-foreground">
           {listing.seller.name}
           <VerifiedBadge isVerified={listing.seller.isVerified} />
           <span aria-hidden="true">&middot;</span>

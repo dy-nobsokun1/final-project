@@ -54,13 +54,19 @@ export function LoginForm() {
         />
       </Field>
 
-      <Button type="submit" size="lg" disabled={isLoading}>
+      {/* Light fill with black text: the old #1B3022 fill only reached 1.5:1. */}
+      <Button
+        type="submit"
+        size="lg"
+        disabled={isLoading}
+        className="border border-border bg-brand-50 text-brand-ink hover:bg-brand-200"
+      >
         {isLoading ? "Signing in..." : "Sign in"}
       </Button>
 
-      <p className="text-center text-sm text-zinc-500">
+      <p className="text-center text-sm text-muted-foreground">
         New to UniSwap?{" "}
-        <Link href="/register" className="font-medium text-zinc-900 underline">
+        <Link href="/register" className="font-semibold text-foreground underline">
           Create an account
         </Link>
       </p>

@@ -31,10 +31,10 @@ export default async function ProfilePage() {
               {user.name}
               <VerifiedBadge isVerified={user.isVerified} />
             </h1>
-            <p className="text-sm text-zinc-500">
+            <p className="text-sm text-muted-foreground">
               {user.major} &middot; Class of {user.graduationYear}
             </p>
-            <p className="mt-2 text-sm text-zinc-700">{user.bio}</p>
+            <p className="mt-2 text-sm text-foreground">{user.bio}</p>
           </div>
           <div className="flex gap-2">
             <Link href="/settings">

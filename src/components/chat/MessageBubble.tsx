@@ -13,14 +13,16 @@ export function MessageBubble({ message, isOwn }: MessageBubbleProps) {
       <div
         className={cn(
           "max-w-[75%] rounded-2xl px-3.5 py-2 text-sm",
-          isOwn ? "bg-zinc-900 text-white" : "bg-zinc-100 text-zinc-900",
+          isOwn ? "bg-primary text-primary-foreground" : "bg-muted text-foreground",
         )}
       >
         <p className="whitespace-pre-wrap break-words">{message.body}</p>
         <p
           className={cn(
             "mt-1 text-[10px]",
-            isOwn ? "text-zinc-400" : "text-zinc-500",
+            // Bubbles sit inside the thread's light-surface card, so both
+            // resolve to black text via that scope.
+            isOwn ? "text-primary-foreground" : "text-muted-foreground",
           )}
         >
           {formatRelativeTime(message.createdAt)}

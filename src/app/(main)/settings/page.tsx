@@ -28,7 +28,7 @@ export function SettingsForm() {
   if (!user) {
     return (
       <Card>
-        <CardContent className="p-6 text-sm text-zinc-500">
+        <CardContent className="p-6 text-sm text-muted-foreground">
           Sign in to manage your account settings.
         </CardContent>
       </Card>
@@ -89,11 +89,15 @@ export function SettingsForm() {
 
       <div className="flex items-center gap-3">
         <Button onClick={() => setSaved(true)}>Save changes</Button>
-        <Button variant="destructive" onClick={signOut}>
+        <Button
+          variant="destructive"
+          onClick={signOut}
+          className="border border-brand-danger bg-brand-50 text-brand-ink hover:bg-brand-200"
+        >
           Sign out
         </Button>
         {saved ? (
-          <p role="status" className="text-sm text-emerald-700">
+          <p role="status" className="text-sm text-foreground">
             Saved locally. Not yet persisted to a server.
           </p>
         ) : null}
@@ -106,8 +110,8 @@ export default function SettingsPage() {
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-col gap-6">
       <header>
-        <h1 className="text-2xl font-semibold tracking-tight">Settings</h1>
-        <p className="mt-1 text-sm text-zinc-500">
+        <h1 className="font-heading text-3xl tracking-tight">Settings</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
           Manage your profile and notification preferences.
         </p>
       </header>

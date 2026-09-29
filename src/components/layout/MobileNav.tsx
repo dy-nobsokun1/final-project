@@ -20,7 +20,7 @@ export function MobileNav() {
   return (
     <nav
       aria-label="Primary"
-      className="sticky bottom-0 z-40 border-t border-zinc-200 bg-white md:hidden"
+      className="sticky bottom-0 z-40 border-t border-brand-200/50 bg-background md:hidden"
     >
       <ul className="flex items-stretch justify-around">
         {LINKS.map(({ href, label, icon: Icon }) => {
@@ -31,8 +31,10 @@ export function MobileNav() {
                 href={href}
                 aria-current={isActive ? "page" : undefined}
                 className={cn(
-                  "flex flex-col items-center gap-0.5 py-2.5 text-[11px] font-medium",
-                  isActive ? "text-zinc-900" : "text-zinc-500",
+                  "flex flex-col items-center gap-0.5 py-2.5 text-[11px] font-semibold transition-colors",
+                  isActive
+                    ? "text-foreground"
+                    : "text-muted-foreground hover:text-foreground",
                 )}
               >
                 <Icon aria-hidden="true" className="size-5" />

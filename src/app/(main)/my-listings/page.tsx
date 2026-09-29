@@ -13,8 +13,8 @@ export default async function MyListingsPage() {
     <div className="flex flex-col gap-6">
       <header className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">My listings</h1>
-          <p className="mt-1 text-sm text-zinc-500">
+          <h1 className="font-heading text-3xl tracking-tight">My listings</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
             {listings.length} {listings.length === 1 ? "listing" : "listings"} posted
           </p>
         </div>

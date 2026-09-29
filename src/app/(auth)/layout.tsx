@@ -7,17 +7,17 @@ import type { ReactNode } from "react";
  */
 export default function AuthLayout({ children }: LayoutProps<"/">) {
   return (
-    <div className="flex flex-1 items-center justify-center px-4 py-12">
+    <div className="flex flex-1 items-center justify-center bg-background px-4 py-12">
       <div className="w-full max-w-md">
         <div className="mb-6 text-center">
-          <Link href="/" className="text-lg font-semibold tracking-tight">
+          <Link href="/" className="font-heading text-2xl tracking-wide text-brand-ink">
             UniSwap
           </Link>
-          <p className="mt-1 text-sm text-zinc-500">
+          <p className="mt-1 text-sm text-muted-foreground">
             Buy and sell with students on your campus.
           </p>
         </div>
-        <div className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm">
+        <div className="light-surface rounded-xl border border-border bg-card p-6 shadow-sm">
           {children as ReactNode}
         </div>
       </div>

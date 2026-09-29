@@ -18,7 +18,7 @@ export function ListingImage({ src, alt, className }: ListingImageProps) {
     return (
       <div
         className={cn(
-          "flex items-center justify-center bg-zinc-100 text-zinc-400",
+          "flex items-center justify-center bg-muted text-muted-foreground",
           className,
         )}
       >

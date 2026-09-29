@@ -13,15 +13,16 @@ export const NAV_LINKS = [
 export const CATEGORIES: Array<{
   value: ListingCategory;
   label: string;
-  /** Tailwind-safe hue token used for the category chip. */
+  /** Tailwind-safe class list for the category chip. Each one has to stay
+   *  legible and distinct against the #B1D3B9 card it sits on. */
   accent: string;
 }> = [
-  { value: "textbooks", label: "Textbooks", accent: "bg-amber-100 text-amber-900" },
-  { value: "electronics", label: "Electronics", accent: "bg-sky-100 text-sky-900" },
-  { value: "furniture", label: "Furniture", accent: "bg-emerald-100 text-emerald-900" },
-  { value: "clothing", label: "Clothing", accent: "bg-rose-100 text-rose-900" },
-  { value: "bikes", label: "Bikes", accent: "bg-violet-100 text-violet-900" },
-  { value: "other", label: "Other", accent: "bg-zinc-100 text-zinc-900" },
+  { value: "textbooks", label: "Textbooks", accent: "bg-brand-50 text-brand-ink" },
+  { value: "electronics", label: "Electronics", accent: "bg-brand-600 text-brand-ink" },
+  { value: "furniture", label: "Furniture", accent: "border border-brand-ink/40 text-brand-ink" },
+  { value: "clothing", label: "Clothing", accent: "bg-brand-900 text-brand-50" },
+  { value: "bikes", label: "Bikes", accent: "bg-brand-400 text-brand-ink" },
+  { value: "other", label: "Other", accent: "bg-brand-50 text-brand-ink" },
 ];
 
 export const CONDITIONS: Array<{ value: ListingCondition; label: string }> = [

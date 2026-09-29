@@ -26,7 +26,7 @@ export default async function PublicProfilePage({
             {user.name}
             <VerifiedBadge isVerified={user.isVerified} />
           </h1>
-          <p className="text-sm text-zinc-500">
+          <p className="text-sm text-muted-foreground">
             {user.major} &middot; Class of {user.graduationYear}
           </p>
           <Badge
@@ -38,7 +38,7 @@ export default async function PublicProfilePage({
         </div>
       </header>
 
-      {user.bio ? <p className="text-sm text-zinc-700">{user.bio}</p> : null}
+      {user.bio ? <p className="text-sm text-foreground">{user.bio}</p> : null}
 
       <section className="flex flex-col gap-4">
         <h2 className="text-lg font-semibold">

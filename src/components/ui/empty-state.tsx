@@ -22,16 +22,16 @@ export function EmptyState({
   return (
     <div
       className={cn(
-        "flex flex-col items-center justify-center gap-3 rounded-xl border",
-        "border-dashed border-zinc-300 bg-zinc-50 px-6 py-16 text-center",
+        "light-surface flex flex-col items-center justify-center gap-3 rounded-xl border",
+        "border-dashed border-input bg-card px-6 py-16 text-center",
         className,
       )}
     >
-      {Icon ? <Icon aria-hidden="true" className="size-10 text-zinc-400" /> : null}
+      {Icon ? <Icon aria-hidden="true" className="size-10 text-muted-foreground" /> : null}
       <div className="flex flex-col gap-1">
-        <p className="font-medium text-zinc-900">{title}</p>
+        <p className="font-medium text-foreground">{title}</p>
         {description ? (
-          <p className="max-w-sm text-sm text-zinc-500">{description}</p>
+          <p className="max-w-sm text-sm text-muted-foreground">{description}</p>
         ) : null}
       </div>
       {action ? <RenderAction action={action} /> : null}
@@ -44,7 +44,7 @@ function RenderAction({ action }: { action: { href: string; label: string } }) {
   return (
     <Link
       href={action.href}
-      className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-700"
+      className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/85"
     >
       {content}
     </Link>

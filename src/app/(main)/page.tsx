@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import { Package } from "lucide-react";
 import { FilterPanel } from "@/components/listings/FilterPanel";
 import { ListingGrid } from "@/components/listings/ListingGrid";
+import { HeroBand } from "@/components/marketing/HeroBand";
 import { getListings } from "@/lib/api";
 import type { ListingCategory, ListingCondition, ListingFilters } from "@/types";
 
@@ -13,17 +14,21 @@ export default async function BrowsePage({ searchParams }: PageProps<"/">) {
 
   return (
     <div className="flex flex-col gap-6">
-      <header>
-        <h1 className="text-2xl font-semibold tracking-tight">Browse listings</h1>
-        <p className="mt-1 text-sm text-zinc-500">
-          {listings.length} {listings.length === 1 ? "listing" : "listings"} from students
-          on campus.
-        </p>
-      </header>
+      <HeroBand />
 
-      <Suspense fallback={<div className="h-24 rounded-xl border border-zinc-200" />}>
-        <FilterPanel />
-      </Suspense>
+      <section id="listings" className="flex flex-col gap-4">
+        <header className="flex flex-wrap items-end justify-between gap-2">
+          <h2 className="font-heading text-2xl tracking-tight">Browse listings</h2>
+          <p className="text-sm text-muted-foreground">
+            {listings.length} {listings.length === 1 ? "listing" : "listings"} from
+            students on campus.
+          </p>
+        </header>
+
+        <Suspense fallback={<div className="h-24 rounded-xl border border-border" />}>
+          <FilterPanel />
+        </Suspense>
+      </section>
 
       <ListingGrid
         listings={listings}
@@ -34,6 +39,7 @@ export default async function BrowsePage({ searchParams }: PageProps<"/">) {
     </div>
   );
 }
+
 
 /** Read `searchParams` into `ListingFilters`, ignoring unrecognised values. */
 function parseFilters(

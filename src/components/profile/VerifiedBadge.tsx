@@ -13,7 +13,7 @@ export function VerifiedBadge({ isVerified, className }: VerifiedBadgeProps) {
   return (
     <span
       title="Verified student"
-      className={cn("inline-flex items-center text-sky-600", className)}
+      className={cn("inline-flex items-center text-foreground", className)}
     >
       <BadgeCheck aria-label="Verified student" className="size-4" />
     </span>
