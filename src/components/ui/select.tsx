@@ -59,10 +59,14 @@ function SelectTrigger({
 function SelectContent({
   className,
   children,
+  scrollButtonClassName,
   position = "item-aligned",
   align = "center",
   ...props
-}: React.ComponentProps<typeof SelectPrimitive.Content>) {
+}: React.ComponentProps<typeof SelectPrimitive.Content> & {
+  /** Recols the overflow scroll buttons, which are hardcoded to `bg-popover`. */
+  scrollButtonClassName?: string
+}) {
   return (
     <SelectPrimitive.Portal>
       <SelectPrimitive.Content
@@ -73,7 +77,7 @@ function SelectContent({
         align={align}
         {...props}
       >
-        <SelectScrollUpButton />
+        <SelectScrollUpButton className={scrollButtonClassName} />
         <SelectPrimitive.Viewport
           data-position={position}
           className={cn(
@@ -83,7 +87,7 @@ function SelectContent({
         >
           {children}
         </SelectPrimitive.Viewport>
-        <SelectScrollDownButton />
+        <SelectScrollDownButton className={scrollButtonClassName} />
       </SelectPrimitive.Content>
     </SelectPrimitive.Portal>
   )

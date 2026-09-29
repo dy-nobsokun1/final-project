@@ -34,9 +34,13 @@ export function HeroBand() {
             Sell an item
             <ArrowRight aria-hidden="true" className="size-4" />
           </Link>
+          {/* Dark CTA against the light hero. #E6F2DD on #22312D is 11.72:1.
+              The border moves to brand-50/30 because the old brand-ink/40 read
+              as invisible on a dark fill, and hover goes to brand-900 rather
+              than brand-50, which would flash bright against the hero. */}
           <a
             href="#listings"
-            className="inline-flex items-center rounded-lg border border-brand-ink/40 bg-brand-50/70 px-5 py-2.5 text-sm font-semibold text-brand-ink transition-colors hover:bg-brand-50"
+            className="inline-flex items-center rounded-lg border border-brand-50/30 bg-brand-deep px-5 py-2.5 text-sm font-semibold text-brand-50 transition-colors hover:bg-brand-900"
           >
             Browse listings
           </a>
