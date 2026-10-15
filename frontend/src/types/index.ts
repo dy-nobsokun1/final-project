@@ -89,6 +89,29 @@ export interface Conversation {
   unreadCount: number;
 }
 
+/**
+ * A rating one student gave another after a sale or trade. Only the listing's owner and the
+ * person they chatted with can review each other, once per listing (backend/src/routes/reviews.js).
+ */
+export interface Review {
+  id: string;
+  listingId: string;
+  listingTitle: string;
+  revieweeId: string;
+  /** 1 to 5 whole stars. */
+  rating: number;
+  comment: string;
+  createdAt: string;
+  reviewer: Pick<User, "id" | "name" | "avatarUrl">;
+}
+
+/** The reviews a student received, newest first, and their average (null until the first one). */
+export interface ReviewSummary {
+  reviews: Review[];
+  averageRating: number | null;
+  reviewCount: number;
+}
+
 /** A listing joined with the fields a card needs, so the UI does not re-look-up the seller. */
 export interface ListingWithSeller extends Listing {
   seller: Pick<User, "id" | "name" | "avatarUrl" | "isVerified">;

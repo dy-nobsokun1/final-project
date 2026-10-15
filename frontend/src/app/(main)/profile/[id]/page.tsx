@@ -1,18 +1,21 @@
 import { notFound } from "next/navigation";
 import { ListingGrid } from "@/components/listings/ListingGrid";
+import { RatingStars } from "@/components/profile/RatingStars";
+import { ReviewList } from "@/components/profile/ReviewList";
 import { UserAvatar } from "@/components/profile/UserAvatar";
 import { Badge } from "@/components/ui/badge";
 import { VerifiedBadge } from "@/components/profile/VerifiedBadge";
-import { getListingsBySeller, getUserById } from "@/lib/api";
+import { getListingsBySeller, getUserById, getUserReviews } from "@/lib/api";
 
-/** Public profile of any user, showing the listings they have posted. */
+/** Public profile of any user: their rating, the listings they have posted, and their reviews. */
 export default async function PublicProfilePage({
   params,
 }: PageProps<"/profile/[id]">) {
   const { id } = await params;
-  const [user, listings] = await Promise.all([
+  const [user, listings, { reviews, averageRating, reviewCount }] = await Promise.all([
     getUserById(id),
     getListingsBySeller(id),
+    getUserReviews(id),
   ]);
 
   if (!user) notFound();
@@ -37,6 +40,12 @@ export default async function PublicProfilePage({
           >
             {user.isVerified ? "Verified student" : "Unverified"}
           </Badge>
+          {averageRating !== null ? (
+            <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
+              <RatingStars rating={averageRating} />
+              {averageRating} · {reviewCount} {reviewCount === 1 ? "review" : "reviews"}
+            </p>
+          ) : null}
         </div>
       </header>
 
@@ -51,6 +60,11 @@ export default async function PublicProfilePage({
           emptyTitle="No listings yet"
           emptyDescription="This student has not posted anything."
         />
+      </section>
+
+      <section className="flex flex-col gap-2">
+        <h2 className="text-lg font-semibold">Reviews</h2>
+        <ReviewList reviews={reviews} />
       </section>
     </div>
   );

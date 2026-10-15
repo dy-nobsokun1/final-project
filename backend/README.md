@@ -43,9 +43,9 @@ backend/
 │   ├── config.js       reads environment variables
 │   ├── db/             schema.sql, connection pool, shared listing query
 │   ├── middleware/     requireAuth (JWT), CORS, error handler
-│   ├── routes/         auth, listings, users, messages, uploads
+│   ├── routes/         auth, listings, bids, reviews, users, messages, payments, telegram, uploads
 │   └── utils/          validation, password hashing, tokens, JSON serializers, email
-└── test/               unit tests for validation
+└── test/               unit tests; test/api/ holds the API tests (see Testing)
 ```
 
 ## Database
@@ -126,6 +126,17 @@ CREATE TABLE IF NOT EXISTS bids (
 CREATE INDEX IF NOT EXISTS bids_listing_idx ON bids (listing_id, amount DESC);
 ```
 
+### Reviews
+
+Once a listing is marked `sold` or `traded`, its owner and a person they dealt with can rate each
+other: 1 to 5 whole stars and an optional comment of up to 1000 characters.
+
+- "Dealt with" means both people wrote at least one message about that listing. Someone who asked
+  a question but got no reply cannot review, and neither can a stranger.
+- One review per person per listing (`UNIQUE (listing_id, reviewer_id)` in `schema.sql`).
+- A profile lists every review the user received, with their average rounded to one decimal place.
+- The `reviews` table was already in the ER diagram, so existing databases need no upgrade.
+
 ### Email notifications
 
 `src/utils/notify.js` emails people when something happens (using the same SMTP settings as the
@@ -195,6 +206,9 @@ Send JSON. Routes marked 🔒 need the header `Authorization: Bearer <token>` (t
 | DELETE 🔒 | `/api/listings/:id` | Owner only |
 | GET | `/api/listings/:id/bids` | An auction's bids, highest first, with bidder name |
 | POST 🔒 | `/api/listings/:id/bids` | `{ amount }`. Place a bid (see Auctions above) |
+| GET | `/api/listings/:id/reviews` | Reviews about this listing's deal (at most one per person) |
+| POST 🔒 | `/api/listings/:id/reviews` | `{ revieweeId, rating, comment? }`. 1-5 stars, once the listing is sold or traded (see Reviews above) |
+| GET | `/api/users/:id/reviews` | `{ reviews, averageRating, reviewCount }`: reviews the user received, newest first |
 | GET | `/api/payments/config` | `{ enabled }`: whether card payments are switched on |
 | POST 🔒 | `/api/payments/checkout` | `{ listingId }` → `{ url }` of Stripe's payment page |
 | POST 🔒 | `/api/payments/confirm` | `{ sessionId }` → `{ status: "paid" \| "pending" }`, checked with Stripe |
@@ -224,7 +238,7 @@ Errors always look like `{ "error": "message", "details": { "field": "message" }
 - `npm run test:api` runs the API tests in `test/api/`. Each file starts the real app on a free port
   and sends it real HTTP requests, so routes, SQL and database rules are tested together: sign-up and
   verification, owner-only changes, messaging, bidding (including five bids at the same moment),
-  and payments with Stripe switched off.
+  payments with Stripe switched off, and reviews.
 
 The API tests need their own database, because `test/api/reset-db.js` wipes it before every run.
 Create it once, then put its URL in `.env` as `TEST_DATABASE_URL` (see `.env.example`):
@@ -248,18 +262,7 @@ off email, Stripe, Telegram and Cloudinary, so a test run never sends anything.
 - **Privacy:** emails appear only on your own account, never on public profiles.
 - **Secrets:** live in `.env` (git-ignored). Nothing secret is committed.
 
-## Progress (week 4)
+## Progress
 
-Done:
-- Database schema from the ER diagram, with setup and seed scripts
-- Campus-email registration, login, JWT sessions, email-verification flow
-- Listings: create/read/update/delete, search, filters, sale/buy-request/trade/giveaway types, cash top-up, sold/traded status
-- Profiles and messaging (threads per listing, unread counts)
-- Unit tests for validation; all endpoints checked against a real PostgreSQL database
-- Frontend connected: login, registration, email verification, listings (with photo upload),
-  owner actions (sold / reserved / delete), messaging and profile editing all use this API
-- Verification emails over SMTP (Outlook or Gmail), with a resend button
-
-Next:
-- Move photo uploads to Cloudinary before deploying (Render's disk is wiped on every restart)
-- Deploy (Render + Supabase); then stretch goals: reviews, KHQR, meetup spots, Notify Me, Telegram bot
+What is built, tested and still to do is kept in one place: the Status section of the
+[root README](../README.md).

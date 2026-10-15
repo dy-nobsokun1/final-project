@@ -63,6 +63,20 @@ export function toBid(row) {
   };
 }
 
+/** Expects a review row joined with reviewer and listing columns (REVIEW_SELECT in routes/reviews.js). */
+export function toReview(row) {
+  return {
+    id: row.id,
+    listingId: row.listing_id,
+    listingTitle: row.listing_title,
+    revieweeId: row.reviewee_id,
+    rating: row.rating,
+    comment: row.comment,
+    createdAt: row.created_at,
+    reviewer: { id: row.reviewer_id, name: row.reviewer_name, avatarUrl: row.reviewer_avatar_url },
+  };
+}
+
 export function toMessage(row) {
   return {
     id: row.id,

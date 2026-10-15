@@ -94,10 +94,11 @@ verified. `dara@aupp.edu.kh` is **unverified**, so its login returns 403 (useful
 
 Done (week 5): auth with email verification, listings CRUD with five types (incl. auction) and statuses,
 ranked typo-tolerant search and filters, auctions/bidding, email + Telegram notifications, Stripe test payments, Cloudinary photos, profiles, per-listing messaging, photo
-uploads; frontend fully wired to the API.
+uploads; frontend fully wired to the API. Reviews and ratings (rate the person you chatted with once
+a listing is sold or traded). API tests in `backend/test/api/`.
 
 Built but needs the team's own accounts/keys (see `DEPLOY.md`): Supabase database, Render + Vercel
 deployment, Cloudinary photos, Stripe test payments, Telegram bot.
 
-Possible next steps: real-time chat, reviews and ratings (the `reviews` table exists), safe meetup
-spots, KHQR/Bakong as a local alternative to Stripe, and per-user notification preferences.
+Possible next steps: real-time chat, safe meetup spots, KHQR/Bakong as a local alternative to
+Stripe, and per-user notification preferences.

@@ -2,7 +2,16 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { cache } from "react";
 import { ApiError, apiFetch, TOKEN_COOKIE } from "@/lib/api/http";
-import type { Bid, Conversation, ListingFilters, ListingWithSeller, Message, User } from "@/types";
+import type {
+  Bid,
+  Conversation,
+  ListingFilters,
+  ListingWithSeller,
+  Message,
+  Review,
+  ReviewSummary,
+  User,
+} from "@/types";
 
 /**
  * Data reads for Server Components. Each function calls the Express API on the server,
@@ -106,6 +115,22 @@ export async function getMyListings(): Promise<ListingWithSeller[]> {
 export async function getUserById(id: string): Promise<User | null> {
   const result = await orNull(apiFetch<{ user: User }>(`/api/users/${encodeURIComponent(id)}`));
   return result?.user ?? null;
+}
+
+/** The reviews a student received, newest first, with their average rating. */
+export async function getUserReviews(userId: string): Promise<ReviewSummary> {
+  const result = await orNull(
+    apiFetch<ReviewSummary>(`/api/users/${encodeURIComponent(userId)}/reviews`),
+  );
+  return result ?? { reviews: [], averageRating: null, reviewCount: 0 };
+}
+
+/** The reviews about one listing's deal: at most one per person. */
+export async function getListingReviews(listingId: string): Promise<Review[]> {
+  const result = await orNull(
+    apiFetch<{ reviews: Review[] }>(`/api/listings/${encodeURIComponent(listingId)}/reviews`),
+  );
+  return result?.reviews ?? [];
 }
 
 /** A thread's id in the URL: the listing plus the other person. UUIDs never contain "_". */

@@ -11,6 +11,47 @@ buy, sell, trade, or give away items.
 Rules for AI coding agents working in this repo are in [`Agent.md`](Agent.md).
 Putting it online (Supabase, Render, Vercel, Cloudinary, Stripe, Telegram): [`DEPLOY.md`](DEPLOY.md).
 
+## Status (week 5)
+
+### Built
+
+- **Accounts:** sign-up with a `.edu.kh` email only, and nobody can sign in until the emailed
+  verification link is opened. Profiles are public; email addresses never are.
+- **Listings:** sell, ask for something ("wanted"), trade (with a cash top-up for uneven trades),
+  give away, or auction. Photos, owner-only editing and deleting, and the statuses active,
+  reserved, sold and traded.
+- **Search:** best matches first. It finds partial words and typos ("calculas" finds "Calculus"),
+  with filters for category, condition, type and price.
+- **Auctions:** a starting price, a minimum raise and an end time. Two bids placed at the same
+  moment can never both win. When time runs out, the item is reserved for the highest bidder.
+- **Messaging:** a private thread per listing between its owner and each interested student, with
+  unread counts.
+- **Reviews and ratings:** once a listing is sold or traded, its owner and the person they chatted
+  with can rate each other (1 to 5 stars and a comment). Profiles show the average and every review.
+- **Notifications:** by email, and by Telegram for students who connect it in Settings: new
+  messages, being outbid, auction results and payments.
+- **Card payments (Stripe test mode):** pay for an item for sale or an auction you won. Live keys
+  are refused, so no real card can ever be charged.
+- **Security:** parameterized SQL everywhere, hashed passwords, verified accounts only, owner-only
+  changes, and no secrets in the repository.
+
+### Tested
+
+- `npm test` (in `backend/`): 17 unit tests for validation, the search query, and the Stripe and
+  Cloudinary helpers.
+- `npm run test:api` (in `backend/`): 28 tests that send real requests to the running API, covering
+  sign-up and verification, owner-only changes, messaging, simultaneous bids, payments and reviews.
+  They use a separate test database (see [Testing](backend/README.md#testing)).
+
+### Not done yet
+
+- **Needs our own accounts and keys** (steps in [`DEPLOY.md`](DEPLOY.md)): the Supabase database,
+  Render and Vercel hosting, Cloudinary, Stripe test keys and the Telegram bot. Until their keys are
+  set, photos are saved on the server's disk, and payments and Telegram stay switched off.
+- **Possible next steps:** real-time chat, safe meetup spots, KHQR/Bakong payments, and
+  notification settings.
+- **Known gap:** deleting a listing also deletes its reviews.
+
 ## Run locally
 
 ```bash

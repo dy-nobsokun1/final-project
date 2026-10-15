@@ -95,6 +95,22 @@ export function minimumNextBid({ startingPrice, highestBid, minIncrement }) {
   return highestBid === null ? startingPrice : highestBid + minIncrement;
 }
 
+/** Longest review comment, in characters. */
+export const MAX_REVIEW_LENGTH = 1000;
+
+/** A review says who it is about, gives 1 to 5 whole stars, and may add a short comment. */
+export function validateReview({ revieweeId, rating, comment }) {
+  const errors = {};
+  if (typeof revieweeId !== "string" || !revieweeId) errors.revieweeId = "Say who you are reviewing.";
+  if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
+    errors.rating = "Rating must be a whole number from 1 to 5.";
+  }
+  if (comment !== undefined && (typeof comment !== "string" || comment.length > MAX_REVIEW_LENGTH)) {
+    errors.comment = `Comment must be text of at most ${MAX_REVIEW_LENGTH} characters.`;
+  }
+  return errors;
+}
+
 function toNumber(value) {
   if (value === undefined || value === "") return undefined;
   const number = Number(value);

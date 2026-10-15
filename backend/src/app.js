@@ -7,6 +7,7 @@ import { bidsRouter } from "./routes/bids.js";
 import { listingsRouter } from "./routes/listings.js";
 import { messagesRouter } from "./routes/messages.js";
 import { paymentsRouter, stripeWebhook } from "./routes/payments.js";
+import { listingReviewsRouter, userReviewsRouter } from "./routes/reviews.js";
 import { telegramRouter } from "./routes/telegram.js";
 import { UPLOAD_DIR, uploadsRouter } from "./routes/uploads.js";
 import { usersRouter } from "./routes/users.js";
@@ -27,8 +28,10 @@ app.get("/api/health", async (req, res) => {
 
 app.use("/api/auth", authRouter);
 app.use("/api/listings/:id/bids", bidsRouter);
+app.use("/api/listings/:id/reviews", listingReviewsRouter);
 app.use("/api/listings", listingsRouter);
 app.use("/api/users/me/telegram", telegramRouter);
+app.use("/api/users/:id/reviews", userReviewsRouter);
 app.use("/api/users", usersRouter);
 app.use("/api/messages", messagesRouter);
 app.use("/api/uploads", uploadsRouter);

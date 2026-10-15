@@ -174,6 +174,25 @@ export async function placeBid(listingId: string, amount: number): Promise<Actio
   return {};
 }
 
+/** Rates the other person in a finished deal. The API checks who may review whom. */
+export async function submitReview(
+  listingId: string,
+  revieweeId: string,
+  rating: number,
+  comment: string,
+): Promise<ActionResult> {
+  try {
+    await apiFetch(`/api/listings/${encodeURIComponent(listingId)}/reviews`, {
+      method: "POST",
+      body: JSON.stringify({ revieweeId, rating, comment }),
+    });
+  } catch (error) {
+    return toActionError(error);
+  }
+  refresh(); // re-render the thread so your rating replaces the form
+  return {};
+}
+
 /** Starts a Stripe Checkout (test mode) for a listing. Returns the Stripe page to send the buyer to. */
 export async function startCheckout(listingId: string): Promise<ActionResult & { url?: string }> {
   try {

@@ -3,10 +3,12 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { MessageBubble } from "@/components/chat/MessageBubble";
 import { MessageComposer } from "@/components/chat/MessageComposer";
+import { ThreadReview } from "@/components/chat/ThreadReview";
 import { UserAvatar } from "@/components/profile/UserAvatar";
 import { VerifiedBadge } from "@/components/profile/VerifiedBadge";
 import {
   getListingById,
+  getListingReviews,
   getMessages,
   getUserById,
   markThreadRead,
@@ -38,7 +40,10 @@ export default async function MessageThreadPage({
 
   // Opening the thread counts as reading it, which clears its unread badge in the inbox.
   await markThreadRead(listing.id, partner.id);
-  const messages = await getMessages(listing.id, partner.id);
+  const [messages, reviews] = await Promise.all([
+    getMessages(listing.id, partner.id),
+    getListingReviews(listing.id),
+  ]);
 
   return (
     <div className="light-surface flex h-full flex-col gap-4 rounded-xl bg-card p-4">
@@ -75,6 +80,7 @@ export default async function MessageThreadPage({
         </ul>
       )}
 
+      <ThreadReview listing={listing} partner={partner} meId={me.id} messages={messages} reviews={reviews} />
       <MessageComposer listingId={listing.id} receiverId={partner.id} />
     </div>
   );

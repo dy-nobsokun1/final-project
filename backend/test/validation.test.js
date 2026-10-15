@@ -6,6 +6,7 @@ import {
   parseListingFilters,
   validateListing,
   validateRegistration,
+  validateReview,
 } from "../src/utils/validation.js";
 
 test("only .edu.kh emails are campus emails", () => {
@@ -70,4 +71,14 @@ test("an auction needs a future end time within 30 days and a positive minimum r
 test("the first bid must reach the starting price; later bids must beat the highest by the raise", () => {
   assert.equal(minimumNextBid({ startingPrice: 20, highestBid: null, minIncrement: 2 }), 20);
   assert.equal(minimumNextBid({ startingPrice: 20, highestBid: 22, minIncrement: 2 }), 24);
+});
+
+test("a review names who it is about and gives 1 to 5 whole stars; the comment is optional", () => {
+  assert.deepEqual(validateReview({ revieweeId: "u1", rating: 5, comment: "Smooth handover" }), {});
+  assert.deepEqual(validateReview({ revieweeId: "u1", rating: 1 }), {});
+  for (const rating of [0, 6, 4.5, "5", undefined]) {
+    assert.ok(validateReview({ revieweeId: "u1", rating }).rating, `rating ${rating}`);
+  }
+  assert.ok(validateReview({ revieweeId: "u1", rating: 3, comment: "x".repeat(1001) }).comment);
+  assert.ok(validateReview({ rating: 3 }).revieweeId);
 });
