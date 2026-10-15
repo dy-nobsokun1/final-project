@@ -43,6 +43,7 @@ is public); state a plan before multi-file changes; explain every change so the 
 # backend/  (needs PostgreSQL; copy .env.example to .env first)
 npm run dev          # API on http://localhost:4000
 npm test             # unit tests (node --test)
+npm run test:api     # API tests: real HTTP against TEST_DATABASE_URL (a separate DB they wipe)
 npm run db:setup     # recreate tables: WIPES ALL DATA
 npm run db:seed      # demo data
 npm run email:test -- someone@aupp.edu.kh

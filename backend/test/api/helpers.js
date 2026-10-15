@@ -1,0 +1,108 @@
+// Shared setup for the API tests in this folder (run them with: npm run test:api).
+// Each test file starts the real Express app on a free port and sends it real HTTP requests, so
+// routes, SQL and database rules are tested together. They use a SEPARATE database
+// (TEST_DATABASE_URL), because reset-db.js wipes it before every run.
+import assert from "node:assert/strict";
+import { once } from "node:events";
+import { randomUUID } from "node:crypto";
+
+// Switched off in tests, so a test run never sends email or Telegram messages, or calls Stripe.
+const OUTSIDE_SERVICES = [
+  "SMTP_HOST", "SMTP_USER", "SMTP_PASS",
+  "STRIPE_SECRET_KEY", "STRIPE_WEBHOOK_SECRET",
+  "TELEGRAM_BOT_TOKEN", "TELEGRAM_BOT_USERNAME",
+  "CLOUDINARY_CLOUD_NAME", "CLOUDINARY_API_KEY", "CLOUDINARY_API_SECRET",
+];
+
+function sameDatabase(a, b) {
+  const [x, y] = [new URL(a), new URL(b)];
+  return x.host === y.host && x.pathname === y.pathname;
+}
+
+/** Points the app at the test database. Must run before anything imports src/config.js. */
+export function useTestDatabase() {
+  const testUrl = process.env.TEST_DATABASE_URL;
+  if (!testUrl) throw new Error("Set TEST_DATABASE_URL in backend/.env first (see .env.example).");
+  // The tests wipe their database, so never let them run against the real one.
+  if (process.env.DATABASE_URL && sameDatabase(testUrl, process.env.DATABASE_URL)) {
+    throw new Error("TEST_DATABASE_URL must be a separate database, not the one in DATABASE_URL.");
+  }
+  process.env.DATABASE_URL = testUrl;
+  process.env.JWT_SECRET ??= "test-secret";
+  for (const name of OUTSIDE_SERVICES) delete process.env[name];
+}
+
+/** A fresh campus email, so tests never collide with each other's accounts. */
+export function uniqueEmail() {
+  return `student-${randomUUID().slice(0, 8)}@test.edu.kh`;
+}
+
+// With email switched off, the app logs every email it skips ("[notify] ...", "[verify-email] ...").
+// That is expected here, so those lines are hidden. Everything else, like server errors, still prints.
+function hideSkippedEmailLogs() {
+  for (const method of ["log", "error"]) {
+    const print = console[method];
+    console[method] = (...args) => {
+      if (!/^\[(notify|verify-email)\]/.test(String(args[0]))) print(...args);
+    };
+  }
+}
+
+/**
+ * Starts the app on a free port and returns what the tests need: request() for HTTP calls,
+ * createUser() and createListing() for test data, sql() to set up cases the API does not allow
+ * (like an auction that already ended), and close() to stop everything afterwards.
+ */
+export async function startApi() {
+  useTestDatabase();
+  hideSkippedEmailLogs();
+  const { app } = await import("../../src/app.js");
+  const { pool } = await import("../../src/db/pool.js");
+  const server = app.listen(0);
+  await once(server, "listening");
+  const baseUrl = `http://127.0.0.1:${server.address().port}`;
+
+  async function request(method, path, { token, body } = {}) {
+    const headers = {};
+    if (token) headers.Authorization = `Bearer ${token}`;
+    if (body !== undefined) headers["Content-Type"] = "application/json";
+    const response = await fetch(`${baseUrl}${path}`, { method, headers, body: JSON.stringify(body) });
+    const text = await response.text();
+    return { status: response.status, body: text ? JSON.parse(text) : null };
+  }
+
+  async function sql(text, params = []) {
+    return (await pool.query(text, params)).rows;
+  }
+
+  /** Registers, verifies and logs in a new student, like a real person would. */
+  async function createUser(name = "Test Student") {
+    const email = uniqueEmail();
+    const password = "password123";
+    assert.equal((await request("POST", "/api/auth/register", { body: { name, email, password } })).status, 201);
+    // The real link arrives by email; the tests read its token from the database instead.
+    const [{ id, verification_token: token }] = await sql(
+      "SELECT id, verification_token FROM users WHERE email = $1", [email]);
+    assert.equal((await request("POST", "/api/auth/verify-email", { body: { token } })).status, 200);
+    const login = await request("POST", "/api/auth/login", { body: { email, password } });
+    assert.equal(login.status, 200);
+    return { id, name, email, token: login.body.token };
+  }
+
+  /** Posts a listing as `owner`: by default a $25 textbook for sale. */
+  async function createListing(owner, fields = {}) {
+    const response = await request("POST", "/api/listings", {
+      token: owner.token,
+      body: { title: "Test listing", category: "textbooks", condition: "good", price: 25, ...fields },
+    });
+    assert.equal(response.status, 201, JSON.stringify(response.body));
+    return response.body.listing;
+  }
+
+  async function close() {
+    await new Promise((resolve) => server.close(resolve));
+    await pool.end();
+  }
+
+  return { request, sql, createUser, createListing, close };
+}

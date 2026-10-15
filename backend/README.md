@@ -15,6 +15,7 @@ npm run db:setup          # creates the tables (drops existing data!)
 npm run db:seed           # optional demo data; every demo user's password is "password123"
 npm run dev               # http://localhost:4000, restarts on file changes
 npm test                  # unit tests (Node's built-in test runner)
+npm run test:api          # API tests against a separate test database (see Testing below)
 ```
 
 Check it works: `curl http://localhost:4000/api/health` → `{"status":"ok"}`
@@ -215,6 +216,26 @@ Put the returned `url` in a listing's `imageUrls`.
 
 JSON field names match the frontend types in `frontend/src/types/index.ts` (camelCase).
 Errors always look like `{ "error": "message", "details": { "field": "message" } }`.
+
+## Testing
+
+- `npm test` runs the unit tests in `test/*.test.js`: validation, the search query builder, and the
+  Stripe and Cloudinary helpers. No database needed.
+- `npm run test:api` runs the API tests in `test/api/`. Each file starts the real app on a free port
+  and sends it real HTTP requests, so routes, SQL and database rules are tested together: sign-up and
+  verification, owner-only changes, messaging, bidding (including five bids at the same moment),
+  and payments with Stripe switched off.
+
+The API tests need their own database, because `test/api/reset-db.js` wipes it before every run.
+Create it once, then put its URL in `.env` as `TEST_DATABASE_URL` (see `.env.example`):
+
+```bash
+createdb uniswap_test                                      # local PostgreSQL
+docker exec <container> createdb -U <user> uniswap_test    # PostgreSQL in Docker
+```
+
+The tests refuse to run if `TEST_DATABASE_URL` is the same database as `DATABASE_URL`. They switch
+off email, Stripe, Telegram and Cloudinary, so a test run never sends anything.
 
 ## Security
 
