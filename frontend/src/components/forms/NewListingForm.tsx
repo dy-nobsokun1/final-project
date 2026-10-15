@@ -19,15 +19,15 @@ const MAX_AUCTION_MS = 30 * 24 * 60 * 60 * 1000;
  * Create-a-listing form. Checks the fields here for quick feedback, then sends the whole form
  * (photo included) to a Server Action, which uploads the photo and creates the listing via the API.
  *
- * Given a `listing`, it edits that listing instead: the fields start filled in, and the listing type
- * and auction settings stay as they are. Once an auction has bids its price is locked too (as in the API).
+ * Given a `listing`, it edits that listing instead: the fields start filled in and saving updates it.
+ * Once an auction has bids, its type, price and auction settings are locked (as in the API).
  */
 export function NewListingForm({ listing }: { listing?: Listing }) {
   const router = useRouter();
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [listingType, setListingType] = useState<string>(listing?.listingType ?? "sale");
-  const priceLocked = (listing?.auction?.bidCount ?? 0) > 0;
+  const lockedByBids = (listing?.auction?.bidCount ?? 0) > 0;
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -42,7 +42,7 @@ export function NewListingForm({ listing }: { listing?: Listing }) {
     if (!Number.isFinite(price) || price < 0) next.price = "Enter a valid price.";
     if (description.length < 20) next.description = "Describe the item in at least 20 characters.";
     if (photo instanceof File && photo.size > MAX_PHOTO_BYTES) next.photo = "Choose a photo under 5 MB.";
-    if (!listing && listingType === "auction") {
+    if (listingType === "auction" && !lockedByBids) {
       // datetime-local gives the user's local time with no zone ("2026-10-04T18:00"). Converting it
       // here, in the browser, keeps the user's time zone; the API receives an exact ISO time.
       const endsAt = new Date(String(data.get("auctionEndsAt") ?? "")).getTime();
@@ -95,11 +95,11 @@ export function NewListingForm({ listing }: { listing?: Listing }) {
       </Field>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        {!listing ? (
+        {!lockedByBids ? (
           <Field label="Listing type" error={errors.listingType}>
             <FieldSelect
               name="listingType"
-              defaultValue="sale"
+              defaultValue={listing?.listingType ?? "sale"}
               options={LISTING_TYPES}
               onValueChange={setListingType}
             />
@@ -116,7 +116,7 @@ export function NewListingForm({ listing }: { listing?: Listing }) {
               step="1"
               inputMode="decimal"
               defaultValue={listing?.price}
-              disabled={priceLocked}
+              disabled={lockedByBids}
               className="bg-brand-50/40 placeholder:text-foreground/50"
             />
           </Field>
@@ -129,7 +129,14 @@ export function NewListingForm({ listing }: { listing?: Listing }) {
         </Field>
       </div>
 
-      {!listing && listingType === "auction" ? <AuctionFields errors={errors} /> : null}
+      {listingType === "auction" && !lockedByBids ? (
+        <AuctionFields errors={errors} endsAt={listing?.auction?.endsAt} minIncrement={listing?.auction?.minIncrement} />
+      ) : null}
+      {lockedByBids ? (
+        <p className="text-sm text-muted-foreground">
+          People have already bid, so the type, price and auction settings are locked.
+        </p>
+      ) : null}
 
       <Field label={listing ? "New photo (optional, replaces the current one)" : "Photo (optional)"} error={errors.photo}>
         <FieldInput

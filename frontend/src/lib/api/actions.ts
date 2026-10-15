@@ -140,12 +140,15 @@ async function uploadPhoto(photo: File): Promise<string> {
 
 /**
  * Saves an edited listing. A newly chosen photo replaces the old one; with no new photo the old one
- * stays. The form leaves out the price when it cannot change (a giveaway, or an auction with bids).
+ * stays. Once an auction has bids the form leaves out its type and price, so they are not sent:
+ * fields set to `undefined` here are dropped by JSON.stringify.
  */
 export async function updateListing(id: string, formData: FormData): Promise<ActionResult & { listingId?: string }> {
   try {
     const photo = formData.get("photo");
     const price = formData.get("price");
+    const listingType = formData.get("listingType") ?? undefined;
+    const isAuction = listingType === "auction";
     await apiFetch(`/api/listings/${encodeURIComponent(id)}`, {
       method: "PATCH",
       body: JSON.stringify({
@@ -153,8 +156,13 @@ export async function updateListing(id: string, formData: FormData): Promise<Act
         description: formData.get("description"),
         category: formData.get("category"),
         condition: formData.get("condition"),
-        ...(price !== null && { price: Number(price || 0) }),
-        ...(photo instanceof File && photo.size > 0 && { imageUrls: [await uploadPhoto(photo)] }),
+        listingType,
+        // A giveaway is free, as on the create form.
+        price: listingType === "giveaway" ? 0 : price === null ? undefined : Number(price || 0),
+        // The form has already turned the local end time into an ISO string.
+        auctionEndsAt: isAuction ? formData.get("auctionEndsAt") : undefined,
+        minIncrement: isAuction ? Number(formData.get("minIncrement") || 1) : undefined,
+        imageUrls: photo instanceof File && photo.size > 0 ? [await uploadPhoto(photo)] : undefined,
       }),
     });
     return { listingId: id };
