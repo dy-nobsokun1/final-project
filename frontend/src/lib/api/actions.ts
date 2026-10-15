@@ -138,6 +138,31 @@ async function uploadPhoto(photo: File): Promise<string> {
   return url;
 }
 
+/**
+ * Saves an edited listing. A newly chosen photo replaces the old one; with no new photo the old one
+ * stays. The form leaves out the price when it cannot change (a giveaway, or an auction with bids).
+ */
+export async function updateListing(id: string, formData: FormData): Promise<ActionResult & { listingId?: string }> {
+  try {
+    const photo = formData.get("photo");
+    const price = formData.get("price");
+    await apiFetch(`/api/listings/${encodeURIComponent(id)}`, {
+      method: "PATCH",
+      body: JSON.stringify({
+        title: formData.get("title"),
+        description: formData.get("description"),
+        category: formData.get("category"),
+        condition: formData.get("condition"),
+        ...(price !== null && { price: Number(price || 0) }),
+        ...(photo instanceof File && photo.size > 0 && { imageUrls: [await uploadPhoto(photo)] }),
+      }),
+    });
+    return { listingId: id };
+  } catch (error) {
+    return toActionError(error);
+  }
+}
+
 export async function updateListingStatus(id: string, status: ListingStatus): Promise<ActionResult> {
   try {
     await apiFetch(`/api/listings/${encodeURIComponent(id)}`, {

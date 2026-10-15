@@ -6,8 +6,9 @@ import { AuctionFields } from "@/components/forms/AuctionFields";
 import { Field, FieldInput, FieldTextarea } from "@/components/forms/Field";
 import { FieldSelect } from "@/components/forms/FieldSelect";
 import { Button } from "@/components/ui/button";
-import { createListing } from "@/lib/api/actions";
+import { createListing, updateListing } from "@/lib/api/actions";
 import { CATEGORIES, CONDITIONS, LISTING_TYPES } from "@/lib/constants";
+import type { Listing } from "@/types";
 
 /** Matches the API's upload limit (backend/src/routes/uploads.js). */
 const MAX_PHOTO_BYTES = 5 * 1024 * 1024;
@@ -17,12 +18,16 @@ const MAX_AUCTION_MS = 30 * 24 * 60 * 60 * 1000;
 /**
  * Create-a-listing form. Checks the fields here for quick feedback, then sends the whole form
  * (photo included) to a Server Action, which uploads the photo and creates the listing via the API.
+ *
+ * Given a `listing`, it edits that listing instead: the fields start filled in, and the listing type
+ * and auction settings stay as they are. Once an auction has bids its price is locked too (as in the API).
  */
-export function NewListingForm() {
+export function NewListingForm({ listing }: { listing?: Listing }) {
   const router = useRouter();
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [listingType, setListingType] = useState("sale");
+  const [listingType, setListingType] = useState<string>(listing?.listingType ?? "sale");
+  const priceLocked = (listing?.auction?.bidCount ?? 0) > 0;
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -37,7 +42,7 @@ export function NewListingForm() {
     if (!Number.isFinite(price) || price < 0) next.price = "Enter a valid price.";
     if (description.length < 20) next.description = "Describe the item in at least 20 characters.";
     if (photo instanceof File && photo.size > MAX_PHOTO_BYTES) next.photo = "Choose a photo under 5 MB.";
-    if (listingType === "auction") {
+    if (!listing && listingType === "auction") {
       // datetime-local gives the user's local time with no zone ("2026-10-04T18:00"). Converting it
       // here, in the browser, keeps the user's time zone; the API receives an exact ISO time.
       const endsAt = new Date(String(data.get("auctionEndsAt") ?? "")).getTime();
@@ -53,13 +58,14 @@ export function NewListingForm() {
     if (Object.keys(next).length > 0) return;
 
     setIsSubmitting(true);
-    const result = await createListing(data);
+    const result = listing ? await updateListing(listing.id, data) : await createListing(data);
     if (result.listingId) {
       router.push(`/listings/${result.listingId}`);
       return;
     }
     setIsSubmitting(false);
-    setErrors({ ...result.fieldErrors, form: result.error ?? "Could not publish the listing." });
+    const fallback = listing ? "Could not save your changes." : "Could not publish the listing.";
+    setErrors({ ...result.fieldErrors, form: result.error ?? fallback });
   }
 
   return (
@@ -73,6 +79,7 @@ export function NewListingForm() {
       <Field label="Title" error={errors.title}>
         <FieldInput
           name="title"
+          defaultValue={listing?.title}
           placeholder="Calculus: Early Transcendentals, 9th ed."
           className="bg-brand-50/40 placeholder:text-foreground/50"
         />
@@ -80,6 +87,7 @@ export function NewListingForm() {
       <Field label="Description" error={errors.description}>
         <FieldTextarea
           name="description"
+          defaultValue={listing?.description}
           rows={5}
           placeholder="Condition, defects, and what is included."
           className="bg-brand-50/40 placeholder:text-foreground/50"
@@ -87,15 +95,18 @@ export function NewListingForm() {
       </Field>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field label="Listing type" error={errors.listingType}>
-          <FieldSelect
-            name="listingType"
-            defaultValue="sale"
-            options={LISTING_TYPES}
-            onValueChange={setListingType}
-          />
-        </Field>
-        {/* A giveaway has no price, so the field is hidden and the price is sent as 0. */}
+        {!listing ? (
+          <Field label="Listing type" error={errors.listingType}>
+            <FieldSelect
+              name="listingType"
+              defaultValue="sale"
+              options={LISTING_TYPES}
+              onValueChange={setListingType}
+            />
+          </Field>
+        ) : null}
+        {/* A giveaway has no price, so the field is hidden and the price is sent as 0.
+            A disabled input is left out of the form data, so a locked price is not sent. */}
         {listingType !== "giveaway" ? (
           <Field label={listingType === "auction" ? "Starting bid (USD)" : "Price (USD)"} error={errors.price}>
             <FieldInput
@@ -104,21 +115,23 @@ export function NewListingForm() {
               min={0}
               step="1"
               inputMode="decimal"
+              defaultValue={listing?.price}
+              disabled={priceLocked}
               className="bg-brand-50/40 placeholder:text-foreground/50"
             />
           </Field>
         ) : null}
         <Field label="Category" error={errors.category}>
-          <FieldSelect name="category" defaultValue="textbooks" options={CATEGORIES} />
+          <FieldSelect name="category" defaultValue={listing?.category ?? "textbooks"} options={CATEGORIES} />
         </Field>
         <Field label="Condition" error={errors.condition}>
-          <FieldSelect name="condition" defaultValue="good" options={CONDITIONS} />
+          <FieldSelect name="condition" defaultValue={listing?.condition ?? "good"} options={CONDITIONS} />
         </Field>
       </div>
 
-      {listingType === "auction" ? <AuctionFields errors={errors} /> : null}
+      {!listing && listingType === "auction" ? <AuctionFields errors={errors} /> : null}
 
-      <Field label="Photo (optional)" error={errors.photo}>
+      <Field label={listing ? "New photo (optional, replaces the current one)" : "Photo (optional)"} error={errors.photo}>
         <FieldInput
           name="photo"
           type="file"
@@ -129,7 +142,9 @@ export function NewListingForm() {
 
       <div className="flex items-center gap-2">
         <Button type="submit" size="lg" disabled={isSubmitting}>
-          {isSubmitting ? "Publishing..." : "Publish listing"}
+          {listing
+            ? (isSubmitting ? "Saving..." : "Save changes")
+            : (isSubmitting ? "Publishing..." : "Publish listing")}
         </Button>
         <Button type="button" variant="ghost" onClick={() => router.back()}>
           Cancel

@@ -12,7 +12,7 @@ interface ListingOwnerActionsProps {
   status: ListingStatus;
 }
 
-/** Shown to a listing's owner in place of "Message seller": close it, relist it, or delete it. */
+/** Shown to a listing's owner in place of "Message seller": close it, relist it, edit it, or delete it. */
 export function ListingOwnerActions({ listingId, listingType, status }: ListingOwnerActionsProps) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
@@ -54,6 +54,9 @@ export function ListingOwnerActions({ listingId, listingType, status }: ListingO
             Make available again
           </Button>
         )}
+        <Button variant="secondary" disabled={isBusy} onClick={() => router.push(`/listings/${listingId}/edit`)}>
+          Edit
+        </Button>
         <Button variant="destructive" disabled={isBusy} onClick={handleDelete}>
           Delete
         </Button>
