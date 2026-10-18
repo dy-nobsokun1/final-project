@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { config } from "../config.js";
-import { lockListingForPayment, markPaid } from "../db/payments.js";
+import { confirmOpenKhqrPayments, lockListingForPayment, markPaid } from "../db/payments.js";
 import { query, withTransaction } from "../db/pool.js";
 import { requireAuth } from "../middleware/auth.js";
 import { isBakongConfigured } from "../services/bakong.js";
@@ -24,6 +24,14 @@ paymentsRouter.get("/config", (req, res) => {
 // POST /api/payments/checkout  { listingId }  (logged in) -> { url } of Stripe's payment page
 paymentsRouter.post("/checkout", requireAuth, async (req, res) => {
   if (!isStripeConfigured) throw new HttpError(503, "Online payment is not set up yet.");
+  // An earlier KHQR for this item may have been paid without being confirmed yet: record it first,
+  // so nobody pays for the item a second time (see confirmOpenKhqrPayments).
+  try {
+    await confirmOpenKhqrPayments(req.body?.listingId);
+  } catch (error) {
+    console.error("[bakong]", error.message);
+    throw new HttpError(503, "Cannot check an earlier KHQR payment for this item right now. Please try again later.");
+  }
 
   const url = await withTransaction(async (client) => {
     // Refuses if the item is already paid for, or someone else is paying right now.
@@ -75,7 +83,8 @@ paymentsRouter.post("/confirm", requireAuth, async (req, res) => {
 export async function stripeWebhook(req, res) {
   const secret = config.stripe.webhookSecret;
   if (!isStripeConfigured || !secret) throw new HttpError(503, "Stripe webhooks are not set up.");
-  const rawBody = req.body.toString("utf8");
+  // Without a JSON body there is no Buffer here; an empty text then fails the signature check (400).
+  const rawBody = Buffer.isBuffer(req.body) ? req.body.toString("utf8") : "";
   if (!isValidWebhookSignature(rawBody, req.get("stripe-signature"), secret)) {
     throw new HttpError(400, "Invalid Stripe signature.");
   }

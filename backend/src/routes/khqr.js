@@ -1,11 +1,12 @@
 import { randomUUID } from "node:crypto";
 import { Router } from "express";
-import { lockListingForPayment, markPaid, PAYMENT_MINUTES } from "../db/payments.js";
+import { confirmOpenKhqrPayments, lockListingForPayment, markPaid, PAYMENT_MINUTES } from "../db/payments.js";
 import { query, withTransaction } from "../db/pool.js";
 import { requireAuth } from "../middleware/auth.js";
 import { checkBakongReachable, isBakongConfigured, isKhqrPaid } from "../services/bakong.js";
 import { HttpError } from "../utils/httpError.js";
 import { buildKhqr, khqrPaysAccount, toAsciiName } from "../utils/khqr.js";
+import { isUuid } from "../utils/validation.js";
 
 // KHQR payments: the buyer scans a QR with any Cambodian banking app, and the money goes straight
 // to the seller's own Bakong account. UniSwap never holds it: we only ask Bakong whether the QR
@@ -26,13 +27,22 @@ khqrRouter.post("/", requireAuth, async (req, res) => {
   if (!isBakongConfigured) throw new HttpError(503, "KHQR payment is not set up yet.");
   const listingId = req.body?.listingId; // req.body is undefined when no JSON body was sent
   if (typeof listingId !== "string" || !listingId) throw new HttpError(400, "Say which listing to pay for (listingId).");
-  // A QR only makes sense if we can see it being paid. Asked before the transaction below, so no
-  // listing stays locked while we wait for Bakong.
+  if (!isUuid(listingId)) throw new HttpError(404, "Listing not found."); // before asking Bakong anything
+
+  // Asked before the transaction below, so no listing stays locked while we wait for Bakong:
+  // - an earlier QR for this item may have been paid without being confirmed yet (e.g. Bakong was
+  //   down). Recording it first means nobody can pay for the item a second time.
+  // - a QR only makes sense if we can see it being paid, so Bakong must be answering right now.
+  let recorded;
   try {
+    recorded = await confirmOpenKhqrPayments(listingId);
     await checkBakongReachable();
   } catch (error) {
     console.error("[bakong]", error.message);
     throw new HttpError(503, "KHQR payment is unavailable right now because UniSwap cannot reach Bakong. Please try again later.");
+  }
+  if (recorded.some((payment) => payment.buyer_id === req.userId && payment.status === "paid")) {
+    throw new HttpError(409, "Your earlier KHQR payment for this item went through, so it is yours. Refresh the page to see it.");
   }
 
   const payment = await withTransaction(async (client) => {
@@ -105,10 +115,20 @@ khqrRouter.get("/:id", requireAuth, async (req, res) => {
     if (!marked) throw new HttpError(404, "Payment not found."); // its listing was deleted meanwhile
     return res.json({ status: marked.status });
   }
-  // Not paid, and the item went another way meanwhile (the seller marked it sold or traded, or
-  // someone else paid): "unavailable" takes the QR off the buyer's screen so they do not pay it.
-  const { rows: [listing] } = await query("SELECT status FROM listings WHERE id = $1", [payment.listing_id]);
-  if (!listing) throw new HttpError(404, "Payment not found."); // its listing was deleted meanwhile
-  if (listing.status === "sold" || listing.status === "traded") return res.json({ status: "unavailable" });
+  // Not paid, as far as Bakong knew a moment ago. Read everything again in one go: this same
+  // payment may have been recorded meanwhile (by the background check, or a second tab).
+  const { rows: [latest] } = await query(
+    `SELECT p.status, l.status AS listing_status, u.bakong_account_id
+     FROM payments p JOIN listings l ON l.id = p.listing_id JOIN users u ON u.id = l.user_id
+     WHERE p.id = $1`,
+    [payment.id],
+  );
+  if (!latest) throw new HttpError(404, "Payment not found."); // its listing was deleted meanwhile
+  if (latest.status !== "pending") return res.json({ status: latest.status });
+  // "unavailable" takes the QR off the buyer's screen so they do not pay it: the item went another
+  // way (sold or traded), or the seller changed or removed the Bakong account this QR pays.
+  const isGone = latest.listing_status === "sold" || latest.listing_status === "traded";
+  const paysCurrentAccount = Boolean(latest.bakong_account_id) && khqrPaysAccount(payment.khqr, latest.bakong_account_id);
+  if (isGone || !paysCurrentAccount) return res.json({ status: "unavailable" });
   res.json({ status: payment.is_expired ? "expired" : "pending" });
 });

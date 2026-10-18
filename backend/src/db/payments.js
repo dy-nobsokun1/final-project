@@ -1,6 +1,8 @@
+import { isBakongConfigured, isKhqrPaid } from "../services/bakong.js";
 import { HttpError } from "../utils/httpError.js";
 import { notifyLatePayment, notifyPaid } from "../utils/notify.js";
 import { amountToPay } from "../utils/payments.js";
+import { isUuid } from "../utils/validation.js";
 import { LISTING_SELECT } from "./listings.js";
 import { query, withTransaction } from "./pool.js";
 
@@ -8,8 +10,9 @@ import { query, withTransaction } from "./pool.js";
 // Stripe's checkout page and our KHQR codes both expire after this long.
 export const PAYMENT_MINUTES = 30;
 
-// How long after a payment starts it may still be confirmed: PAYMENT_MINUTES plus 5 minutes in case
-// Bakong reports a payment made just before its QR expired a little late.
+// How long the once-a-minute check keeps asking Bakong about a new QR: PAYMENT_MINUTES plus 5 minutes
+// in case a payment made just before the QR expired is reported a little late. After that,
+// RECHECK_HOURS (below) applies.
 export const CONFIRM_MINUTES = PAYMENT_MINUTES + 5;
 
 /**
@@ -96,4 +99,27 @@ export async function findOpenKhqrPayments({ includeOlder = false } = {}) {
     [includeOlder ? RECHECK_HOURS * 60 : CONFIRM_MINUTES],
   );
   return rows;
+}
+
+/**
+ * Asks Bakong about every unconfirmed KHQR for one listing from the last RECHECK_HOURS, and records
+ * the ones that were paid. Called before anything that assumes nobody has paid yet: issuing a new QR
+ * or card checkout, and the owner marking the item sold. Otherwise a payment whose confirmation was
+ * held up (e.g. Bakong was down) could be overtaken by a second sale. Throws if Bakong does not
+ * answer. Returns the payments it recorded (each with buyer_id and its new status).
+ */
+export async function confirmOpenKhqrPayments(listingId) {
+  if (!isBakongConfigured || !isUuid(listingId)) return []; // a bad id finds nothing; the caller says 404
+  const { rows } = await query(
+    `SELECT id, khqr FROM payments
+     WHERE listing_id = $1 AND method = 'khqr' AND status = 'pending' AND created_at > now() - make_interval(mins => $2)`,
+    [listingId, RECHECK_HOURS * 60],
+  );
+  const recorded = [];
+  for (const payment of rows) {
+    if (!(await isKhqrPaid(payment.khqr))) continue;
+    const marked = await markPaid(payment.id);
+    if (marked) recorded.push(marked);
+  }
+  return recorded;
 }

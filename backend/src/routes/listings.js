@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { buildBrowseQuery, findListingById } from "../db/listings.js";
-import { RECHECK_HOURS } from "../db/payments.js";
+import { confirmOpenKhqrPayments, RECHECK_HOURS } from "../db/payments.js";
 import { query, withTransaction } from "../db/pool.js";
 import { requireAuth } from "../middleware/auth.js";
 import { HttpError } from "../utils/httpError.js";
@@ -86,6 +86,12 @@ listingsRouter.patch("/:id", requireAuth, async (req, res) => {
       throw new HttpError(409, "People have already bid, so the type, price and auction settings are locked.");
     }
   }
+  // A seller who saw a KHQR payment arrive in their bank app may mark the item sold before UniSwap
+  // confirmed it (e.g. Bakong was down). Record such payments first, so the buyer's payment counts
+  // as the sale instead of becoming a refund. If Bakong cannot be asked, the seller is not blocked.
+  if ((changes.status === "sold" || changes.status === "traded") && listing.status !== changes.status) {
+    await confirmOpenKhqrPayments(listing.id).catch((error) => console.error("[bakong]", error.message));
+  }
   // A listing someone paid for online stays with that sale: its payment and reviews point at that
   // buyer, and nobody could pay for it online again. Selling it again means a new listing.
   if (changes.status === "active" && listing.status !== "active") {
@@ -132,8 +138,8 @@ listingsRouter.delete("/:id", requireAuth, async (req, res) => {
     const { rows: reviews } = await client.query("SELECT 1 FROM reviews WHERE listing_id = $1 LIMIT 1", [req.params.id]);
     if (reviews.length) throw new HttpError(409, "People have reviewed this deal, so the listing cannot be deleted.");
 
-    // An unconfirmed payment may still be confirmed for RECHECK_HOURS (see server.js), plus a minute
-    // so a check that is still waiting for Bakong cannot lose its payment to a delete.
+    // An unconfirmed payment may still be confirmed for RECHECK_HOURS (see server.js). The extra
+    // minute makes it unlikely that a check still waiting for Bakong loses its payment to a delete.
     const { rows: payments } = await client.query(
       `SELECT status, ceil(extract(epoch FROM created_at + make_interval(mins => $2) - now()) / 60)::int AS minutes_left
        FROM payments
@@ -145,8 +151,8 @@ listingsRouter.delete("/:id", requireAuth, async (req, res) => {
     }
     if (payments.length) {
       const minutes = Math.max(...payments.map((payment) => payment.minutes_left));
-      const plural = (count, unit) => `${count} ${unit}${count === 1 ? "" : "s"}`;
-      const wait = minutes > 60 ? plural(Math.ceil(minutes / 60), "hour") : plural(minutes, "minute");
+      const plural = (count, unit) => (count ? `${count} ${unit}${count === 1 ? "" : "s"}` : "");
+      const wait = [plural(Math.floor(minutes / 60), "hour"), plural(minutes % 60, "minute")].filter(Boolean).join(" and ");
       throw new HttpError(409, `A payment for this listing has not been confirmed yet, so it cannot be deleted for another ${wait}. Mark it reserved to take it off the browse page meanwhile.`);
     }
 

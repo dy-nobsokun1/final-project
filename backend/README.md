@@ -247,10 +247,10 @@ Send JSON. Routes marked 🔒 need the header `Authorization: Bearer <token>` (t
 | GET | `/api/users/:id/reviews` | `{ reviews, averageRating, reviewCount }`: reviews the user received, newest first |
 | GET | `/api/payments/config` | `{ enabled, khqr }`: whether card and KHQR payments are switched on |
 | POST 🔒 | `/api/payments/checkout` | `{ listingId }` → `{ url }` of Stripe's payment page |
-| POST 🔒 | `/api/payments/confirm` | `{ sessionId }` → `{ status: "paid" \| "pending" }`, checked with Stripe |
+| POST 🔒 | `/api/payments/confirm` | `{ sessionId }` → `{ status: "paid" \| "pending" \| "refund_due" }`, checked with Stripe |
 | POST | `/api/payments/webhook` | Called by Stripe only, with a signature check |
-| POST 🔒 | `/api/payments/khqr` | `{ listingId }` → `{ paymentId, qr, amount, expiresAt }`. Asking again within 30 minutes returns the same QR. `400` if the seller has no Bakong account. `503` if Bakong cannot be reached right now (no QR is shown that could not be confirmed) |
-| GET 🔒 | `/api/payments/khqr/:id` | Buyer only → `{ status: "paid" \| "pending" \| "expired" \| "refund_due" \| "unavailable" }`, checked with Bakong. `refund_due`: paid after the item was already sold. `unavailable`: not paid, and the item has been sold or traded another way, so the QR should not be paid |
+| POST 🔒 | `/api/payments/khqr` | `{ listingId }` → `{ paymentId, qr, amount, expiresAt }`. Asking again within 30 minutes returns the same QR, as long as it still pays the seller's current Bakong account. First records any earlier QR for the item that was paid but not yet confirmed: `409` if it was this buyer's. `400` if the seller has no Bakong account. `503` if Bakong cannot be reached right now (no QR is shown that could not be confirmed) |
+| GET 🔒 | `/api/payments/khqr/:id` | Buyer only → `{ status: "paid" \| "pending" \| "expired" \| "refund_due" \| "unavailable" }`, checked with Bakong. `refund_due`: paid after the item was already sold. `unavailable`: not paid, and the item has been sold or traded another way, or the seller changed the Bakong account this QR pays, so the QR should not be paid |
 | GET 🔒 | `/api/users/me/telegram` | `{ enabled, connected }` |
 | POST 🔒 | `/api/users/me/telegram` | `{ link }`: one-time link that opens the bot |
 | DELETE 🔒 | `/api/users/me/telegram` | Disconnect Telegram |

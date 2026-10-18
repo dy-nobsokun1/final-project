@@ -96,7 +96,9 @@ Its log: `/tmp/uniswap-cloud-setup.log`. Use the `implement_backend` branch.
   (now keyed by payment id). That check covers QRs up to `CONFIRM_MINUTES` (35) old; at start-up and
   every 15 minutes it also re-checks unconfirmed ones up to `RECHECK_HOURS` (24) old. Before showing
   a QR, `POST /api/payments/khqr` calls `checkBakongReachable()` and answers 503 if Bakong does not
-  answer, so nobody can pay a QR that could not be confirmed. `payments.method` is `stripe` or `khqr`. A payment confirmed after the
+  answer, so nobody can pay a QR that could not be confirmed. `confirmOpenKhqrPayments(listingId)`
+  (`db/payments.js`) asks Bakong about a listing's unconfirmed QRs and records the paid ones; it
+  runs before a new QR or card checkout and before the owner marks the item sold or traded. `payments.method` is `stripe` or `khqr`. A payment confirmed after the
   item was already sold becomes `refund_due` (not `paid`); the listing is untouched and both people
   are told the seller must refund (`notifyLatePayment`). Bakong only accepts Cambodian
   IPs, so it does not work from Render. Token in `BAKONG_TOKEN`, expires 13 Jan 2027.

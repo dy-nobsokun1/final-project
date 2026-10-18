@@ -85,6 +85,54 @@ test("an unpaid QR expires after 30 minutes, and the buyer can then get a new on
   assert.notEqual((await startKhqr(buyer, listing)).body.paymentId, paymentId);
 });
 
+test("a paid QR whose confirmation was held up is recorded before anyone else can pay", async () => {
+  const [seller, first, second] = await Promise.all([api.createUser(), api.createUser(), api.createUser()]);
+  await api.request("PATCH", "/api/users/me", { token: seller.token, body: { bakongAccountId: "seller@aclb" } });
+  const heldUp = async () => {
+    const listing = await api.createListing(seller);
+    const { paymentId, qr } = (await startKhqr(first, listing)).body;
+    // Paid an hour ago while Bakong could not confirm it: the QR has expired, so nothing locks it.
+    await api.sql("UPDATE payments SET created_at = now() - interval '1 hour' WHERE id = $1", [paymentId]);
+    paidMd5s.add(khqrMd5(qr));
+    return { listing, paymentId };
+  };
+  const paymentStatus = async (id) => (await api.sql("SELECT status FROM payments WHERE id = $1", [id]))[0].status;
+
+  // Someone else trying to pay finds the item already bought.
+  const a = await heldUp();
+  assert.equal((await startKhqr(second, a.listing)).status, 400);
+  assert.equal(await paymentStatus(a.paymentId), "paid");
+
+  // The first buyer asking for a new QR is told their payment went through.
+  const b = await heldUp();
+  const again = await startKhqr(first, b.listing);
+  assert.equal(again.status, 409);
+  assert.match(again.body.error, /went through/);
+
+  // The seller marking it sold (they saw the money arrive) makes it this buyer's sale, not a refund.
+  const c = await heldUp();
+  await api.request("PATCH", `/api/listings/${c.listing.id}`, { token: seller.token, body: { status: "sold" } });
+  assert.equal(await paymentStatus(c.paymentId), "paid");
+});
+
+test("an open QR is withdrawn once the seller changes the Bakong account it pays", async () => {
+  const [seller, buyer] = await Promise.all([api.createUser(), api.createUser()]);
+  await api.request("PATCH", "/api/users/me", { token: seller.token, body: { bakongAccountId: "typo@aclb" } });
+  const { paymentId } = (await startKhqr(buyer, await api.createListing(seller))).body;
+  await api.request("PATCH", "/api/users/me", { token: seller.token, body: { bakongAccountId: "fixed@aclb" } });
+  assert.deepEqual((await khqrStatus(buyer, paymentId)).body, { status: "unavailable" });
+});
+
+test("a malformed listing id is refused without asking Bakong", async () => {
+  const buyer = await api.createUser();
+  bakong.isDown = true; // would turn any Bakong call into a 503
+  try {
+    assert.equal((await api.request("POST", "/api/payments/khqr", { token: buyer.token, body: { listingId: "x" } })).status, 404);
+  } finally {
+    bakong.isDown = false;
+  }
+});
+
 test("asking for a QR without saying which listing is a 400, not a server error", async () => {
   const buyer = await api.createUser();
   const noBody = await api.request("POST", "/api/payments/khqr", { token: buyer.token });
@@ -167,9 +215,9 @@ test("a listing cannot be deleted while a payment for it may still be confirmed,
   const { paymentId } = (await startKhqr(buyer, open)).body;
   const age = (interval) => api.sql("UPDATE payments SET created_at = now() - $2::interval WHERE id = $1", [paymentId, interval]);
   await age("31 minutes"); // the QR itself has expired, but a held-up confirmation can still arrive
-  assert.match((await deleteListing(open)).body.error, /for another 24 hours/);
+  assert.match((await deleteListing(open)).body.error, /for another 23 hours and 30 minutes\./);
   await age("23 hours 50 minutes");
-  assert.match((await deleteListing(open)).body.error, /for another 11 minutes/);
+  assert.match((await deleteListing(open)).body.error, /for another 11 minutes\./);
   await age("24 hours 2 minutes"); // nothing can confirm it any more: an abandoned QR
   assert.equal((await deleteListing(open)).status, 204);
 

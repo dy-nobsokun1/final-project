@@ -42,7 +42,7 @@ Putting it online (Supabase, Render, Vercel, Cloudinary, Stripe, Telegram): [`DE
 
 - `npm test` (in `backend/`): 23 unit tests for validation, the search query, the Stripe and
   Cloudinary helpers, and the KHQR builder (checked against the National Bank's own library).
-- `npm run test:api` (in `backend/`): 46 tests that send real requests to the running API, covering
+- `npm run test:api` (in `backend/`): 49 tests that send real requests to the running API, covering
   sign-up and verification, owner-only changes, messaging, simultaneous bids, card and KHQR
   payments, reviews, and refusing to delete a listing whose payments or reviews must stay.
   They use a separate test database (see [Testing](backend/README.md#testing)).
@@ -68,6 +68,12 @@ Putting it online (Supabase, Render, Vercel, Cloudinary, Stripe, Telegram): [`DE
 - **An item paid for online cannot be made available again.** Its payment and reviews belong to
   that sale. If the deal falls through, the seller refunds the buyer and posts the item as a new
   listing.
+- **A listing with an unconfirmed payment cannot be deleted for 24 hours.** UniSwap keeps checking
+  such a payment with Bakong for 24 hours, and deleting the listing would erase it. Meanwhile the
+  seller can mark the item reserved to take it off the browse page.
+- **A KHQR payment confirmed more than 24 hours late is not recorded automatically.** That only
+  happens if Bakong cannot be reached for a whole day. The money still reached the seller's account,
+  so the buyer and seller settle it between them.
 
 ## Run locally
 

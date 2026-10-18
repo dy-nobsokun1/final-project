@@ -49,17 +49,20 @@ const KHQR_CHECK_MS = 60 * 1000;
 const OLDER_KHQR_EVERY = 15;
 let khqrRuns = 0;
 let isKhqrCheckRunning = false;
+let didLastKhqrCheckFail = false; // then the next run re-checks older QRs too, once Bakong is back
 
 async function runKhqrCheck() {
   if (isKhqrCheckRunning) return; // the previous run is still waiting for Bakong
   isKhqrCheckRunning = true;
   try {
-    const includeOlder = khqrRuns % OLDER_KHQR_EVERY === 0;
+    const includeOlder = didLastKhqrCheckFail || khqrRuns % OLDER_KHQR_EVERY === 0;
     khqrRuns += 1;
+    didLastKhqrCheckFail = false;
     for (const payment of await findOpenKhqrPayments({ includeOlder })) {
       try {
         if (await isKhqrPaid(payment.khqr)) await markPaid(payment.id);
       } catch (error) {
+        didLastKhqrCheckFail = true;
         console.error(`[bakong] could not check payment ${payment.id}:`, error.message);
       }
     }

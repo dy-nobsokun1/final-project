@@ -103,6 +103,13 @@ export function isBakongAccountId(value) {
   return typeof value === "string" && value.length <= 32 && BAKONG_ACCOUNT_ID.test(value);
 }
 
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** True for a UUID, the form of every id in the database. Lets a route refuse a bad id early. */
+export function isUuid(value) {
+  return typeof value === "string" && UUID.test(value);
+}
+
 /** Longest review comment, in characters. */
 export const MAX_REVIEW_LENGTH = 1000;
 
