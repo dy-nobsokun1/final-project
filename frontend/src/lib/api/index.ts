@@ -169,16 +169,18 @@ export async function getMyListings(): Promise<ListingWithSeller[]> {
 
 /**
  * Ids of the listings the signed-in user saved, so pages can fill in the hearts on their cards.
- * Empty when signed out.
+ * Empty when signed out, and when the API answers with an error: then the hearts show as not saved
+ * instead of the whole page failing (e.g. an API that is a version behind), and a click still works.
  */
 export async function getSavedListingIds(): Promise<string[]> {
   if (!(await cookies()).has(TOKEN_COOKIE)) return [];
   try {
     return (await apiFetch<{ listingIds: string[] }>("/api/users/me/saved/ids")).listingIds;
   } catch (error) {
-    // An expired or invalid token just means "signed out", as in getCurrentUser.
-    if (error instanceof ApiError && error.status === 401) return [];
-    throw error;
+    if (!(error instanceof ApiError)) throw error;
+    // An expired or invalid token (401) just means "signed out", as in getCurrentUser.
+    if (error.status !== 401) console.error(`[saved] could not load the saved listing ids (${error.status}): ${error.message}`);
+    return [];
   }
 }
 

@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { uploadListingPhoto, type ActionResult } from "@/lib/api/actions";
-import { MAX_LISTING_PHOTOS, MAX_PHOTO_BYTES } from "@/lib/constants";
+import { MAX_LISTING_PHOTOS, MAX_PHOTO_BYTES, MAX_PHOTO_MB } from "@/lib/constants";
 
 /** One photo on the listing form. `url` is null while it is still uploading. */
 export interface FormPhoto {
@@ -25,14 +25,17 @@ export function useListingPhotos(initialUrls: string[]) {
   async function addFiles(files: File[]) {
     const room = Math.max(MAX_LISTING_PHOTOS - items.length, 0);
     const problems: string[] = [];
-    if (files.length > room) {
-      problems.push(`Only ${MAX_LISTING_PHOTOS} photos fit, so ${files.length - room} were left out.`);
-    }
-    const accepted = files.slice(0, room).filter((file) => {
+    // Files that are too large are dropped first, so they never take the place of a photo that fits.
+    const small = files.filter((file) => {
       if (file.size <= MAX_PHOTO_BYTES) return true;
-      problems.push(`${file.name} is over 5 MB.`);
+      problems.push(`${file.name} is over ${MAX_PHOTO_MB} MB.`);
       return false;
     });
+    if (small.length > room) {
+      const left = small.length - room;
+      problems.push(`Only ${MAX_LISTING_PHOTOS} photos fit, so ${left} ${left === 1 ? "photo was" : "photos were"} left out.`);
+    }
+    const accepted = small.slice(0, room);
     setErrors(problems);
 
     const added = accepted.map((file) => ({ file, key: `new-${nextKey.current++}` }));

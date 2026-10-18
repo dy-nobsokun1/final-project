@@ -53,8 +53,12 @@ export const PRICE_MAX = 1000;
 
 /** Most photos a listing can have; the first is the cover. Matches MAX_PHOTOS in backend/src/utils/validation.js. */
 export const MAX_LISTING_PHOTOS = 6;
-/** Largest photo the API accepts (MAX_SIZE in backend/src/routes/uploads.js). */
-export const MAX_PHOTO_BYTES = 5 * 1024 * 1024;
+/**
+ * Largest photo the form uploads, in MB. The API accepts 5 MB (MAX_SIZE in backend/src/routes/uploads.js),
+ * but each photo goes through a Server Action, and on Vercel a request over 4.5 MB is refused.
+ */
+export const MAX_PHOTO_MB = 4;
+export const MAX_PHOTO_BYTES = MAX_PHOTO_MB * 1024 * 1024;
 
 /** Maps a condition value to its human label; falls back to the raw value. */
 export function conditionLabel(value: ListingCondition): string {

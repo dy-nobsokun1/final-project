@@ -131,11 +131,14 @@ A wanted post (`listingType: "buy_request"`) is matched with items for sale, tra
 (see [`src/db/matches.js`](src/db/matches.js)). Its `price` is the student's budget. An item matches when:
 
 1. **Searching for the wanted post's title would find it,** using search's full-text test and its typo
-   test (`wordMatchSql` in `src/db/listings.js`) but not the part-of-a-word test: a match can send an
-   email, and "pen" inside "open" is no reason to send one. A leading "Looking for", "Searching for",
-   "Anyone selling", "Want to buy", "Wanted", "Want", "WTB", "Needed", "Need" or "Buying" (with any
-   `:`, `.`, `-` or spaces after it) is dropped first, so "Looking for a TI-84" searches for "a TI-84".
-   A title with no real words left ("Wanted:" alone, or only words like "the") matches nothing.
+   test (`wordMatchSql` in `src/db/listings.js`) but not the part-of-a-word test, because a match can
+   send an email. A leading "Looking for", "Searching for", "Anyone selling", "Want to buy", "Wanted",
+   "Want", "WTB", "Needed", "Need" or "Buying" (with any `:`, `.`, `-` or spaces after it) is dropped
+   first, then a leading "a", "an", "the" or "some", so "Looking for a TI-84" searches for "TI-84".
+   (Kept, the "a" would let "Looking for a TV" match "Selling a TI-84 calculator" through the typo
+   test.) A title with no real words left ("Wanted:" alone, or only words like "the") matches nothing.
+   The typo test can still match inside a longer word when the term is short: a wanted "pen" matches
+   an "Open-box" item (score 0.5).
 2. **Same category,** unless either one is "Other".
 3. **Within budget:** the item's price (an auction's starting bid) is at most the wanted post's price.
    A budget of 0 means any price.
@@ -143,8 +146,8 @@ A wanted post (`listingType: "buy_request"`) is matched with items for sale, tra
    verified students' wanted posts are matched to an item, because those students get alerts.
 
 - **Alerts:** when an item is **posted** (`POST /api/listings`), the students whose active wanted
-  posts it matches get an email (and a Telegram message, if connected): at most 10 wanted posts per new
-  listing, best matches first, and one message per student, about their best-matching post. Edits,
+  posts it matches get an email (and a Telegram message, if connected): one message per student, about
+  their best-matching post, and at most 10 students per new listing, best matches first. Edits,
   relisting and type changes never alert, so fixing a typo or changing the price does not email
   anyone again. Alerts are sent in the background and never slow down or break posting. A student
   stops them by marking the wanted post sold or reserved, or deleting it.
@@ -158,8 +161,9 @@ No schema change: existing databases need no upgrade.
 A listing has up to 6 photos (`imageUrls`); the first one is the cover.
 
 - Each photo is uploaded on its own (`POST /api/uploads`, max 5 MB) as soon as it is picked on the
-  form, because a Server Action may carry at most 6 MB (`frontend/next.config.ts`). Saving the
-  listing only sends the URLs.
+  form, because a Server Action may carry at most 6 MB (`frontend/next.config.ts`), and on Vercel any
+  request over 4.5 MB is refused. So the form takes photos of up to 4 MB (`MAX_PHOTO_MB` in
+  `frontend/src/lib/constants.ts`). Saving the listing only sends the URLs.
 - `validateListing` refuses more than 6 photos, the same photo twice, and any new URL that is not one
   of our own uploads: it must start with `uploadedPhotoPrefix` (in `src/routes/uploads.js`: the
   Cloudinary folder once Cloudinary is set up, else this API's `/uploads/`), then a generated file
@@ -333,7 +337,7 @@ verification email):
 | Auction ended with bids | The winner ("You won…") and the seller ("ended at $…") | Their chat with each other |
 | Password changed or reset | The account owner | `/forgot-password`, in case it was not them |
 | Price drop | Everyone who saved the item, when its owner lowers the price of an available item for sale | The listing |
-| A new listing matches your wanted post | Students whose active wanted post it matches (at most 10 wanted posts per new listing, one message per student, verified accounts only). Only when the listing is posted, never when it is edited | The new listing |
+| A new listing matches your wanted post | Students whose active wanted post it matches (one message per student, at most 10 students per new listing, verified accounts only). Only when the listing is posted, never when it is edited | The new listing |
 | New or changed offer | The seller | The listing |
 | Offer accepted | The buyer | The listing |
 | Offer declined (by the seller, or because the item was sold or reserved another way, or is no longer for sale) | The buyer | The listing |

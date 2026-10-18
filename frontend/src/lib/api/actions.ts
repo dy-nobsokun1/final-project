@@ -183,7 +183,8 @@ export async function createListing(formData: FormData): Promise<ActionResult & 
 
 /**
  * Uploads one listing photo as soon as it is picked on the form. One photo per call keeps each
- * request under the 6 MB Server Action limit (next.config.ts).
+ * request small: the form sends at most MAX_PHOTO_MB (4 MB) per photo, under Vercel's 4.5 MB
+ * request limit and the 6 MB Server Action limit (next.config.ts).
  */
 export async function uploadListingPhoto(formData: FormData): Promise<ActionResult & { url?: string }> {
   const photo = formData.get("photo");

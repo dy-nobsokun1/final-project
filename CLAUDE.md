@@ -124,13 +124,14 @@ Its log: `/tmp/uniswap-cloud-setup.log`. Use the `implement_backend` branch.
 - **Saved listings:** `saved_listings` (PK `user_id` + `listing_id`, cascades), `routes/saved.js`. Pages get
   hearts via `GET /api/users/me/saved/ids` and pass `savedIds` to `ListingGrid` (leave it out for grids of
   your own listings). `save_count` is in `LISTING_SELECT`; test helpers `skippedEmails()` and `waitFor()`
-  read notifications.
+  read notifications. `getSavedListingIds` answers `[]` on any API error, so a failed lookup only
+  empties the hearts.
 - **Wanted matches:** `db/matches.js` (`findItemsForWanted` / `findWantedForItem` share one rule built on
   `wordMatchSql` from `db/listings.js`: search's full-text and typo tests on the wanted title minus a
-  leading "Looking for"/"Wanted:", same category or Other, item price within the wanted post's price as
-  budget (0 = any), both active, different owners, verified posters); `GET /api/listings/:id/matches`
-  (the owner's listing page shows it in `ListingMatches`); alerts from POST only (`notifyWantedMatches`,
-  at most 10 posts, one message per student).
+  leading "Looking for"/"Wanted:" and then a leading article, same category or Other, item price within
+  the wanted post's price as budget (0 = any), both active, different owners, verified posters);
+  `GET /api/listings/:id/matches` (the owner's listing page shows it in `ListingMatches`); alerts from
+  POST only (`notifyWantedMatches`: one message per student, at most 10 students).
 - **Offers:** `routes/offers.js` + `db/offers.js`, table `offers` (pending/accepted/declined/withdrawn/
   cancelled); sale listings only, below the asking price; one pending offer per buyer (a new one
   withdraws the old); every offer change locks the listing row. Accept sets `listings.reserved_for` +
@@ -146,7 +147,8 @@ Its log: `/tmp/uniswap-cloud-setup.log`. Use the `implement_backend` branch.
   uses. While it is set, the type is locked and DELETE is refused.
 - **Messaging:** there is no conversations table. A thread is all messages between two users about
   one listing (this follows the ER diagram).
-- **Uploads:** `POST /api/uploads` with raw image bytes (max 5 MB), saved to `backend/uploads/`
+- **Uploads:** `POST /api/uploads` with raw image bytes (max 5 MB; the form takes 4 MB, `MAX_PHOTO_MB`,
+  because Vercel refuses requests over 4.5 MB), saved to `backend/uploads/`
   (git-ignored). Must move to Cloudinary before deploying, because Render wipes the disk on restart.
   A listing has up to 6 photos; `imageUrls[0]` is the cover. `validateListing` enforces `MAX_PHOTOS`,
   no duplicates and own-upload URLs only (`uploadedPhotoPrefix` in `routes/uploads.js`), but keeps

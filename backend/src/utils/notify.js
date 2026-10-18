@@ -258,7 +258,7 @@ export function notifyPriceDrop({ listingId, title, oldPrice, newPrice }) {
   });
 }
 
-// Most wanted posts one new listing can alert (best matches first), so one post can never email everyone.
+// Most students one new listing can alert (best matches first), so one post can never email everyone.
 const MAX_MATCH_ALERTS = 10;
 
 /**
@@ -267,9 +267,12 @@ const MAX_MATCH_ALERTS = 10;
  */
 export function notifyWantedMatches({ id: listingId, title }) {
   inBackground(async () => {
-    const posts = await findWantedForItem(listingId, MAX_MATCH_ALERTS);
+    // Every matching post (no limit), so one student with many matching posts cannot use up the
+    // places of other students: the cap below counts students, not posts.
+    const posts = await findWantedForItem(listingId, null);
     const alerted = new Set();
     for (const post of posts) {
+      if (alerted.size >= MAX_MATCH_ALERTS) break;
       // One message per student, about their best match (the posts come best first).
       if (alerted.has(post.user_id)) continue;
       alerted.add(post.user_id);

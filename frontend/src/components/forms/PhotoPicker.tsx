@@ -3,7 +3,7 @@
 import { Field, FieldInput } from "@/components/forms/Field";
 import { PhotoThumb } from "@/components/forms/PhotoThumb";
 import type { ListingPhotos } from "@/hooks/use-listing-photos";
-import { MAX_LISTING_PHOTOS } from "@/lib/constants";
+import { MAX_LISTING_PHOTOS, MAX_PHOTO_MB } from "@/lib/constants";
 
 /**
  * Picks, orders and removes a listing's photos (from useListingPhotos). Each file is uploaded as
@@ -21,7 +21,7 @@ export function PhotoPicker({ photos, error }: { photos: ListingPhotos; error?: 
 
   return (
     <Field
-      label={`Photos (optional, up to ${MAX_LISTING_PHOTOS}; the first is the cover)`}
+      label={`Photos (optional, up to ${MAX_LISTING_PHOTOS}, at most ${MAX_PHOTO_MB} MB each; the first is the cover)`}
       error={[...photos.errors, error].filter(Boolean).join(" ") || undefined}
     >
       <FieldInput

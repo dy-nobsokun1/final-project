@@ -66,6 +66,9 @@ soon as it wakes. Bids are always refused after the end time.
 4. Deploy. Copy the site's URL, then go back to Render → **Environment** → set `FRONTEND_ORIGIN`
    to it. Render redeploys. Links in emails and Telegram now point to the live site.
 
+Vercel refuses any request over 4.5 MB, and listing photos are uploaded through the website, so the
+listing form only takes photos of up to 4 MB (`MAX_PHOTO_MB`), although the API itself accepts 5 MB.
+
 ## 5. Card payments: Stripe (test mode)
 
 1. Create a Stripe account. Test mode works straight away, and you never need to activate live payments.

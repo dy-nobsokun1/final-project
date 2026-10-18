@@ -9,7 +9,8 @@ after(() => api.close());
 const { findWantedForItem } = await import("../../src/db/matches.js");
 
 // Test files run at the same time against one database, so every title here uses a made-up word
-// ("Zorbex", "Vantrix", "Quellum", "Morvane") that no other test file posts.
+// ("Zorbex", "Vantrix", "Quellum", "Morvane", "Brixolo") that no other test file posts, except the
+// TV test, which checks only that two listings of its own do not match.
 
 const sortedIds = (listings) => listings.map((listing) => listing.id).sort();
 
@@ -99,6 +100,32 @@ test("posting an item alerts each matching student once, in the background; want
   assert.equal(alertsTo(bob.email).length, 1);
   assert.equal(alertsTo(seller.email).length, 0);
   assert.equal(alertsTo(carol.email).length, 0);
+});
+
+test("a leading article goes with the Looking for: 'Looking for a TV' matches a TV, not 'Selling a TI-84 calculator'", async () => {
+  // Negative checks on these two ids only, since other test files may post TVs at the same time.
+  const [poster, seller] = await Promise.all([api.createUser(), api.createUser()]);
+  const post = await wanted(poster, { title: "Looking for a TV", category: "electronics", price: 0 });
+  const calculator = await api.createListing(seller, { title: "Selling a TI-84 calculator", category: "electronics", price: 40 });
+  const tv = await api.createListing(seller, { title: "Samsung TV, 32 inch", category: "electronics", price: 60 });
+
+  const found = (await matches(post.id)).body.listings.map((listing) => listing.id);
+  assert.ok(found.includes(tv.id));
+  assert.equal(found.includes(calculator.id), false);
+  const wantedForCalculator = (await matches(calculator.id)).body.listings.map((listing) => listing.id);
+  assert.equal(wantedForCalculator.includes(post.id), false);
+});
+
+test("the alert cap counts students, not wanted posts: one student's many posts do not crowd out another", async () => {
+  const [busy, other, seller] = await Promise.all([api.createUser(), api.createUser(), api.createUser()]);
+  const post = { title: "Brixolo kettle", category: "other", price: 0 };
+  // Equally good matches come newest first, so the other student's older post ranks below all ten.
+  await wanted(other, post);
+  for (let i = 0; i < 10; i += 1) await wanted(busy, post);
+
+  await api.createListing(seller, { title: "Brixolo kettle", category: "other", price: 10 });
+  await waitFor(() => alertsTo(other.email).length);
+  assert.equal(alertsTo(busy.email).length, 1);
 });
 
 test("matches: 404 for unknown or malformed ids, empty once the listing is not active, and a title with no real words matches nothing", async () => {

@@ -59,6 +59,8 @@ export default async function ListingDetailPage({ params, searchParams }: PagePr
   const myOffer = canOffer ? await getMyOffer(listing.id) : null;
   // Mirrors the API's rule (backend/src/utils/payments.js). Null when this viewer cannot pay online.
   const payAmount = payableAmount(listing, user?.id ?? null, myOffer);
+  // A wanted post's owner is looking to buy, so the contact button names them instead of "seller".
+  const contactName = listing.listingType === "buy_request" ? listing.seller.name : null;
 
   return (
     <div className="flex flex-col gap-6">
@@ -118,7 +120,7 @@ export default async function ListingDetailPage({ params, searchParams }: PagePr
               href={user ? `/messages/${conversationId(listing.id, listing.seller.id)}` : "/login"}
               className="rounded-lg bg-primary px-4 py-2.5 text-center text-sm font-medium text-primary-foreground hover:bg-primary/85"
             >
-              {user ? "Message seller" : "Sign in to message the seller"}
+              {user ? `Message ${contactName ?? "seller"}` : `Sign in to message ${contactName ?? "the seller"}`}
             </Link>
           )}
 
