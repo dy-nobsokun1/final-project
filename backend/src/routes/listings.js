@@ -1,10 +1,11 @@
 import { Router } from "express";
 import { buildBrowseQuery, findListingById } from "../db/listings.js";
+import { findItemsForWanted, findWantedForItem } from "../db/matches.js";
 import { confirmOpenKhqrPayments, RECHECK_HOURS } from "../db/payments.js";
 import { query, withTransaction } from "../db/pool.js";
 import { requireAuth } from "../middleware/auth.js";
 import { HttpError } from "../utils/httpError.js";
-import { notifyPriceDrop } from "../utils/notify.js";
+import { notifyPriceDrop, notifyWantedMatches } from "../utils/notify.js";
 import { toListing } from "../utils/serializers.js";
 import { parseListingFilters, validateListing } from "../utils/validation.js";
 import { uploadedPhotoPrefix } from "./uploads.js";
@@ -28,6 +29,9 @@ const WRITABLE_COLUMNS = {
 
 // Once someone has bid, these would change the deal under the bidders' feet, so they are locked.
 const LOCKED_AFTER_BIDS = ["listingType", "price", "auctionEndsAt", "minIncrement"];
+
+// How many matches a listing page shows.
+const MATCHES_SHOWN = 4;
 
 function assertValid(body, options) {
   const errors = validateListing(body, options);
@@ -56,6 +60,18 @@ listingsRouter.get("/:id", async (req, res) => {
   res.json({ listing: toListing(listing) });
 });
 
+// GET /api/listings/:id/matches -> { listings }: for a wanted post, active items that match it; for any
+// other listing, the active wanted posts it matches (db/matches.js). Best first, at most MATCHES_SHOWN.
+listingsRouter.get("/:id/matches", async (req, res) => {
+  const listing = await findListingById(req.params.id);
+  if (!listing) throw new HttpError(404, "Listing not found.");
+  if (listing.status !== "active") return res.json({ listings: [] });
+  const rows = listing.listing_type === "buy_request"
+    ? await findItemsForWanted(listing.id, MATCHES_SHOWN)
+    : await findWantedForItem(listing.id, MATCHES_SHOWN);
+  res.json({ listings: rows.map(toListing) });
+});
+
 // POST /api/listings  (logged in)
 listingsRouter.post("/", requireAuth, async (req, res) => {
   assertValid(req.body, { photoPrefix: uploadedPhotoPrefix(req) });
@@ -70,7 +86,11 @@ listingsRouter.post("/", requireAuth, async (req, res) => {
       // An end time only means something for an auction.
       b.listingType === "auction" ? b.auctionEndsAt : null, b.minIncrement ?? 1],
   );
-  res.status(201).json({ listing: toListing(await findListingById(rows[0].id)) });
+  const listing = await findListingById(rows[0].id);
+  res.status(201).json({ listing: toListing(listing) });
+  // After answering, in the background: tell students whose wanted posts this new item matches.
+  // Only here, never in PATCH, so fixing a typo or changing the price does not email them again.
+  if (listing.listing_type !== "buy_request") notifyWantedMatches(listing);
 });
 
 // PATCH /api/listings/:id  (owner only) -- any subset of fields, e.g. { "status": "sold" }

@@ -118,6 +118,17 @@ export async function getBids(listingId: string): Promise<Bid[]> {
   return result?.bids ?? [];
 }
 
+/**
+ * For a wanted post: active items that match it. For any other listing: active wanted posts it
+ * matches. Best match first, at most 4 (backend/src/db/matches.js). Empty if the listing is gone.
+ */
+export async function getListingMatches(listingId: string): Promise<ListingWithSeller[]> {
+  const result = await orNull(
+    apiFetch<{ listings: ListingWithSeller[] }>(`/api/listings/${encodeURIComponent(listingId)}/matches`),
+  );
+  return result?.listings ?? [];
+}
+
 export async function getListingById(id: string): Promise<ListingWithSeller | null> {
   const result = await orNull(
     apiFetch<{ listing: ListingWithSeller }>(`/api/listings/${encodeURIComponent(id)}`),

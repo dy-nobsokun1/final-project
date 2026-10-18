@@ -14,11 +14,13 @@ export function formatPrice(amount: number): string {
 }
 
 /**
- * Price text for a listing: giveaways are free, a trade with no price is a straight swap,
- * and an auction shows its highest bid (or the starting bid before anyone has bid).
+ * Price text for a listing: giveaways are free, a wanted post shows its budget, a trade with no
+ * price is a straight swap, and an auction shows its highest bid (or the starting bid before anyone has bid).
  */
 export function formatListingPrice(listing: Pick<Listing, "listingType" | "price" | "auction">): string {
   if (listing.listingType === "giveaway") return "Free";
+  // A wanted post's price is its budget (matching only suggests items within it); 0 means any price.
+  if (listing.listingType === "buy_request") return listing.price > 0 ? `Up to ${formatPrice(listing.price)}` : "Any price";
   if (listing.auction) return formatPrice(listing.auction.highestBid ?? listing.price);
   if (listing.listingType === "trade" && listing.price === 0) return "Trade";
   return formatPrice(listing.price);

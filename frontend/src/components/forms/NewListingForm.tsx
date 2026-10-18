@@ -9,7 +9,7 @@ import { PhotoPicker } from "@/components/forms/PhotoPicker";
 import { Button } from "@/components/ui/button";
 import { useListingPhotos } from "@/hooks/use-listing-photos";
 import { createListing, updateListing } from "@/lib/api/actions";
-import { CATEGORIES, CONDITIONS, LISTING_TYPES } from "@/lib/constants";
+import { CATEGORIES, CONDITIONS, LISTING_TYPES, priceFieldLabel } from "@/lib/constants";
 import type { Listing } from "@/types";
 
 /** Matches the API's longest auction (MAX_AUCTION_DAYS in backend/src/utils/validation.js). */
@@ -109,7 +109,7 @@ export function NewListingForm({ listing }: { listing?: Listing }) {
         {/* A giveaway has no price, so the field is hidden and the price is sent as 0.
             A disabled input is left out of the form data, so a locked price is not sent. */}
         {listingType !== "giveaway" ? (
-          <Field label={listingType === "auction" ? "Starting bid (USD)" : "Price (USD)"} error={errors.price}>
+          <Field label={priceFieldLabel(listingType)} error={errors.price}>
             <FieldInput
               name="price"
               type="number"

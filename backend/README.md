@@ -44,7 +44,7 @@ backend/
 │   ├── server.js       starts the HTTP server
 │   ├── app.js          Express app: middleware + routes
 │   ├── config.js       reads environment variables
-│   ├── db/             schema.sql, connection pool, shared listing query
+│   ├── db/             schema.sql, connection pool, shared listing query, wanted-post matching
 │   ├── middleware/     requireAuth (JWT), CORS, error handler
 │   ├── routes/         auth, listings, bids, reviews, saved, users, messages, payments, telegram, uploads
 │   └── utils/          validation, password hashing, tokens, JSON serializers, email
@@ -117,6 +117,34 @@ ALTER TABLE listings ADD COLUMN IF NOT EXISTS search_vector TSVECTOR GENERATED A
 ) STORED;
 CREATE INDEX IF NOT EXISTS listings_search_idx ON listings USING GIN (search_vector);
 ```
+
+### Wanted matches
+
+A wanted post (`listingType: "buy_request"`) is matched with items for sale, trade, giveaway or auction
+(see [`src/db/matches.js`](src/db/matches.js)). Its `price` is the student's budget. An item matches when:
+
+1. **Searching for the wanted post's title would find it,** using search's full-text test and its typo
+   test (`wordMatchSql` in `src/db/listings.js`) but not the part-of-a-word test: a match can send an
+   email, and "pen" inside "open" is no reason to send one. A leading "Looking for", "Searching for",
+   "Anyone selling", "Want to buy", "Wanted", "Want", "WTB", "Needed", "Need" or "Buying" (with any
+   `:`, `.`, `-` or spaces after it) is dropped first, so "Looking for a TI-84" searches for "a TI-84".
+   A title with no real words left ("Wanted:" alone, or only words like "the") matches nothing.
+2. **Same category,** unless either one is "Other".
+3. **Within budget:** the item's price (an auction's starting bid) is at most the wanted post's price.
+   A budget of 0 means any price.
+4. **Both are active,** an auction has not ended, and they belong to different students. Only
+   verified students' wanted posts are matched to an item, because those students get alerts.
+
+- **Alerts:** when an item is **posted** (`POST /api/listings`), the students whose active wanted
+  posts it matches get an email (and a Telegram message, if connected): at most 10 wanted posts per new
+  listing, best matches first, and one message per student, about their best-matching post. Edits,
+  relisting and type changes never alert, so fixing a typo or changing the price does not email
+  anyone again. Alerts are sent in the background and never slow down or break posting. A student
+  stops them by marking the wanted post sold or reserved, or deleting it.
+- **On the listing page,** the owner sees up to 4 matches (`GET /api/listings/:id/matches`): items
+  that match their wanted post, or, for an item, the students looking for something like it.
+
+No schema change: existing databases need no upgrade.
 
 ### Photos
 
@@ -243,6 +271,7 @@ verification email):
 | Auction ended with bids | The winner ("You won…") and the seller ("ended at $…") | Their chat with each other |
 | Password changed or reset | The account owner | `/forgot-password`, in case it was not them |
 | Price drop | Everyone who saved the item, when its owner lowers the price of an available item for sale | The listing |
+| A new listing matches your wanted post | Students whose active wanted post it matches (at most 10 wanted posts per new listing, one message per student, verified accounts only). Only when the listing is posted, never when it is edited | The new listing |
 
 Notifications never block or break the request that caused them: if email is not configured they
 are skipped with a log line, and send failures are logged, not returned to the user. User-written
@@ -332,11 +361,12 @@ A token issued before the account's last password change or reset is refused (40
 | GET 🔒 | `/api/auth/me` | The logged-in user |
 | GET | `/api/listings` | Browse and search (ranked, typo tolerant; see Search above). Query: `query`, `category`, `condition`, `type`, `minPrice`, `maxPrice`, `status` (default `active`) |
 | GET | `/api/listings/:id` | One listing, with seller info |
-| POST 🔒 | `/api/listings` | `{ title, category, condition, description?, listingType?, price?, cashTopup?, imageUrls?, auctionEndsAt?, minIncrement? }`. `imageUrls`: up to 6 URLs from `POST /api/uploads`, the first is the cover (see Photos above). `auctionEndsAt` (ISO date) is required for an auction |
+| POST 🔒 | `/api/listings` | `{ title, category, condition, description?, listingType?, price?, cashTopup?, imageUrls?, auctionEndsAt?, minIncrement? }`. `imageUrls`: up to 6 URLs from `POST /api/uploads`, the first is the cover (see Photos above). `auctionEndsAt` (ISO date) is required for an auction. For a wanted post, `price` is the budget (0 = any price). A new item alerts students whose wanted posts it matches (see Wanted matches above) |
 | PATCH 🔒 | `/api/listings/:id` | Owner only. Any subset of fields, e.g. `{ "status": "sold" }`. `imageUrls` replaces the whole list; photos the listing already has may stay. `409` for `{ "status": "active" }` on an item someone paid for online (post it as a new listing instead). Lowering the price of an available item for sale alerts everyone who saved it |
 | DELETE 🔒 | `/api/listings/:id` | Owner only. `409` if it is sold or traded, has reviews, someone paid for it, or a payment for it is unconfirmed and less than 24 hours old (it may still be confirmed): deleting would also erase its payments and reviews |
 | GET | `/api/listings/:id/bids` | An auction's bids, highest first, with bidder name |
 | POST 🔒 | `/api/listings/:id/bids` | `{ amount }`. Place a bid (see Auctions above) |
+| GET | `/api/listings/:id/matches` | `{ listings }`, at most 4, best first: for a wanted post, active items that match it; for any other listing, active wanted posts it matches (see Wanted matches above). Empty when the listing is not active |
 | GET | `/api/listings/:id/reviews` | Reviews about this listing's deal (at most one per person) |
 | GET 🔒 | `/api/listings/:id/reviews/can-review?revieweeId=` | `{ allowed, reason }`: whether you may review that person for this listing |
 | POST 🔒 | `/api/listings/:id/reviews` | `{ revieweeId, rating, comment? }`. 1-5 stars, once the listing is sold or traded (see Reviews above) |
@@ -377,7 +407,8 @@ Errors always look like `{ "error": "message", "details": { "field": "message" }
   and sends it real HTTP requests, so routes, SQL and database rules are tested together: sign-up and
   verification, password reset and change, owner-only changes, messaging, bidding (including five
   bids at the same moment), payments with Stripe switched off, KHQR payments (with Bakong replaced by
-  a fake), reviews, saved listings (including who gets a price-drop alert), and listing photo rules.
+  a fake), reviews, saved listings (including who gets a price-drop alert), listing photo rules, and
+  wanted-post matching and alerts.
 
 The API tests need their own database, because `test/api/reset-db.js` wipes it before every run.
 Create it once, then put its URL in `.env` as `TEST_DATABASE_URL` (see `.env.example`):

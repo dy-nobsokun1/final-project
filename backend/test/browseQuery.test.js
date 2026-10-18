@@ -4,7 +4,7 @@ import { test } from "node:test";
 // db/listings.js loads config.js, which requires these. No database connection is made.
 process.env.DATABASE_URL ??= "postgres://unused";
 process.env.JWT_SECRET ??= "unused";
-const { buildBrowseQuery } = await import("../src/db/listings.js");
+const { buildBrowseQuery, wordMatchSql } = await import("../src/db/listings.js");
 
 test("without a search term, listings are newest first", () => {
   const { text, params } = buildBrowseQuery({ status: "active" });
@@ -34,4 +34,16 @@ test("a search term is ranked and typo tolerant, and stays a parameter", () => {
 test("% and _ in a search term are literal characters, not wildcards", () => {
   const { params } = buildBrowseQuery({ status: "active", query: "50%_off" });
   assert.equal(params[2], "%50\\%\\_off%");
+});
+
+test("wanted-post matching uses search's full-text and typo tests, but not part-of-a-word", () => {
+  const { matches, rank } = wordMatchSql("n", "t.term");
+  assert.ok(matches.includes("n.search_vector @@ websearch_to_tsquery('english', t.term)"));
+  assert.ok(matches.includes("word_similarity(t.term, n.title) >= 0.5"));
+  assert.doesNotMatch(matches, /ILIKE/);
+  assert.ok(rank.startsWith("ts_rank(n.search_vector"));
+  // The search box still finds part of a word ("mac" in "MacBook").
+  const { text } = buildBrowseQuery({ status: "active", query: "mac" });
+  assert.ok(text.includes("l.title ILIKE $3"));
+  assert.ok(text.includes("l.description ILIKE $3"));
 });

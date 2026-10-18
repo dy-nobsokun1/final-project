@@ -92,7 +92,8 @@ Its log: `/tmp/uniswap-cloud-setup.log`. Use the `implement_backend` branch.
   end time and raise are locked (409). Every listing in the API has `auction: null | {...}`.
 - **Notifications:** `utils/notify.js` (fire-and-forget, never throws). New message (first unread
   per thread only), outbid, auction won/ended, password changed, price drop on a saved listing
-  (`notifyPriceDrop`, called from PATCH in `routes/listings.js`). Add new events there; Telegram can reuse it later.
+  (`notifyPriceDrop`, called from PATCH in `routes/listings.js`), new listing matching a wanted post
+  (create only, not edits). Add new events there; Telegram can reuse it later.
 - **Optional services** (`backend/src/services/`, plain `fetch`, no packages), each off until its env
   keys are set: Stripe Checkout **test mode only** (`routes/payments.js`; `markPaid` is idempotent and
   marks the item sold; the webhook needs the raw body, so it is mounted before `express.json` in
@@ -123,6 +124,12 @@ Its log: `/tmp/uniswap-cloud-setup.log`. Use the `implement_backend` branch.
   hearts via `GET /api/users/me/saved/ids` and pass `savedIds` to `ListingGrid` (leave it out for grids of
   your own listings). `save_count` is in `LISTING_SELECT`; test helpers `skippedEmails()` and `waitFor()`
   read notifications.
+- **Wanted matches:** `db/matches.js` (`findItemsForWanted` / `findWantedForItem` share one rule built on
+  `wordMatchSql` from `db/listings.js`: search's full-text and typo tests on the wanted title minus a
+  leading "Looking for"/"Wanted:", same category or Other, item price within the wanted post's price as
+  budget (0 = any), both active, different owners, verified posters); `GET /api/listings/:id/matches`
+  (the owner's listing page shows it in `ListingMatches`); alerts from POST only (`notifyWantedMatches`,
+  at most 10 posts, one message per student).
 - **Messaging:** there is no conversations table. A thread is all messages between two users about
   one listing (this follows the ER diagram).
 - **Uploads:** `POST /api/uploads` with raw image bytes (max 5 MB), saved to `backend/uploads/`
@@ -139,7 +146,7 @@ Its log: `/tmp/uniswap-cloud-setup.log`. Use the `implement_backend` branch.
 ## Status and roadmap
 
 Done (week 5): auth with email verification, forgot/change password, listings CRUD with five types (incl. auction) and statuses,
-ranked typo-tolerant search and filters, auctions/bidding, saved listings with price-drop alerts, up to 6 photos per listing, email + Telegram notifications, Stripe test payments, KHQR payments via Bakong, Cloudinary photos, profiles, per-listing messaging, photo
+ranked typo-tolerant search and filters, auctions/bidding, saved listings with price-drop alerts, up to 6 photos per listing, wanted match alerts, email + Telegram notifications, Stripe test payments, KHQR payments via Bakong, Cloudinary photos, profiles, per-listing messaging, photo
 uploads; frontend fully wired to the API. Reviews and ratings once a listing is sold or traded,
 between the owner and the buyer: whoever paid online, else the auction winner, else (in-person
 deals) someone who chatted with the owner both ways (`reviewBlocker` in `routes/reviews.js`). API tests in `backend/test/api/`.

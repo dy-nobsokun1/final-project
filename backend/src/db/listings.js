@@ -30,6 +30,23 @@ function escapeLike(value) {
   return value.replace(/[\\%_]/g, (char) => `\\${char}`);
 }
 
+/**
+ * Search's two word tests, as SQL for listing `alias` and a search `term`. The term is SQL too: a $n
+ * parameter when a student searches, or a wanted post's title in db/matches.js, so both follow one rule.
+ * Both arguments come from our own code, never from a request.
+ *  - full-text search on title, description and category, ignoring word endings ("textbook" finds the "textbooks" category)
+ *  - a typo of a title word: "calculs" finds "Calculus" (pg_trgm)
+ * `rank` scores a match: the full-text score (title words count more) plus how closely the title matches.
+ */
+export function wordMatchSql(alias, term) {
+  return {
+    matches: `(${alias}.search_vector @@ websearch_to_tsquery('english', ${term})
+      OR word_similarity(${term}, ${alias}.title) >= ${TYPO_THRESHOLD})`,
+    rank: `ts_rank(${alias}.search_vector, websearch_to_tsquery('english', ${term}))
+               + word_similarity(${term}, ${alias}.title)`,
+  };
+}
+
 export async function findListingById(id) {
   const { rows } = await query(`${LISTING_SELECT} WHERE l.id = $1`, [id]);
   return rows[0] ?? null;
@@ -59,19 +76,12 @@ export function buildBrowseQuery(filters) {
   let orderBy = "l.created_at DESC";
   if (filters.query) {
     params.push(filters.query, `%${escapeLike(filters.query)}%`);
-    const q = `$${params.length - 1}`;
+    const words = wordMatchSql("l", `$${params.length - 1}`);
     const pattern = `$${params.length}`;
-    // A listing matches if any of these is true:
-    //  1. full-text search on title, description and category, ignoring word endings
-    //     ("textbook" finds the "textbooks" category)
-    //  2. part of a word: "mac" finds "MacBook"
-    //  3. a typo of a title word: "calculs" finds "Calculus" (pg_trgm)
-    conditions.push(`(l.search_vector @@ websearch_to_tsquery('english', ${q})
-      OR l.title ILIKE ${pattern} OR l.description ILIKE ${pattern}
-      OR word_similarity(${q}, l.title) >= ${TYPO_THRESHOLD})`);
-    // Rank: full-text score (title words count more) plus how closely the title matches.
-    orderBy = `ts_rank(l.search_vector, websearch_to_tsquery('english', ${q}))
-               + word_similarity(${q}, l.title) DESC, l.created_at DESC`;
+    // A listing matches if either word test does (see wordMatchSql), or the term is part of a word in
+    // its title or description: "mac" finds "MacBook".
+    conditions.push(`(${words.matches} OR l.title ILIKE ${pattern} OR l.description ILIKE ${pattern})`);
+    orderBy = `${words.rank} DESC, l.created_at DESC`;
   }
 
   return {

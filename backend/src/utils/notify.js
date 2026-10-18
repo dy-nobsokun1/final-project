@@ -1,4 +1,5 @@
 import { config } from "../config.js";
+import { findWantedForItem } from "../db/matches.js";
 import { query } from "../db/pool.js";
 import { isTelegramConfigured, sendTelegramMessage } from "../services/telegram.js";
 import { escapeHtml, isEmailConfigured, sendEmail } from "./email.js";
@@ -248,6 +249,37 @@ export function notifyPriceDrop({ listingId, title, oldPrice, newPrice }) {
           "You get this because you saved it. Remove it from your Saved page to stop these alerts."],
         link: appLink(`/listings/${listingId}`),
         linkLabel: "View the listing",
+      });
+    }
+  });
+}
+
+// Most wanted posts one new listing can alert (best matches first), so one post can never email everyone.
+const MAX_MATCH_ALERTS = 10;
+
+/**
+ * A new item matches students' wanted posts (db/matches.js): tell each student once, about their
+ * best-matching post. Called only when a listing is created (routes/listings.js), never on edits.
+ */
+export function notifyWantedMatches({ id: listingId, title }) {
+  inBackground(async () => {
+    const posts = await findWantedForItem(listingId, MAX_MATCH_ALERTS);
+    const alerted = new Set();
+    for (const post of posts) {
+      // One message per student, about their best match (the posts come best first).
+      if (alerted.has(post.user_id)) continue;
+      alerted.add(post.user_id);
+      const student = await findUser(post.user_id);
+      if (!student) continue;
+      // One at a time, so ten alerts do not hit the mail server at once.
+      await deliver({
+        to: student,
+        subject: `Someone just listed something you're looking for: "${title}"`,
+        lines: [`Hi ${student.name},`,
+          `"${title}" was just posted on UniSwap. It matches your wanted post "${post.title}".`,
+          "Found what you need? Mark your wanted post as sold or reserved (or delete it) and these alerts stop."],
+        link: appLink(`/listings/${listingId}`),
+        linkLabel: "See the listing",
       });
     }
   });

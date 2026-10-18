@@ -1,10 +1,12 @@
 import { ArrowLeft, MapPin } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { Suspense } from "react";
 import { AuctionPanel } from "@/components/listings/AuctionPanel";
 import { KhqrPayButton } from "@/components/listings/KhqrPayButton";
 import { ListingGallery } from "@/components/listings/ListingGallery";
 import { ListingHeading } from "@/components/listings/ListingHeading";
+import { ListingMatches } from "@/components/listings/ListingMatches";
 import { ListingOwnerActions } from "@/components/listings/ListingOwnerActions";
 import { PayButton } from "@/components/listings/PayButton";
 import { UserAvatar } from "@/components/profile/UserAvatar";
@@ -142,6 +144,7 @@ export default async function ListingDetailPage({ params, searchParams }: PagePr
           </div>
         </div>
       </div>
+      {isOwner ? <Suspense fallback={null}><ListingMatches listing={listing} /></Suspense> : null}
     </div>
   );
 }

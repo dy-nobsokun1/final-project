@@ -71,6 +71,13 @@ export function listingTypeLabel(value: ListingType): string {
   return LISTING_TYPES.find((item) => item.value === value)?.label ?? value;
 }
 
+/** Label of the listing form's price field: an auction's starting bid, or a wanted post's budget. */
+export function priceFieldLabel(listingType: string): string {
+  if (listingType === "auction") return "Starting bid (USD)";
+  if (listingType === "buy_request") return "Budget (USD, 0 for any price)";
+  return "Price (USD)";
+}
+
 export function statusLabel(value: ListingStatus): string {
   return STATUS_LABELS[value] ?? value;
 }

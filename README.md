@@ -25,6 +25,9 @@ Putting it online (Supabase, Render, Vercel, Cloudinary, Stripe, Telegram): [`DE
 - **Saved listings:** the heart on another student's listing saves it to a Saved page, where sold
   items stay, marked sold. A listing shows how many students saved it, never who. When the owner
   lowers the price of an item for sale, everyone who saved it is told.
+- **Wanted alerts:** when someone posts an item that matches your wanted post (same search rules,
+  same category, within your budget), you get an email (and a Telegram message, if connected), and
+  your wanted post's page lists matching items. Sellers see who is looking for something like theirs.
 - **Search:** best matches first. It finds partial words and typos ("calculas" finds "Calculus"),
   with filters for category, condition, type and price.
 - **Auctions:** a starting price, a minimum raise and an end time. Two bids placed at the same
@@ -34,7 +37,8 @@ Putting it online (Supabase, Render, Vercel, Cloudinary, Stripe, Telegram): [`DE
 - **Reviews and ratings:** once a listing is sold or traded, its owner and the person they chatted
   with can rate each other (1 to 5 stars and a comment). Profiles show the average and every review.
 - **Notifications:** by email, and by Telegram for students who connect it in Settings: new
-  messages, being outbid, auction results, payments, password changes and price drops on items you saved.
+  messages, being outbid, auction results, payments, password changes, price drops on items you saved,
+  and a new listing that matches your wanted post.
 - **Card payments (Stripe test mode):** pay for an item for sale or an auction you won. Live keys
   are refused, so no real card can ever be charged.
 - **KHQR payments (Bakong):** sellers add their Bakong account in Settings; buyers scan a QR with
@@ -45,13 +49,13 @@ Putting it online (Supabase, Render, Vercel, Cloudinary, Stripe, Telegram): [`DE
 
 ### Tested
 
-- `npm test` (in `backend/`): 26 unit tests for validation (including the photo rules), the search
-  query, the Stripe and Cloudinary helpers, and the KHQR builder (checked against the National
-  Bank's own library).
-- `npm run test:api` (in `backend/`): 69 tests that send real requests to the running API, covering
+- `npm test` (in `backend/`): 27 unit tests for validation (including the photo rules), the search
+  query and wanted-post matching, the Stripe and Cloudinary helpers, and the KHQR builder (checked
+  against the National Bank's own library).
+- `npm run test:api` (in `backend/`): 73 tests that send real requests to the running API, covering
   sign-up and verification, password reset and change, owner-only changes, messaging, simultaneous
-  bids, card and KHQR payments, reviews, saved listings, listing photos, and refusing to delete a
-  listing whose payments or reviews must stay.
+  bids, card and KHQR payments, reviews, saved listings, listing photos, wanted-post matching and
+  alerts, and refusing to delete a listing whose payments or reviews must stay.
   They use a separate test database (see [Testing](backend/README.md#testing)).
 
 ### Not done yet
