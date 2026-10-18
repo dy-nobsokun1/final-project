@@ -1,15 +1,21 @@
 "use client";
 
 import { QrCode } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { KhqrCode } from "@/components/listings/KhqrCode";
 import { Button } from "@/components/ui/button";
-import { checkKhqrPayment, startKhqrPayment } from "@/lib/api/actions";
-import type { KhqrPayment } from "@/types";
+import { useKhqrStatus } from "@/hooks/use-khqr-status";
+import { startKhqrPayment } from "@/lib/api/actions";
+import type { KhqrPayment, KhqrStatus } from "@/types";
 
-/** How often the open QR asks whether Bakong has seen the payment. */
-const CHECK_EVERY_MS = 5000;
+/** What to tell the buyer once the QR is off the screen. */
+const STATUS_NOTES: Partial<Record<KhqrStatus, string>> = {
+  expired:
+    "This QR has expired. If you paid it before then, do not pay again: UniSwap keeps checking with Bakong and will let you know.",
+  unavailable: "This item has just been sold, so its QR was withdrawn. Do not pay it.",
+  paid: "Payment received. Loading...",
+  refund_due: "Payment received. Loading...",
+};
 
 interface KhqrPayButtonProps {
   listingId: string;
@@ -19,27 +25,15 @@ interface KhqrPayButtonProps {
 }
 
 /**
- * "Pay with KHQR": shows a QR that pays the seller's own Bakong account, then checks every few
- * seconds until the API (which asks Bakong) says it was paid. Real money: there is no test mode.
+ * "Pay with KHQR": shows a QR that pays the seller's own Bakong account, and keeps asking the API
+ * (which asks Bakong) whether it was paid. Real money: there is no test mode.
  */
 export function KhqrPayButton({ listingId, priceLabel, sellerName }: KhqrPayButtonProps) {
-  const router = useRouter();
   const [payment, setPayment] = useState<KhqrPayment | null>(null);
-  const [isExpired, setIsExpired] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isBusy, setIsBusy] = useState(false);
-
-  useEffect(() => {
-    if (!payment || isExpired) return;
-    const timer = setInterval(async () => {
-      const status = await checkKhqrPayment(payment.paymentId);
-      // The listing page confirms the payment again with the API and shows the success message.
-      // A late payment ("refund_due") goes there too: that page explains the refund.
-      if (status === "paid" || status === "refund_due") router.replace(`/listings/${listingId}?khqr=${payment.paymentId}`);
-      if (status === "expired") setIsExpired(true);
-    }, CHECK_EVERY_MS);
-    return () => clearInterval(timer);
-  }, [payment, isExpired, listingId, router]);
+  const { status, isFailing } = useKhqrStatus(listingId, payment);
+  const canStart = payment === null || status === "expired";
 
   async function handleClick() {
     setIsBusy(true);
@@ -51,21 +45,21 @@ export function KhqrPayButton({ listingId, priceLabel, sellerName }: KhqrPayButt
       return;
     }
     setPayment(result.payment);
-    setIsExpired(false);
   }
 
   return (
     <div className="flex flex-col gap-1.5">
-      {payment && !isExpired ? (
-        <KhqrCode payment={payment} sellerName={sellerName} />
-      ) : (
+      {payment && status === "pending" ? (
+        <KhqrCode payment={payment} sellerName={sellerName} isFailing={isFailing} />
+      ) : null}
+      {canStart ? (
         <Button onClick={handleClick} disabled={isBusy} size="lg">
           <QrCode aria-hidden="true" />
-          {isBusy ? "Creating QR..." : isExpired ? "QR expired: make a new one" : `Pay ${priceLabel} with KHQR`}
+          {isBusy ? "Creating QR..." : status === "expired" ? "Make a new QR" : `Pay ${priceLabel} with KHQR`}
         </Button>
-      )}
-      <p className="text-xs text-muted-foreground">
-        Real money, paid straight to the seller. UniSwap never holds it.
+      ) : null}
+      <p role="status" className="text-xs text-muted-foreground">
+        {(payment ? STATUS_NOTES[status] : null) ?? "Real money, paid straight to the seller. UniSwap never holds it."}
       </p>
       {error ? (
         <p role="alert" className="text-sm text-foreground">
