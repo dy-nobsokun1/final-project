@@ -237,7 +237,7 @@ Send JSON. Routes marked 🔒 need the header `Authorization: Bearer <token>` (t
 | GET | `/api/listings` | Browse and search (ranked, typo tolerant; see Search above). Query: `query`, `category`, `condition`, `type`, `minPrice`, `maxPrice`, `status` (default `active`) |
 | GET | `/api/listings/:id` | One listing, with seller info |
 | POST 🔒 | `/api/listings` | `{ title, category, condition, description?, listingType?, price?, cashTopup?, imageUrls?, auctionEndsAt?, minIncrement? }`. `auctionEndsAt` (ISO date) is required for an auction |
-| PATCH 🔒 | `/api/listings/:id` | Owner only. Any subset of fields, e.g. `{ "status": "sold" }` |
+| PATCH 🔒 | `/api/listings/:id` | Owner only. Any subset of fields, e.g. `{ "status": "sold" }`. `409` for `{ "status": "active" }` on an item someone paid for online (post it as a new listing instead) |
 | DELETE 🔒 | `/api/listings/:id` | Owner only. `409` if it is sold or traded, has reviews, someone paid for it, or a payment for it is unconfirmed and less than 24 hours old (it may still be confirmed): deleting would also erase its payments and reviews |
 | GET | `/api/listings/:id/bids` | An auction's bids, highest first, with bidder name |
 | POST 🔒 | `/api/listings/:id/bids` | `{ amount }`. Place a bid (see Auctions above) |

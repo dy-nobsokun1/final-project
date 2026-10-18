@@ -173,16 +173,32 @@ test("a listing cannot be deleted while a payment for it may still be confirmed,
   await age("24 hours 2 minutes"); // nothing can confirm it any more: an abandoned QR
   assert.equal((await deleteListing(open)).status, 204);
 
-  // Paid, then made available again by the seller: the payment record must still stay.
-  const paid = await api.createListing(seller);
-  const started = (await startKhqr(buyer, paid)).body;
+  // Sold in person while the buyer's QR was open, the buyer pays anyway (refund_due), and the seller
+  // makes the item available again: that payment record must still stay.
+  const late = await api.createListing(seller);
+  const started = (await startKhqr(buyer, late)).body;
+  await api.request("PATCH", `/api/listings/${late.id}`, { token: seller.token, body: { status: "sold" } });
   paidMd5s.add(khqrMd5(started.qr));
-  assert.deepEqual((await khqrStatus(buyer, started.paymentId)).body, { status: "paid" });
-  const relisted = await api.request("PATCH", `/api/listings/${paid.id}`, { token: seller.token, body: { status: "active" } });
+  assert.deepEqual((await khqrStatus(buyer, started.paymentId)).body, { status: "refund_due" });
+  const relisted = await api.request("PATCH", `/api/listings/${late.id}`, { token: seller.token, body: { status: "active" } });
   assert.equal(relisted.body.listing.status, "active");
-  assert.equal((await deleteListing(paid)).status, 409);
-  assert.deepEqual(await api.sql("SELECT status FROM payments WHERE id = $1", [started.paymentId]), [{ status: "paid" }]);
-  // A late payment the seller must refund is kept as well.
-  await api.sql("UPDATE payments SET status = 'refund_due' WHERE id = $1", [started.paymentId]);
-  assert.equal((await deleteListing(paid)).status, 409);
+  assert.equal((await deleteListing(late)).status, 409);
+  assert.deepEqual(await api.sql("SELECT status FROM payments WHERE id = $1", [started.paymentId]), [{ status: "refund_due" }]);
+});
+
+test("an item paid for online cannot be made available again; it is sold again as a new listing", async () => {
+  const [seller, buyer] = await Promise.all([api.createUser(), api.createUser()]);
+  await api.request("PATCH", "/api/users/me", { token: seller.token, body: { bakongAccountId: "seller@aclb" } });
+  const listing = await api.createListing(seller);
+  const { paymentId, qr } = (await startKhqr(buyer, listing)).body;
+  paidMd5s.add(khqrMd5(qr));
+  assert.deepEqual((await khqrStatus(buyer, paymentId)).body, { status: "paid" });
+
+  const relist = await api.request("PATCH", `/api/listings/${listing.id}`, { token: seller.token, body: { status: "active" } });
+  assert.equal(relist.status, 409);
+  assert.match(relist.body.error, /post the item again as a new listing/);
+  assert.equal((await api.request("GET", `/api/listings/${listing.id}`)).body.listing.status, "sold");
+  // Other edits still work.
+  const edited = await api.request("PATCH", `/api/listings/${listing.id}`, { token: seller.token, body: { description: "Sold, thanks!" } });
+  assert.equal(edited.status, 200);
 });

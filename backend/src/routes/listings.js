@@ -86,6 +86,14 @@ listingsRouter.patch("/:id", requireAuth, async (req, res) => {
       throw new HttpError(409, "People have already bid, so the type, price and auction settings are locked.");
     }
   }
+  // A listing someone paid for online stays with that sale: its payment and reviews point at that
+  // buyer, and nobody could pay for it online again. Selling it again means a new listing.
+  if (changes.status === "active" && listing.status !== "active") {
+    const { rows: paid } = await query("SELECT 1 FROM payments WHERE listing_id = $1 AND status = 'paid' LIMIT 1", [listing.id]);
+    if (paid.length) {
+      throw new HttpError(409, "Someone paid for this online, so it cannot be made available again. If the deal fell through and you refunded them, post the item again as a new listing.");
+    }
+  }
   const nextType = changes.listingType ?? listing.listing_type;
   if (nextType === "auction" && !(changes.auctionEndsAt ?? listing.auction_ends_at)) {
     throw new HttpError(400, "An auction needs an end date and time.", { auctionEndsAt: "Required for an auction." });

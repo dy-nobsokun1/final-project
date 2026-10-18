@@ -42,7 +42,7 @@ Putting it online (Supabase, Render, Vercel, Cloudinary, Stripe, Telegram): [`DE
 
 - `npm test` (in `backend/`): 23 unit tests for validation, the search query, the Stripe and
   Cloudinary helpers, and the KHQR builder (checked against the National Bank's own library).
-- `npm run test:api` (in `backend/`): 45 tests that send real requests to the running API, covering
+- `npm run test:api` (in `backend/`): 46 tests that send real requests to the running API, covering
   sign-up and verification, owner-only changes, messaging, simultaneous bids, card and KHQR
   payments, reviews, and refusing to delete a listing whose payments or reviews must stay.
   They use a separate test database (see [Testing](backend/README.md#testing)).
@@ -55,6 +55,19 @@ Putting it online (Supabase, Render, Vercel, Cloudinary, Stripe, Telegram): [`DE
 - **KHQR on Render:** Bakong only answers Cambodian IP addresses, so KHQR works when the API runs
   in Cambodia (e.g. a laptop for the demo), not on Render.
 - **Possible next steps:** real-time chat, safe meetup spots, and notification settings.
+
+### Known limitations (by design)
+
+- **One buyer pays at a time.** While someone has a card checkout or KHQR open for an item (up to
+  30 minutes), other buyers are told someone is paying. This is what stops two people paying for
+  the same item, but it also means any signed-in student can hold an item for 30 minutes without
+  paying. Every account is a verified `.edu.kh` student, and the item can still be sold in person.
+- **"Mark reserved" does not cancel a payment already in progress.** Whoever pays first buys the
+  item, and both people are told. (Reserved does not record *who* it is reserved for, so cancelling
+  could refund the very buyer the seller meant.)
+- **An item paid for online cannot be made available again.** Its payment and reviews belong to
+  that sale. If the deal falls through, the seller refunds the buyer and posts the item as a new
+  listing.
 
 ## Run locally
 
