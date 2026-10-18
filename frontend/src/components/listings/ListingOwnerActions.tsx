@@ -57,9 +57,12 @@ export function ListingOwnerActions({ listingId, listingType, status }: ListingO
         <Button variant="secondary" disabled={isBusy} onClick={() => router.push(`/listings/${listingId}/edit`)}>
           Edit
         </Button>
-        <Button variant="destructive" disabled={isBusy} onClick={handleDelete}>
-          Delete
-        </Button>
+        {/* The API keeps sold and traded listings as a record of the deal, so they cannot be deleted. */}
+        {status === "sold" || status === "traded" ? null : (
+          <Button variant="destructive" disabled={isBusy} onClick={handleDelete}>
+            Delete
+          </Button>
+        )}
       </div>
       {error ? (
         <p role="alert" className="text-sm text-foreground">

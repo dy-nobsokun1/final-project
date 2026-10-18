@@ -90,8 +90,10 @@ test("a listing cannot be deleted while someone may be paying for it, or once it
   const open = await api.createListing(seller);
   const { paymentId } = (await startKhqr(buyer, open)).body;
   assert.equal((await deleteListing(open)).status, 409);
-  // 35 minutes later nobody can confirm that QR any more, so an abandoned one no longer blocks it.
-  await api.sql("UPDATE payments SET created_at = now() - interval '36 minutes' WHERE id = $1", [paymentId]);
+  // The refusal says how long to wait. After that (35 minutes + 1 minute of slack) an abandoned QR
+  // no longer blocks deleting.
+  assert.match((await deleteListing(open)).body.error, /Try again in 36 minutes/);
+  await api.sql("UPDATE payments SET created_at = now() - interval '37 minutes' WHERE id = $1", [paymentId]);
   assert.equal((await deleteListing(open)).status, 204);
 
   // Paid, then made available again by the seller: the payment record must still stay.

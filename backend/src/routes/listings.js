@@ -118,22 +118,26 @@ listingsRouter.delete("/:id", requireAuth, async (req, res) => {
       "SELECT status FROM listings WHERE id = $1 FOR UPDATE", [req.params.id]);
     if (!listing) throw new HttpError(404, "Listing not found.");
     if (listing.status === "sold" || listing.status === "traded") {
-      throw new HttpError(409, "A sold or traded listing stays on your profile with its reviews, so it cannot be deleted.");
+      throw new HttpError(409, "Sold and traded listings stay on your public profile as a record of the deal, so they cannot be deleted.");
     }
     // Also after "Make available again": its reviews must not disappear with it.
     const { rows: reviews } = await client.query("SELECT 1 FROM reviews WHERE listing_id = $1 LIMIT 1", [req.params.id]);
     if (reviews.length) throw new HttpError(409, "People have reviewed this deal, so the listing cannot be deleted.");
 
+    // One minute more than the background check's window, so a check that is still asking Bakong
+    // about a payment cannot lose it to a delete.
     const { rows: payments } = await client.query(
-      `SELECT status FROM payments
+      `SELECT status, ceil(extract(epoch FROM created_at + make_interval(mins => $2) - now()) / 60)::int AS minutes_left
+       FROM payments
        WHERE listing_id = $1 AND (status <> 'pending' OR created_at > now() - make_interval(mins => $2))`,
-      [req.params.id, CONFIRM_MINUTES],
+      [req.params.id, CONFIRM_MINUTES + 1],
     );
     if (payments.some((payment) => payment.status !== "pending")) {
-      throw new HttpError(409, "Someone has paid for this listing, so it cannot be deleted. Mark it sold instead.");
+      throw new HttpError(409, "Someone has paid for this listing, so it cannot be deleted. Mark it reserved or sold to take it off the browse page.");
     }
     if (payments.length) {
-      throw new HttpError(409, `Someone is paying for this right now, so it cannot be deleted. Try again in ${CONFIRM_MINUTES} minutes.`);
+      const minutes = Math.max(...payments.map((payment) => payment.minutes_left));
+      throw new HttpError(409, `Someone is paying for this right now, so it cannot be deleted. Try again in ${minutes} minute${minutes === 1 ? "" : "s"}.`);
     }
 
     await client.query("DELETE FROM listings WHERE id = $1", [req.params.id]);

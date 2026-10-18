@@ -86,6 +86,7 @@ khqrRouter.get("/:id", requireAuth, async (req, res) => {
   if (paid) {
     const marked = await markPaid(payment.id)
       ?? (await query("SELECT status FROM payments WHERE id = $1", [payment.id])).rows[0];
+    if (!marked) throw new HttpError(404, "Payment not found."); // its listing was deleted meanwhile
     return res.json({ status: marked.status });
   }
   res.json({ status: expiresAt(payment) <= new Date() ? "expired" : "pending" });

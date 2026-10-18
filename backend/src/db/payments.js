@@ -56,6 +56,7 @@ export async function markPaid(paymentId) {
     // the second one sees the first one's "sold".
     const { rows: [listing] } = await client.query(
       "SELECT status FROM listings WHERE id = $1 FOR UPDATE", [pending.listing_id]);
+    if (!listing) return null; // deleted while this call waited for the lock (its payments went with it)
     const isLate = listing.status === "sold" || listing.status === "traded";
 
     const { rows } = await client.query(

@@ -62,6 +62,7 @@ paymentsRouter.post("/confirm", requireAuth, async (req, res) => {
   // null means another call (e.g. the webhook) recorded it a moment ago: read what it decided.
   const payment = await markPaid(rows[0].id)
     ?? (await query("SELECT status FROM payments WHERE id = $1", [rows[0].id])).rows[0];
+  if (!payment) throw new HttpError(404, "Payment not found."); // its listing was deleted meanwhile
   res.json({ status: payment.status });
 });
 
