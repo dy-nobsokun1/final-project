@@ -57,6 +57,13 @@ npx tsc --noEmit
 Demo users (password `password123`): `sokunth@aupp.edu.kh` and `chanrithorn@aupp.edu.kh` are
 verified. `dara@aupp.edu.kh` is **unverified**, so its login returns 403 (useful for testing that flow).
 
+**Cloud sessions** (claude.ai/code, the Claude app): `.claude/settings.json` runs `.claude/cloud-setup.sh`
+at start and resume (it does nothing locally). It installs npm packages, starts the VM's PostgreSQL
+with throwaway `uniswap` + `uniswap_test` databases and demo data, and writes `backend/.env` from
+`.env.example`. Email, Stripe, Cloudinary, Telegram and Bakong stay off there: never put real keys in
+the cloud environment (anyone using it can read them), and Bakong only answers Cambodian IPs anyway.
+Its log: `/tmp/uniswap-cloud-setup.log`. Use the `implement_backend` branch.
+
 ## How things work (non-obvious)
 
 - **Auth:** sign-up accepts only `.edu.kh` and returns `{ email, verificationRequired: true }` with
