@@ -73,6 +73,17 @@ export function SettingsForm() {
               }}
             />
           </Field>
+          {/* Each card saves itself, so it is clear this button does not save the Bakong account below. */}
+          <div className="flex flex-wrap items-center gap-3">
+            <Button size="sm" onClick={handleSave} disabled={isSaving}>
+              {isSaving ? "Saving..." : "Save profile"}
+            </Button>
+            {status ? (
+              <p role="status" className="text-sm text-foreground">
+                {status}
+              </p>
+            ) : null}
+          </div>
         </CardContent>
       </Card>
 
@@ -95,9 +106,6 @@ export function SettingsForm() {
       </Card>
 
       <div className="flex items-center gap-3">
-        <Button onClick={handleSave} disabled={isSaving}>
-          {isSaving ? "Saving..." : "Save changes"}
-        </Button>
         <Button
           variant="destructive"
           onClick={() => void signOut()}
@@ -105,11 +113,6 @@ export function SettingsForm() {
         >
           Sign out
         </Button>
-        {status ? (
-          <p role="status" className="text-sm text-foreground">
-            {status}
-          </p>
-        ) : null}
       </div>
     </div>
   );
