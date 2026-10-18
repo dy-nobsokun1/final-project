@@ -5,7 +5,7 @@ import { after, test } from "node:test";
 // fetch is replaced below.
 process.env.DATABASE_URL ??= "postgres://unused";
 process.env.JWT_SECRET ??= "unused";
-const { buildKhqr, crc16, khqrMd5, toAsciiName } = await import("../src/utils/khqr.js");
+const { buildKhqr, crc16, khqrMd5, khqrPaysAccount, toAsciiName } = await import("../src/utils/khqr.js");
 const { checkBakongReachable, isKhqrPaid } = await import("../src/services/bakong.js");
 const { isBakongAccountId } = await import("../src/utils/validation.js");
 
@@ -29,6 +29,11 @@ test("a KHQR matches, character for character, the National Bank's own library (
   assert.equal(qr(12.5), "00020101021229160012sokunth@aclb520459995303840540512.505802KH5907Sokunth"
     + "6010Phnom Penh62310116UNISWAP-1a2b3c4d0307UniSwap993400131792500000000011317925018000006304F7E5");
   assert.equal(khqrMd5(qr(12.5)), "89b45f48f9b58a4cfb55242173301f70");
+
+  // Which account a stored QR pays: the exact ID, not one that merely starts the same way.
+  assert.equal(khqrPaysAccount(qr(25), "sokunth@aclb"), true);
+  assert.equal(khqrPaysAccount(qr(25), "sokunth@acl"), false);
+  assert.equal(khqrPaysAccount(qr(25), "someone@aclb"), false);
 });
 
 test("names in the QR are plain ASCII, at most 25 characters, never empty", () => {

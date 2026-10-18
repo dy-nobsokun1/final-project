@@ -16,6 +16,8 @@ test("with Stripe switched off, the pay button is hidden and checkout is refused
     body: { listingId: listing.id },
   });
   assert.equal(checkout.status, 503);
+  // Returning from Stripe without a body is "not found", not a server error.
+  assert.equal((await api.request("POST", "/api/payments/confirm", { token: buyer.token })).status, 404);
 });
 
 test("a paid checkout marks the listing sold exactly once, and only its buyer can confirm it", async () => {

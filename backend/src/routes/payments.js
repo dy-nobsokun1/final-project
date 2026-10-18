@@ -27,7 +27,8 @@ paymentsRouter.post("/checkout", requireAuth, async (req, res) => {
 
   const url = await withTransaction(async (client) => {
     // Refuses if the item is already paid for, or someone else is paying right now.
-    const { listing, amount } = await lockListingForPayment(client, req.body.listingId, req.userId);
+    // req.body is undefined when no JSON body was sent; lockListingForPayment then answers 404.
+    const { listing, amount } = await lockListingForPayment(client, req.body?.listingId, req.userId);
 
     const page = `${config.frontendOrigin}/listings/${listing.id}`;
     const session = await createCheckoutSession({
@@ -52,7 +53,7 @@ paymentsRouter.post("/checkout", requireAuth, async (req, res) => {
 // POST /api/payments/confirm  { sessionId }  (logged in) -> { status: "paid" | "pending" | "refund_due" }
 // Called when the buyer comes back from Stripe. We ask Stripe directly instead of trusting the URL.
 paymentsRouter.post("/confirm", requireAuth, async (req, res) => {
-  const sessionId = String(req.body.sessionId ?? "");
+  const sessionId = String(req.body?.sessionId ?? "");
   const { rows } = await query("SELECT id, buyer_id, status FROM payments WHERE stripe_session_id = $1", [sessionId]);
   if (!rows[0] || rows[0].buyer_id !== req.userId) throw new HttpError(404, "Payment not found.");
   if (rows[0].status !== "pending") return res.json({ status: rows[0].status });

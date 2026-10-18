@@ -62,6 +62,11 @@ export function buildKhqr({ accountId, receiverName, amount, billNumber, created
   return `${fields}6304${crc16(`${fields}6304`)}`;
 }
 
+/** True if a QR made by buildKhqr pays `accountId`: its tag 29 always follows tags 00 and 01. */
+export function khqrPaysAccount(khqr, accountId) {
+  return khqr.startsWith(field("00", "01") + field("01", "12") + field("29", field("00", accountId)));
+}
+
 /** Bakong looks a payment up by the MD5 hash of the exact QR text that was paid. */
 export function khqrMd5(khqr) {
   return createHash("md5").update(khqr).digest("hex");

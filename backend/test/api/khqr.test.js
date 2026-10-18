@@ -85,6 +85,31 @@ test("an unpaid QR expires after 30 minutes, and the buyer can then get a new on
   assert.notEqual((await startKhqr(buyer, listing)).body.paymentId, paymentId);
 });
 
+test("asking for a QR without saying which listing is a 400, not a server error", async () => {
+  const buyer = await api.createUser();
+  const noBody = await api.request("POST", "/api/payments/khqr", { token: buyer.token });
+  assert.equal(noBody.status, 400);
+  assert.equal((await api.request("POST", "/api/payments/khqr", { token: buyer.token, body: {} })).status, 400);
+});
+
+test("a QR shown again always pays the seller's current Bakong account", async () => {
+  const [seller, buyer] = await Promise.all([api.createUser(), api.createUser()]);
+  const setAccount = (bakongAccountId) =>
+    api.request("PATCH", "/api/users/me", { token: seller.token, body: { bakongAccountId } });
+  await setAccount("old.account@aclb");
+  const listing = await api.createListing(seller);
+  const first = (await startKhqr(buyer, listing)).body;
+  assert.equal((await startKhqr(buyer, listing)).body.paymentId, first.paymentId); // same QR again
+
+  await setAccount("new.account@aclb");
+  const second = (await startKhqr(buyer, listing)).body;
+  assert.notEqual(second.paymentId, first.paymentId);
+  assert.match(second.qr, /0016new\.account@aclb/);
+
+  await setAccount(""); // removed: no QR at all, not the old one
+  assert.equal((await startKhqr(buyer, listing)).status, 400);
+});
+
 test("once the item is sold another way, an unpaid QR reports 'unavailable' so it leaves the screen", async () => {
   const [seller, buyer] = await Promise.all([api.createUser(), api.createUser()]);
   await api.request("PATCH", "/api/users/me", { token: seller.token, body: { bakongAccountId: "seller@aclb" } });

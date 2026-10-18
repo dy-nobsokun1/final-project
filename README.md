@@ -42,7 +42,7 @@ Putting it online (Supabase, Render, Vercel, Cloudinary, Stripe, Telegram): [`DE
 
 - `npm test` (in `backend/`): 23 unit tests for validation, the search query, the Stripe and
   Cloudinary helpers, and the KHQR builder (checked against the National Bank's own library).
-- `npm run test:api` (in `backend/`): 43 tests that send real requests to the running API, covering
+- `npm run test:api` (in `backend/`): 45 tests that send real requests to the running API, covering
   sign-up and verification, owner-only changes, messaging, simultaneous bids, card and KHQR
   payments, reviews, and refusing to delete a listing whose payments or reviews must stay.
   They use a separate test database (see [Testing](backend/README.md#testing)).
