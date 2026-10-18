@@ -85,6 +85,20 @@ test("an unpaid QR expires after 30 minutes, and the buyer can then get a new on
   assert.notEqual((await startKhqr(buyer, listing)).body.paymentId, paymentId);
 });
 
+test("once the item is sold another way, an unpaid QR reports 'unavailable' so it leaves the screen", async () => {
+  const [seller, buyer] = await Promise.all([api.createUser(), api.createUser()]);
+  await api.request("PATCH", "/api/users/me", { token: seller.token, body: { bakongAccountId: "seller@aclb" } });
+  const listing = await api.createListing(seller);
+  const { paymentId, qr } = (await startKhqr(buyer, listing)).body;
+
+  // e.g. the seller sold it in person while the buyer was looking at the QR
+  await api.request("PATCH", `/api/listings/${listing.id}`, { token: seller.token, body: { status: "sold" } });
+  assert.deepEqual((await khqrStatus(buyer, paymentId)).body, { status: "unavailable" });
+  // If the buyer pays it anyway, the money is recorded as a refund the seller owes.
+  paidMd5s.add(khqrMd5(qr));
+  assert.deepEqual((await khqrStatus(buyer, paymentId)).body, { status: "refund_due" });
+});
+
 test("no QR is shown while Bakong cannot be reached, since its payment could not be confirmed", async () => {
   const [seller, buyer] = await Promise.all([api.createUser(), api.createUser()]);
   await api.request("PATCH", "/api/users/me", { token: seller.token, body: { bakongAccountId: "seller@aclb" } });

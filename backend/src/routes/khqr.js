@@ -75,7 +75,7 @@ khqrRouter.post("/", requireAuth, async (req, res) => {
 });
 
 // GET /api/payments/khqr/:id  (logged in, the buyer only)
-//   -> { status: "paid" | "pending" | "expired" | "refund_due" }
+//   -> { status: "paid" | "pending" | "expired" | "refund_due" | "unavailable" }
 // The QR screen asks every few seconds. Each time, we ask Bakong: the browser is never trusted.
 khqrRouter.get("/:id", requireAuth, async (req, res) => {
   if (!isBakongConfigured) throw new HttpError(503, "KHQR payment is not set up yet.");
@@ -97,5 +97,10 @@ khqrRouter.get("/:id", requireAuth, async (req, res) => {
     if (!marked) throw new HttpError(404, "Payment not found."); // its listing was deleted meanwhile
     return res.json({ status: marked.status });
   }
+  // Not paid, and the item went another way meanwhile (the seller marked it sold or traded, or
+  // someone else paid): "unavailable" takes the QR off the buyer's screen so they do not pay it.
+  const { rows: [listing] } = await query("SELECT status FROM listings WHERE id = $1", [payment.listing_id]);
+  if (!listing) throw new HttpError(404, "Payment not found."); // its listing was deleted meanwhile
+  if (listing.status === "sold" || listing.status === "traded") return res.json({ status: "unavailable" });
   res.json({ status: expiresAt(payment) <= new Date() ? "expired" : "pending" });
 });
