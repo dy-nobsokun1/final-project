@@ -38,6 +38,11 @@ are set. When the API starts, its log shows which ones are on, e.g.
    A variable set in the terminal overrides the one in `.env`, so this only affects these commands.
    After this, Supabase's **Table Editor** shows the tables and lets you edit rows by hand.
 
+**Already have a database from an earlier version?** Do not run `npm run db:setup` again, because it
+wipes everything. First run the SQL listed in [`backend/README.md`, "Upgrading an existing database to
+this version"](backend/README.md#upgrading-an-existing-database-to-this-version) in Supabase's
+**SQL Editor**, then deploy the new API.
+
 ## 2. Photos: Cloudinary
 
 Sign up at cloudinary.com. The dashboard's **API Keys** page shows your **Cloud name**, **API key**

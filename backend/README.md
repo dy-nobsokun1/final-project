@@ -54,6 +54,32 @@ backend/
 
 ## Database
 
+### Upgrading an existing database to this version
+
+A database made with `npm run db:setup` before this version does not update itself, and running
+`db:setup` again would wipe it. To keep your data, run these upgrade blocks once (in `psql` or the
+Supabase SQL editor) **before** starting the new API. They do not depend on each other, so any order
+works, and each one is safe to re-run:
+
+1. [Passwords](#passwords): `requireAuth` reads `users.password_changed_at`, so without it every
+   signed-in request fails.
+2. [Saved listings](#saved-listings): every listing query counts saves in `saved_listings`, so without
+   it browsing and every listing page fail.
+3. [Offers](#offers): every listing query also reads `offers` and `listings.reserved_for`, and
+   `markPaid` reads `reserved_for`, so without it listing pages fail and no payment can be recorded.
+
+Also recommended: [Photos](#photos), which adds the database's own limit of 6 photos per listing. The
+API already enforces that limit, so the new API starts without it.
+
+This assumes the database already has the earlier upgrades further down (search, auctions, payments
+and Telegram, KHQR, `refund_due`); if not, run those first. **Claude Code cloud sessions** too:
+`.claude/cloud-setup.sh` creates the tables only while the `uniswap` database has none, so a session
+that kept an older `uniswap` database needs these blocks as well (its address is
+`postgres://postgres:postgres@localhost:5432/uniswap`). Since it only holds demo data,
+`npm run db:setup && npm run db:seed` works too.
+
+### Tables
+
 Tables follow the ER diagram in the proposal (Figure 2): `users`, `listings`, `messages`,
 `reviews`. `saved_listings` was added for saved listings, and `offers` (with `listings.reserved_for`)
 for price offers; neither is in the ER diagram (see Saved listings and Offers below). See
@@ -67,8 +93,10 @@ the API (`utils/validation.js`) and in the database (`CHECK` constraints):
 
 ### Passwords
 
-**Forgot password.** `POST /api/auth/forgot-password` emails a `/reset-password?token=...` link. It
-gives the same answer for every campus address, so nobody can use it to find out who has an account.
+**Forgot password.** `POST /api/auth/forgot-password` emails a `/reset-password?token=...` link.
+Forgot-password itself gives the same answer for every campus address, whether or not it has an
+account. That alone does not hide who has one: registering an address that already has a verified
+account answers 409.
 
 - Only a SHA-256 hash of the link's token is stored (`users.password_reset_hash`), so a leaked
   database or backup holds no usable link.

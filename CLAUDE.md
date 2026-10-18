@@ -62,7 +62,9 @@ at start and resume (it does nothing locally). It installs npm packages, starts 
 with throwaway `uniswap` + `uniswap_test` databases and demo data, and writes `backend/.env` from
 `.env.example`. Email, Stripe, Cloudinary, Telegram and Bakong stay off there: never put real keys in
 the cloud environment (anyone using it can read them), and Bakong only answers Cambodian IPs anyway.
-Its log: `/tmp/uniswap-cloud-setup.log`. Use the `implement_backend` branch.
+Its log: `/tmp/uniswap-cloud-setup.log`. Use the `implement_backend` branch. It creates the tables only
+when `uniswap` has none, so an older `uniswap` database needs the upgrade SQL (backend/README.md,
+"Upgrading an existing database to this version").
 
 ## How things work (non-obvious)
 
@@ -156,7 +158,8 @@ Its log: `/tmp/uniswap-cloud-setup.log`. Use the `implement_backend` branch.
   is picked (`uploadListingPhoto`, `useListingPhotos`, `PhotoPicker`) and submits only the URLs, as
   hidden `imageUrls` inputs. The listing page shows them with `ListingGallery`.
 - **Schema changes:** existing databases do not update themselves. For each change, provide an
-  idempotent SQL snippet in `backend/README.md` (see the "Search" section) as well as editing `schema.sql`.
+  idempotent SQL snippet in `backend/README.md` (see the "Search" section) as well as editing `schema.sql`,
+  and list it under "Upgrading an existing database to this version" (say if the new API needs it to start).
 - **SQL safety:** always use `$1, $2…` parameters. Only whitelisted column names may be built into SQL.
 
 ## Status and roadmap

@@ -102,6 +102,24 @@ Putting it online (Supabase, Render, Vercel, Cloudinary, Stripe, Telegram): [`DE
 - **No limit on password guesses.** Sign-in and change-password do not slow down repeated wrong
   passwords; that would need a package or extra state. Every account is a verified campus student,
   and passwords need at least 8 characters.
+- **"Forgot your password?" has no per-IP limit.** Anyone who knows a student's email can ask for
+  a reset link for it every 2 minutes (the per-account limit), from any computer, and each new link
+  replaces the one before. So someone could flood a student with reset emails and keep cancelling
+  the link they are about to use. It never gives anyone else access to the account.
+- **Signing out other devices works to the second.** Login tokens record their time in whole
+  seconds, so a session that signed in during the same second as a password change or reset, or a
+  sign-in with the old password that was already being checked when the reset was saved, stays
+  signed in (up to the token's 7 days).
+- **Offer, price-drop and wanted-match emails are not throttled.** Every new offer amount emails the
+  seller, every price decrease emails everyone who saved the item (even back down to a price they
+  already saw), and every new listing can alert up to 10 students. A student repeating these on
+  purpose could use up the shared email account's daily limit (about 500 a day on Gmail), which
+  would delay verification and reset emails for everyone.
+- **Wanted matching is strict, so it misses some matches.** Every word left in a wanted post's title
+  must be found in the item (or the title must be close to part of the item's title, allowing
+  typos), and only "Looking for", "Wanted", "WTB" and similar openings are dropped. So "Looking to
+  buy a mini fridge", or a long title that describes the item, may never match an item it should.
+  A short title that names the item works best.
 
 ## Run locally
 
