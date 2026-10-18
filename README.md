@@ -56,7 +56,7 @@ Putting it online (Supabase, Render, Vercel, Cloudinary, Stripe, Telegram): [`DE
 - `npm test` (in `backend/`): 32 unit tests for validation (including the photo rules), the search
   query and wanted-post matching, the payment amount rules, the Stripe and Cloudinary helpers, and
   the KHQR builder (checked against the National Bank's own library).
-- `npm run test:api` (in `backend/`): 90 tests that send real requests to the running API, covering
+- `npm run test:api` (in `backend/`): 93 tests that send real requests to the running API, covering
   sign-up and verification, password reset and change, owner-only changes, messaging, simultaneous
   bids, card and KHQR payments, reviews, saved listings, listing photos, wanted-post matching and
   alerts, offers (including two accepted at the same moment), and refusing to delete a listing whose
@@ -120,4 +120,5 @@ Demo accounts (created by `npm run db:seed`, password `password123` for all):
 `sokunth@aupp.edu.kh`, `chanrithorn@aupp.edu.kh`, and `dara@aupp.edu.kh` (unverified on purpose, to
 show that sign-in is refused). New accounts need a `.edu.kh` email and cannot sign in until its
 verification link is opened; the link is printed in the API's log until email sending is set up.
-The same goes for the link that "Forgot your password?" sends.
+The same goes for the link that "Forgot your password?" sends, except in production
+(`NODE_ENV=production`), where a reset link is never printed.

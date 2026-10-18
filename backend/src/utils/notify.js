@@ -223,6 +223,7 @@ export function notifyPasswordChanged(userId) {
       subject: "Your UniSwap password was changed",
       lines: [`Hi ${user.name},`,
         "Your UniSwap password was just changed. Devices signed in with the old password have been signed out.",
+        "Your Telegram connection and Bakong account stay as they were: check in Settings that they are still yours.",
         "If you did not do this, reset your password now."],
       link: appLink("/forgot-password"),
       linkLabel: "Reset my password",

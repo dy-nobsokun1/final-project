@@ -24,9 +24,10 @@ Check it works: `curl http://localhost:4000/api/health` → `{"status":"ok"}`
 
 Set `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER` and `SMTP_PASS` in `.env` (see `.env.example`) to email
 the verification link when someone registers. Until then, the link is printed in the server log.
-Password-reset links use the same settings. Without them the reset link is printed in the server log
-too, but once email is configured it is never printed, not even when sending fails (anyone who reads
-the log could otherwise take over the account).
+Password-reset links use the same settings. Whenever SMTP is not configured, the reset link is
+printed in the server log too, except when `NODE_ENV=production` (`render.yaml` sets it), where only
+a warning is printed. Once email is configured it is never printed, not even when sending fails
+(anyone who reads the log could otherwise take over the account).
 
 - **School Outlook / Microsoft 365:** `smtp.office365.com`, port `587`, your normal password. Only
   works if the school allows "SMTP AUTH" for your mailbox; Microsoft is phasing it out.
@@ -71,15 +72,20 @@ gives the same answer for every campus address, so nobody can use it to find out
 
 - Only a SHA-256 hash of the link's token is stored (`users.password_reset_hash`), so a leaked
   database or backup holds no usable link.
-- The link works once, for 1 hour. An account gets at most one email every 2 minutes; a request in
-  between sends nothing and the earlier link keeps working. A newer email replaces the older link.
+- The link works once, for 1 hour. While it is unused, an account gets at most one email every 2
+  minutes; a request in between sends nothing and the earlier link keeps working. Once the link has
+  been used, a new one can be asked for straight away (e.g. after mistyping the new password). A
+  newer email replaces the older link.
 - Unverified accounts get a link too, and choosing a new password also verifies the email: opening a
   link sent to the address proves the inbox, which is what verification proves.
 
 **Signing out other devices.** `users.password_changed_at` records the last change or reset.
 `requireAuth` refuses a token issued (`iat`, whole seconds) before it, so a reset or a change signs
 out every older session, stolen ones included. `POST /api/auth/change-password` asks for the current
-password and returns a fresh token for the device that made the change.
+password and returns a fresh token for the device that made the change. Both also cancel an unused
+Telegram connect code (`users.telegram_link_code`), which a stolen session could have kept to
+connect its own chat later. A Telegram chat already connected and the Bakong account stay as they
+are, so the email about the change asks the owner to check them in Settings.
 
 **Upgrading a database created before password reset?** Run this once **before** deploying the new
 API (`requireAuth` reads `password_changed_at`, so without it every signed-in request fails). It keeps
@@ -422,7 +428,7 @@ A token issued before the account's last password change or reset is refused (40
 | POST | `/api/auth/login` | `{ email, password }` → `{ user, token }`. `403` until the email is verified |
 | POST | `/api/auth/verify-email` | `{ token }` → verifies the email, which unlocks signing in |
 | POST | `/api/auth/resend-verification` | `{ email, password }` → emails a new verification link (the old one stops working) |
-| POST | `/api/auth/forgot-password` | `{ email }` → always `{ requested: true }`, whether or not the account exists. Emails a `/reset-password?token=` link that works once, for 1 hour; at most one email per account every 2 minutes. `400` if not a `.edu.kh` email |
+| POST | `/api/auth/forgot-password` | `{ email }` → always `{ requested: true }`, whether or not the account exists. Emails a `/reset-password?token=` link that works once, for 1 hour; at most one email per account every 2 minutes while its link is unused. `400` if not a `.edu.kh` email |
 | POST | `/api/auth/reset-password` | `{ token, password }` → `{ reset: true }`. 8+ characters. Signs out every session and verifies the email. `400` if the link is invalid, used or expired |
 | POST 🔒 | `/api/auth/change-password` | `{ currentPassword, newPassword }` → `{ token }` for this device; every other session is signed out. `400` if the current password is wrong |
 | GET 🔒 | `/api/auth/me` | The logged-in user |
@@ -509,7 +515,8 @@ can check who would have been emailed, waiting with `waitFor` because notificati
 - **Auth:** signed JWTs expire after 7 days; changing or resetting the password signs out every session
   started before it; listings can only be changed or deleted by their owner.
 - **Password reset:** the same answer for every campus email, only the token's hash is stored, the link
-  works once for 1 hour, at most one email per account every 2 minutes.
+  works once for 1 hour, at most one email per account every 2 minutes while its link is unused, and
+  it is never printed in the log in production or once email is set up.
 - **Privacy:** emails and Bakong account IDs appear only on your own account, never on public
   profiles. (A buyer does see the seller's Bakong account inside the KHQR, as with any bank transfer.)
 - **Secrets:** live in `.env` (git-ignored). Nothing secret is committed.

@@ -116,6 +116,9 @@ School Outlook accounts cannot send email from apps. Use a Gmail account:
 3. Set `SMTP_USER` to the Gmail address and `SMTP_PASS` to the 16-character app password.
    Recipients can still be `.edu.kh`.
 
+Until email is set up, verification links only appear in the Render log, and "Forgot your password?"
+sends nothing at all: `render.yaml` sets `NODE_ENV=production`, so reset links are never printed.
+
 ## Checklist
 
 - [ ] `https://<render-url>/api/health` → `{"status":"ok"}`

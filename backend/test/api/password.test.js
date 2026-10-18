@@ -105,6 +105,55 @@ test("a new link can be sent after 2 minutes, and it replaces the old one", asyn
   assert.equal((await reset(second, "a-new-password")).status, 200);
 });
 
+test("once a link is used, a new one can be asked for straight away", async () => {
+  const user = await api.createUser();
+  // e.g. the new password was mistyped, so the student asks again at once
+  assert.equal((await reset(await requestResetToken(user.email), "a-mistyped-password")).status, 200);
+  const next = await requestResetToken(user.email);
+  assert.equal(api.loggedLinks("[reset-password]", user.email).length, 2);
+  assert.equal((await reset(next, "the-password-i-meant")).status, 200);
+  assert.equal((await login(user.email, "the-password-i-meant")).status, 200);
+});
+
+test("in production a reset link is never printed, even while email is off", async () => {
+  const user = await api.createUser();
+  const before = process.env.NODE_ENV;
+  process.env.NODE_ENV = "production";
+  try {
+    const answer = await api.request("POST", "/api/auth/forgot-password", { body: { email: user.email } });
+    assert.deepEqual(answer.body, { requested: true });
+  } finally {
+    if (before === undefined) delete process.env.NODE_ENV;
+    else process.env.NODE_ENV = before;
+  }
+  // A link was made (its hash is stored), but it was not printed.
+  const [row] = await api.sql("SELECT password_reset_hash FROM users WHERE id = $1", [user.id]);
+  assert.notEqual(row.password_reset_hash, null);
+  assert.deepEqual(api.loggedLinks("[reset-password]", user.email), []);
+});
+
+test("a reset or a password change cancels an unused Telegram connect code", async () => {
+  const user = await api.createUser();
+  const code = async () =>
+    (await api.sql("SELECT telegram_link_code FROM users WHERE id = $1", [user.id]))[0].telegram_link_code;
+  // As if a session had pressed "Connect Telegram" and kept the link for later (Telegram is off in tests).
+  const keepConnectCode = () =>
+    api.sql("UPDATE users SET telegram_link_code = $2 WHERE id = $1", [user.id, randomBytes(16).toString("hex")]);
+
+  await keepConnectCode();
+  assert.equal((await reset(await requestResetToken(user.email), "a-new-password")).status, 200);
+  assert.equal(await code(), null);
+
+  await keepConnectCode();
+  const { token } = (await login(user.email, "a-new-password")).body;
+  const changed = await api.request("POST", "/api/auth/change-password", {
+    token,
+    body: { currentPassword: "a-new-password", newPassword: "another-password" },
+  });
+  assert.equal(changed.status, 200);
+  assert.equal(await code(), null);
+});
+
 test("a reset signs out every session started before it", async () => {
   const user = await api.createUser();
   const earlier = sessionFrom(user.id, 60);

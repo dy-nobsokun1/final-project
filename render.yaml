@@ -14,6 +14,8 @@ services:
     envVars:
       - key: NODE_VERSION
         value: "22"
+      - key: NODE_ENV # production: password-reset links are never printed in the log (routes/auth.js)
+        value: production
       - key: DATABASE_URL # Supabase "Session pooler" URI + ?sslmode=no-verify (see DEPLOY.md)
         sync: false
       - key: JWT_SECRET

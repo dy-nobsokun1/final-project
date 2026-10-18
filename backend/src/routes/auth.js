@@ -40,9 +40,14 @@ function hashResetToken(token) {
 async function deliverResetLink(user, token) {
   const link = `${config.frontendOrigin}/reset-password?token=${token}`;
   if (!isEmailConfigured) {
-    // Development only. Once email is set up the link is never printed, not even when sending
-    // fails, because a reset link in the server log would let anyone who reads the log take over the account.
-    console.log(`[reset-password] ${user.email}: ${link}`);
+    // Whenever SMTP is not configured, the link is printed instead, so a developer can still reset by
+    // hand. Never in production (render.yaml sets NODE_ENV), and never once email is set up, not even
+    // when sending fails: a reset link in the server log lets anyone who reads the log take over the account.
+    if (process.env.NODE_ENV === "production") {
+      console.error(`[reset-password] could not email ${user.email}: email is not set up, and reset links are never printed in production`);
+    } else {
+      console.log(`[reset-password] ${user.email}: ${link}`);
+    }
     return;
   }
   try {
@@ -135,11 +140,14 @@ authRouter.post("/forgot-password", async (req, res) => {
   const token = randomBytes(32).toString("hex");
   // The 2-minute check sits in the UPDATE itself: if two requests arrive at the same moment,
   // PostgreSQL re-checks the WHERE on the locked row, so only one email goes out. A throttled
-  // request changes nothing, so the link in the earlier email keeps working.
+  // request changes nothing, so the link in the earlier email keeps working. It only applies while
+  // that link is unused (password_reset_hash is set): after a reset, e.g. with a mistyped password,
+  // a new link goes out straight away.
   const { rows } = await query(
     `UPDATE users SET password_reset_hash = $2, password_reset_expires_at = now() + interval '1 hour',
        password_reset_sent_at = now()
-     WHERE email = $1 AND (password_reset_sent_at IS NULL OR password_reset_sent_at < now() - interval '2 minutes')
+     WHERE email = $1 AND (password_reset_hash IS NULL OR password_reset_sent_at IS NULL
+       OR password_reset_sent_at < now() - interval '2 minutes')
      RETURNING email, name`,
     [email.trim().toLowerCase(), hashResetToken(token)],
   );
@@ -159,10 +167,12 @@ authRouter.post("/reset-password", async (req, res) => {
   // the same moment. Opening a link sent to the address proves the inbox, which is what
   // verification proves, so this also verifies the account (and replaces any password a stranger
   // chose when registering this address). password_changed_at uses Node's clock because
-  // requireAuth compares it with the token's iat, which Node stamps.
+  // requireAuth compares it with the token's iat, which Node stamps. An unused Telegram connect code
+  // is cancelled too: a stolen session may have asked for one to use later (routes/telegram.js).
   const { rows } = await query(
     `UPDATE users SET password_hash = $2, password_changed_at = $3, password_reset_hash = NULL,
-       password_reset_expires_at = NULL, is_verified = true, verification_token = NULL
+       password_reset_expires_at = NULL, is_verified = true, verification_token = NULL,
+       telegram_link_code = NULL
      WHERE password_reset_hash = $1 AND password_reset_expires_at > now()
      RETURNING id`,
     [hashResetToken(String(token ?? "")), await hashPassword(password), new Date()],
@@ -186,10 +196,11 @@ authRouter.post("/change-password", requireAuth, async (req, res) => {
     throw new HttpError(400, "Please fix the highlighted fields.", { currentPassword: "This is not your current password." });
   }
 
-  // A pending reset link is cleared too, so an older email cannot undo this change.
+  // A pending reset link is cleared too, so an older email cannot undo this change, and so is an
+  // unused Telegram connect code, as in reset-password.
   await query(
     `UPDATE users SET password_hash = $2, password_changed_at = $3, password_reset_hash = NULL,
-       password_reset_expires_at = NULL
+       password_reset_expires_at = NULL, telegram_link_code = NULL
      WHERE id = $1`,
     [req.userId, await hashPassword(newPassword), new Date()],
   );

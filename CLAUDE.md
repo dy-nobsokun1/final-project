@@ -73,12 +73,12 @@ Its log: `/tmp/uniswap-cloud-setup.log`. Use the `implement_backend` branch.
   database that the account exists and is verified.
 - **Passwords:** `forgot-password` answers 200 `{ requested: true }` for every `.edu.kh` email and
   stores only a SHA-256 hash of the emailed token (`users.password_reset_hash`; 1 hour, single use,
-  one email per account per 2 minutes). `reset-password` also verifies the email and returns no
-  token. `requireAuth` refuses a JWT whose `iat` (whole seconds) is older than
+  one email per account per 2 minutes while that link is unused). `reset-password` also verifies the
+  email and returns no token. Reset and `change-password` also clear `users.telegram_link_code`. `requireAuth` refuses a JWT whose `iat` (whole seconds) is older than
   `users.password_changed_at`, or that has no `iat`, so a reset or a change signs out older sessions;
   `change-password` checks the current password and returns a fresh token. While email is off the
-  reset link is printed in the API log (never once SMTP is set up); API tests read it with
-  `loggedLinks` in `test/api/helpers.js`.
+  reset link is printed in the API log (never once SMTP is set up, nor when `NODE_ENV=production`,
+  which `render.yaml` sets); API tests read it with `loggedLinks` in `test/api/helpers.js`.
 - **Email:** school Outlook / Microsoft 365 blocks password-based SMTP from apps. Send from Gmail
   (App Password, `smtp.gmail.com:465`) or Brevo; the recipients can still be `.edu.kh`. If sending
   fails, the verification link is printed in the API log.
