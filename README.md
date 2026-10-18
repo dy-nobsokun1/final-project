@@ -16,7 +16,9 @@ Putting it online (Supabase, Render, Vercel, Cloudinary, Stripe, Telegram): [`DE
 ### Built
 
 - **Accounts:** sign-up with a `.edu.kh` email only, and nobody can sign in until the emailed
-  verification link is opened. Profiles are public; email addresses never are.
+  verification link is opened. Profiles are public; email addresses never are. Forgot your
+  password? A one-hour, single-use link is emailed to your campus address, and you can change your
+  password in Settings. Either one signs out every other device.
 - **Listings:** sell, ask for something ("wanted"), trade (with a cash top-up for uneven trades),
   give away, or auction. Photos, owner-only editing and deleting, and the statuses active,
   reserved, sold and traded.
@@ -29,22 +31,23 @@ Putting it online (Supabase, Render, Vercel, Cloudinary, Stripe, Telegram): [`DE
 - **Reviews and ratings:** once a listing is sold or traded, its owner and the person they chatted
   with can rate each other (1 to 5 stars and a comment). Profiles show the average and every review.
 - **Notifications:** by email, and by Telegram for students who connect it in Settings: new
-  messages, being outbid, auction results and payments.
+  messages, being outbid, auction results, payments and password changes.
 - **Card payments (Stripe test mode):** pay for an item for sale or an auction you won. Live keys
   are refused, so no real card can ever be charged.
 - **KHQR payments (Bakong):** sellers add their Bakong account in Settings; buyers scan a QR with
   any Cambodian banking app and the money goes straight to the seller. UniSwap confirms the payment
   with the National Bank's Bakong API and marks the item sold.
 - **Security:** parameterized SQL everywhere, hashed passwords, verified accounts only, owner-only
-  changes, and no secrets in the repository.
+  changes, a password change signs out stolen sessions, and no secrets in the repository.
 
 ### Tested
 
-- `npm test` (in `backend/`): 23 unit tests for validation, the search query, the Stripe and
+- `npm test` (in `backend/`): 24 unit tests for validation, the search query, the Stripe and
   Cloudinary helpers, and the KHQR builder (checked against the National Bank's own library).
-- `npm run test:api` (in `backend/`): 49 tests that send real requests to the running API, covering
-  sign-up and verification, owner-only changes, messaging, simultaneous bids, card and KHQR
-  payments, reviews, and refusing to delete a listing whose payments or reviews must stay.
+- `npm run test:api` (in `backend/`): 57 tests that send real requests to the running API, covering
+  sign-up and verification, password reset and change, owner-only changes, messaging, simultaneous
+  bids, card and KHQR payments, reviews, and refusing to delete a listing whose payments or reviews
+  must stay.
   They use a separate test database (see [Testing](backend/README.md#testing)).
 
 ### Not done yet
@@ -74,6 +77,9 @@ Putting it online (Supabase, Render, Vercel, Cloudinary, Stripe, Telegram): [`DE
 - **A KHQR payment confirmed more than 24 hours late is not recorded automatically.** That only
   happens if Bakong cannot be reached for a whole day. The money still reached the seller's account,
   so the buyer and seller settle it between them.
+- **No limit on password guesses.** Sign-in and change-password do not slow down repeated wrong
+  passwords; that would need a package or extra state. Every account is a verified campus student,
+  and passwords need at least 8 characters.
 
 ## Run locally
 
@@ -92,3 +98,4 @@ Demo accounts (created by `npm run db:seed`, password `password123` for all):
 `sokunth@aupp.edu.kh`, `chanrithorn@aupp.edu.kh`, and `dara@aupp.edu.kh` (unverified on purpose, to
 show that sign-in is refused). New accounts need a `.edu.kh` email and cannot sign in until its
 verification link is opened; the link is printed in the API's log until email sending is set up.
+The same goes for the link that "Forgot your password?" sends.

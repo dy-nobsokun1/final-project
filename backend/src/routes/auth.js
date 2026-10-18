@@ -1,14 +1,15 @@
-import { randomBytes } from "node:crypto";
+import { createHash, randomBytes } from "node:crypto";
 import { Router } from "express";
 import { config } from "../config.js";
 import { query } from "../db/pool.js";
 import { requireAuth } from "../middleware/auth.js";
-import { sendVerificationEmail } from "../utils/email.js";
+import { isEmailConfigured, sendPasswordResetEmail, sendVerificationEmail } from "../utils/email.js";
 import { HttpError } from "../utils/httpError.js";
+import { notifyPasswordChanged } from "../utils/notify.js";
 import { hashPassword, verifyPassword } from "../utils/password.js";
 import { toUser } from "../utils/serializers.js";
 import { signToken } from "../utils/token.js";
-import { validateRegistration } from "../utils/validation.js";
+import { isCampusEmail, passwordError, validateRegistration } from "../utils/validation.js";
 
 export const authRouter = Router();
 
@@ -26,6 +27,28 @@ async function deliverVerificationLink(user) {
     console.error(`[verify-email] could not email ${user.email}: ${error.response ?? error.message}`);
     console.log(`[verify-email] ${user.email}: ${link}`);
     return false;
+  }
+}
+
+// Unlike a password, a reset token is 32 random bytes and cannot be guessed, so a plain SHA-256
+// is enough (no salt or slow scrypt). The database keeps only this hash, so a leak holds no usable link.
+function hashResetToken(token) {
+  return createHash("sha256").update(token).digest("hex");
+}
+
+/** Emails a password-reset link. Never throws: the request has already been answered. */
+async function deliverResetLink(user, token) {
+  const link = `${config.frontendOrigin}/reset-password?token=${token}`;
+  if (!isEmailConfigured) {
+    // Development only. Once email is set up the link is never printed, not even when sending
+    // fails, because a reset link in the server log would let anyone who reads the log take over the account.
+    console.log(`[reset-password] ${user.email}: ${link}`);
+    return;
+  }
+  try {
+    await sendPasswordResetEmail({ to: user.email, name: user.name, link });
+  } catch (error) {
+    console.error(`[reset-password] could not email ${user.email}: ${error.response ?? error.message}`);
   }
 }
 
@@ -98,6 +121,82 @@ authRouter.post("/resend-verification", async (req, res) => {
     throw new HttpError(502, "Could not send the email right now. Please try again later.");
   }
   res.json({ sent: true });
+});
+
+// POST /api/auth/forgot-password  { email } -> always { requested: true }
+// The same answer for every campus address, so nobody can use this to find out who has an account.
+// Unverified accounts get a link too (see reset-password).
+authRouter.post("/forgot-password", async (req, res) => {
+  const { email } = req.body ?? {};
+  if (!isCampusEmail(email)) {
+    throw new HttpError(400, "Please fix the highlighted fields.", { email: "Use your campus email (ending in .edu.kh)." });
+  }
+  // Made before the lookup, so a known and an unknown address take the same work.
+  const token = randomBytes(32).toString("hex");
+  // The 2-minute check sits in the UPDATE itself: if two requests arrive at the same moment,
+  // PostgreSQL re-checks the WHERE on the locked row, so only one email goes out. A throttled
+  // request changes nothing, so the link in the earlier email keeps working.
+  const { rows } = await query(
+    `UPDATE users SET password_reset_hash = $2, password_reset_expires_at = now() + interval '1 hour',
+       password_reset_sent_at = now()
+     WHERE email = $1 AND (password_reset_sent_at IS NULL OR password_reset_sent_at < now() - interval '2 minutes')
+     RETURNING email, name`,
+    [email.trim().toLowerCase(), hashResetToken(token)],
+  );
+  // Not awaited: the answer takes the same time whether or not an email is sent.
+  if (rows[0]) void deliverResetLink(rows[0], token);
+  res.json({ requested: true });
+});
+
+// POST /api/auth/reset-password  { token, password } -> sets the new password; the person signs in next
+authRouter.post("/reset-password", async (req, res) => {
+  const { token, password } = req.body ?? {};
+  // Checked first, so a too-short password does not use up the link.
+  const problem = passwordError(password);
+  if (problem) throw new HttpError(400, "Please fix the highlighted fields.", { password: problem });
+
+  // One UPDATE both checks the link and uses it up, so it works once even if submitted twice at
+  // the same moment. Opening a link sent to the address proves the inbox, which is what
+  // verification proves, so this also verifies the account (and replaces any password a stranger
+  // chose when registering this address). password_changed_at uses Node's clock because
+  // requireAuth compares it with the token's iat, which Node stamps.
+  const { rows } = await query(
+    `UPDATE users SET password_hash = $2, password_changed_at = $3, password_reset_hash = NULL,
+       password_reset_expires_at = NULL, is_verified = true, verification_token = NULL
+     WHERE password_reset_hash = $1 AND password_reset_expires_at > now()
+     RETURNING id`,
+    [hashResetToken(String(token ?? "")), await hashPassword(password), new Date()],
+  );
+  if (!rows[0]) throw new HttpError(400, "This reset link is invalid, expired or already used. Ask for a new one.");
+  notifyPasswordChanged(rows[0].id);
+  // No login token: an emailed link never signs anyone in by itself.
+  res.json({ reset: true });
+});
+
+// POST /api/auth/change-password  { currentPassword, newPassword } -> { token } for this device
+authRouter.post("/change-password", requireAuth, async (req, res) => {
+  const { currentPassword, newPassword } = req.body ?? {};
+  const problem = passwordError(newPassword);
+  if (problem) throw new HttpError(400, "Please fix the highlighted fields.", { newPassword: problem });
+
+  // The current password stops someone at a borrowed, signed-in laptop from locking the owner out.
+  // A wrong one is a 400 with a field error, not a 401, so the frontend does not treat it as an expired session.
+  const { rows: [user] } = await query("SELECT password_hash FROM users WHERE id = $1", [req.userId]);
+  if (!(await verifyPassword(String(currentPassword ?? ""), user.password_hash))) {
+    throw new HttpError(400, "Please fix the highlighted fields.", { currentPassword: "This is not your current password." });
+  }
+
+  // A pending reset link is cleared too, so an older email cannot undo this change.
+  await query(
+    `UPDATE users SET password_hash = $2, password_changed_at = $3, password_reset_hash = NULL,
+       password_reset_expires_at = NULL
+     WHERE id = $1`,
+    [req.userId, await hashPassword(newPassword), new Date()],
+  );
+  notifyPasswordChanged(req.userId);
+  // Every older token now stops working, this device's too, so it gets a fresh one. Its iat is
+  // never below the change time rounded down to the second, so requireAuth accepts it.
+  res.json({ token: signToken(req.userId) });
 });
 
 // POST /api/auth/login  { email, password }

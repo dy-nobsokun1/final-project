@@ -9,7 +9,8 @@ export function signToken(userId) {
   return jwt.sign({ sub: userId }, config.jwtSecret, { expiresIn: EXPIRES_IN });
 }
 
-/** Returns the user id inside a valid token. Throws if the token is invalid or expired. */
+/** Who the token belongs to and when it was issued (iat, in whole seconds). Throws if it is invalid or expired. */
 export function verifyToken(token) {
-  return jwt.verify(token, config.jwtSecret).sub;
+  const payload = jwt.verify(token, config.jwtSecret);
+  return { userId: payload.sub, issuedAt: payload.iat };
 }

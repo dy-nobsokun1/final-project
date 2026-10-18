@@ -4,6 +4,7 @@ import {
   isCampusEmail,
   minimumNextBid,
   parseListingFilters,
+  passwordError,
   validateListing,
   validateRegistration,
   validateReview,
@@ -34,6 +35,15 @@ test("registration accepts an optional major and a whole-number graduation year"
     Object.keys(validateRegistration({ ...base, major: 5, graduationYear: "2028" })).sort(),
     ["graduationYear", "major"],
   );
+});
+
+test("a new password needs at least 8 characters, the same rule as sign-up", () => {
+  const message = "Password must be at least 8 characters.";
+  assert.equal(passwordError("longenough"), null);
+  assert.equal(passwordError("short"), message);
+  assert.equal(passwordError(undefined), message);
+  assert.equal(passwordError(12345678), message);
+  assert.equal(validateRegistration({ name: "Dara", email: "dara@aupp.edu.kh", password: "short" }).password, message);
 });
 
 test("a full listing must have title, category and condition", () => {

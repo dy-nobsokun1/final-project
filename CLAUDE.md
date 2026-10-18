@@ -71,6 +71,14 @@ Its log: `/tmp/uniswap-cloud-setup.log`. Use the `implement_backend` branch.
   unverified email replaces that account; a verified one gets 409. Login is blocked (403) until
   verified. `resend-verification` takes `{ email, password }`. `requireAuth` re-checks in the
   database that the account exists and is verified.
+- **Passwords:** `forgot-password` answers 200 `{ requested: true }` for every `.edu.kh` email and
+  stores only a SHA-256 hash of the emailed token (`users.password_reset_hash`; 1 hour, single use,
+  one email per account per 2 minutes). `reset-password` also verifies the email and returns no
+  token. `requireAuth` refuses a JWT whose `iat` (whole seconds) is older than
+  `users.password_changed_at`, or that has no `iat`, so a reset or a change signs out older sessions;
+  `change-password` checks the current password and returns a fresh token. While email is off the
+  reset link is printed in the API log (never once SMTP is set up); API tests read it with
+  `loggedLinks` in `test/api/helpers.js`.
 - **Email:** school Outlook / Microsoft 365 blocks password-based SMTP from apps. Send from Gmail
   (App Password, `smtp.gmail.com:465`) or Brevo; the recipients can still be `.edu.kh`. If sending
   fails, the verification link is printed in the API log.
@@ -83,7 +91,7 @@ Its log: `/tmp/uniswap-cloud-setup.log`. Use the `implement_backend` branch.
   `reserved` (highest bid wins; on a tie, the earlier bid). After the first bid, type, price,
   end time and raise are locked (409). Every listing in the API has `auction: null | {...}`.
 - **Notifications:** `utils/notify.js` (fire-and-forget, never throws). New message (first unread
-  per thread only), outbid, auction won/ended. Add new events there; Telegram can reuse it later.
+  per thread only), outbid, auction won/ended, password changed. Add new events there; Telegram can reuse it later.
 - **Optional services** (`backend/src/services/`, plain `fetch`, no packages), each off until its env
   keys are set: Stripe Checkout **test mode only** (`routes/payments.js`; `markPaid` is idempotent and
   marks the item sold; the webhook needs the raw body, so it is mounted before `express.json` in
@@ -120,7 +128,7 @@ Its log: `/tmp/uniswap-cloud-setup.log`. Use the `implement_backend` branch.
 
 ## Status and roadmap
 
-Done (week 5): auth with email verification, listings CRUD with five types (incl. auction) and statuses,
+Done (week 5): auth with email verification, forgot/change password, listings CRUD with five types (incl. auction) and statuses,
 ranked typo-tolerant search and filters, auctions/bidding, email + Telegram notifications, Stripe test payments, KHQR payments via Bakong, Cloudinary photos, profiles, per-listing messaging, photo
 uploads; frontend fully wired to the API. Reviews and ratings once a listing is sold or traded,
 between the owner and the buyer: whoever paid online, else the auction winner, else (in-person

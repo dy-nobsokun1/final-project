@@ -2,7 +2,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 
 /**
- * Centered card shell for sign-in, registration and email verification.
+ * Centered card shell for sign-in, registration, email verification and password reset.
  * These routes stay outside the main app shell, so the navbar is not shown.
  */
 export default function AuthLayout({ children }: LayoutProps<"/">) {

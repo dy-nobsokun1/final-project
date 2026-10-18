@@ -89,6 +89,44 @@ export async function resendVerification(email: string, password: string): Promi
   }
 }
 
+/** Asks the API to email a reset link. It answers the same whether or not the account exists. */
+export async function requestPasswordReset(email: string): Promise<ActionResult> {
+  try {
+    await apiFetch("/api/auth/forgot-password", { method: "POST", body: JSON.stringify({ email }) });
+    return {};
+  } catch (error) {
+    return toActionError(error);
+  }
+}
+
+/** Sets a new password with the emailed link's token. Creates no session: the person signs in next. */
+export async function resetPassword(token: string, password: string): Promise<ActionResult> {
+  try {
+    await apiFetch("/api/auth/reset-password", { method: "POST", body: JSON.stringify({ token, password }) });
+    return {};
+  } catch (error) {
+    return toActionError(error);
+  }
+}
+
+/**
+ * Changes the signed-in user's password. The API signs out every older token, this browser's too,
+ * so the fresh one it returns replaces the session cookie. Setting a cookie in a Server Action
+ * re-renders the current page, which then reads the new cookie.
+ */
+export async function changePassword(currentPassword: string, newPassword: string): Promise<ActionResult> {
+  try {
+    const { token } = await apiFetch<{ token: string }>("/api/auth/change-password", {
+      method: "POST",
+      body: JSON.stringify({ currentPassword, newPassword }),
+    });
+    await saveSession(token);
+    return {};
+  } catch (error) {
+    return toActionError(error);
+  }
+}
+
 export async function updateProfile(values: { name: string; bio: string }): Promise<ActionResult & { user?: User }> {
   try {
     const { user } = await apiFetch<{ user: User }>("/api/users/me", {

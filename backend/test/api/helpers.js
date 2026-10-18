@@ -37,13 +37,19 @@ export function uniqueEmail() {
   return `student-${randomUUID().slice(0, 8)}@test.edu.kh`;
 }
 
-// With email switched off, the app logs every email it skips ("[notify] ...", "[verify-email] ...").
-// That is expected here, so those lines are hidden. Everything else, like server errors, still prints.
+// Lines hidden by hideSkippedEmailLogs, oldest first. Tests read from here what the app would have emailed.
+const hiddenLogLines = [];
+
+// With email switched off, the app logs every email it skips ("[notify] ...", "[verify-email] ...",
+// "[reset-password] ..."). That is expected here, so those lines are not printed but kept in
+// hiddenLogLines. Everything else, like server errors, still prints.
 function hideSkippedEmailLogs() {
   for (const method of ["log", "error"]) {
     const print = console[method];
     console[method] = (...args) => {
-      if (!/^\[(notify|verify-email)\]/.test(String(args[0]))) print(...args);
+      const line = String(args[0]);
+      if (/^\[(notify|verify-email|reset-password)\]/.test(line)) hiddenLogLines.push(line);
+      else print(...args);
     };
   }
 }
@@ -51,7 +57,8 @@ function hideSkippedEmailLogs() {
 /**
  * Starts the app on a free port and returns what the tests need: request() for HTTP calls,
  * createUser() and createListing() for test data, sql() to set up cases the API does not allow
- * (like an auction that already ended), and close() to stop everything afterwards.
+ * (like an auction that already ended), loggedLinks() to open a link the app would have emailed,
+ * and close() to stop everything afterwards.
  * `env` switches a service back on for one test file, e.g. { BAKONG_TOKEN: "test" } with a fake fetch.
  */
 export async function startApi({ env = {} } = {}) {
@@ -101,10 +108,17 @@ export async function startApi({ env = {} } = {}) {
     return response.body.listing;
   }
 
+  /** The links the app printed for `email` under `prefix` (e.g. "[reset-password]"), oldest first, as URL objects. */
+  function loggedLinks(prefix, email) {
+    return hiddenLogLines
+      .filter((line) => line.startsWith(`${prefix} ${email}: `))
+      .map((line) => new URL(line.slice(line.indexOf(": ") + 2)));
+  }
+
   async function close() {
     await new Promise((resolve) => server.close(resolve));
     await pool.end();
   }
 
-  return { request, sql, createUser, createListing, close };
+  return { request, sql, createUser, createListing, loggedLinks, close };
 }

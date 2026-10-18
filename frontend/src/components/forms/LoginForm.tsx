@@ -12,6 +12,7 @@ import { useAuth } from "@/contexts/AuthContext";
  * Sign-in form. The email and password go to a Server Action, which checks them against the
  * API and stores the session in an httpOnly cookie. The password is never stored in the browser.
  * Accounts that have not verified their email are refused, with a button to resend the link.
+ * "Forgot your password?" leads to /forgot-password, which emails a reset link.
  */
 export function LoginForm() {
   const router = useRouter();
@@ -62,6 +63,9 @@ export function LoginForm() {
           onChange={(event) => setPassword(event.target.value)}
         />
       </Field>
+      <Link href="/forgot-password" className="-mt-2 self-end text-sm text-foreground underline">
+        Forgot your password?
+      </Link>
 
       {needsVerification ? (
         <ResendVerificationButton email={email.trim()} password={password} />

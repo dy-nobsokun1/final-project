@@ -24,8 +24,21 @@ CREATE TABLE users (
   telegram_link_code TEXT UNIQUE,
   -- KHQR: the seller's Bakong account (e.g. name@aclb) that buyers' payments go straight to.
   bakong_account_id  TEXT CHECK (length(bakong_account_id) <= 32),
+  -- Forgot password: only a SHA-256 hash of the emailed token is kept, so someone who reads the
+  -- database (e.g. a leaked backup) cannot use a pending link. It stops working at
+  -- password_reset_expires_at (1 hour after it is sent).
+  password_reset_hash       TEXT,
+  password_reset_expires_at TIMESTAMPTZ,
+  -- When the last reset email went out, so an account gets at most one every 2 minutes.
+  password_reset_sent_at    TIMESTAMPTZ,
+  -- Login tokens issued before this moment are refused (middleware/auth.js), so changing or
+  -- resetting the password signs out every older session. NULL: never changed.
+  password_changed_at       TIMESTAMPTZ,
   created_at         TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+-- reset-password looks an account up by the hash of its link's token.
+CREATE UNIQUE INDEX users_password_reset_hash_idx ON users (password_reset_hash);
 
 CREATE TABLE listings (
   id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),

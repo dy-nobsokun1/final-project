@@ -43,3 +43,17 @@ export function sendVerificationEmail({ to, name, link }) {
 <p>If you did not create this account, you can ignore this email.</p>`,
   });
 }
+
+export function sendPasswordResetEmail({ to, name, link }) {
+  return sendEmail({
+    to,
+    subject: "Reset your UniSwap password",
+    text: `Hi ${name},\n\nSomeone asked to reset the password of your UniSwap account. `
+      + `Choose a new one (the link works for 1 hour):\n${link}\n\n`
+      + "If you did not ask for this, ignore this email: your password stays the same.",
+    html: `<p>Hi ${escapeHtml(name)},</p>
+<p>Someone asked to reset the password of your UniSwap account. Choose a new one (the link works for 1 hour):</p>
+<p><a href="${link}">Choose a new password</a></p>
+<p>If you did not ask for this, ignore this email: your password stays the same.</p>`,
+  });
+}

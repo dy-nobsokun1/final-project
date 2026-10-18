@@ -24,6 +24,9 @@ Check it works: `curl http://localhost:4000/api/health` → `{"status":"ok"}`
 
 Set `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER` and `SMTP_PASS` in `.env` (see `.env.example`) to email
 the verification link when someone registers. Until then, the link is printed in the server log.
+Password-reset links use the same settings. Without them the reset link is printed in the server log
+too, but once email is configured it is never printed, not even when sending fails (anyone who reads
+the log could otherwise take over the account).
 
 - **School Outlook / Microsoft 365:** `smtp.office365.com`, port `587`, your normal password. Only
   works if the school allows "SMTP AUTH" for your mailbox; Microsoft is phasing it out.
@@ -58,6 +61,35 @@ the API (`utils/validation.js`) and in the database (`CHECK` constraints):
 - **condition:** new, like_new, good, fair
 - **listing type:** sale, buy_request, trade, giveaway, auction
 - **status:** active, reserved, sold, traded
+
+### Passwords
+
+**Forgot password.** `POST /api/auth/forgot-password` emails a `/reset-password?token=...` link. It
+gives the same answer for every campus address, so nobody can use it to find out who has an account.
+
+- Only a SHA-256 hash of the link's token is stored (`users.password_reset_hash`), so a leaked
+  database or backup holds no usable link.
+- The link works once, for 1 hour. An account gets at most one email every 2 minutes; a request in
+  between sends nothing and the earlier link keeps working. A newer email replaces the older link.
+- Unverified accounts get a link too, and choosing a new password also verifies the email: opening a
+  link sent to the address proves the inbox, which is what verification proves.
+
+**Signing out other devices.** `users.password_changed_at` records the last change or reset.
+`requireAuth` refuses a token issued (`iat`, whole seconds) before it, so a reset or a change signs
+out every older session, stolen ones included. `POST /api/auth/change-password` asks for the current
+password and returns a fresh token for the device that made the change.
+
+**Upgrading a database created before password reset?** Run this once **before** deploying the new
+API (`requireAuth` reads `password_changed_at`, so without it every signed-in request fails). It keeps
+your data, signs nobody out, and is safe to re-run:
+
+```sql
+ALTER TABLE users ADD COLUMN IF NOT EXISTS password_reset_hash TEXT;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS password_reset_expires_at TIMESTAMPTZ;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS password_reset_sent_at TIMESTAMPTZ;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS password_changed_at TIMESTAMPTZ;
+CREATE UNIQUE INDEX IF NOT EXISTS users_password_reset_hash_idx ON users (password_reset_hash);
+```
 
 ### Search
 
@@ -151,6 +183,7 @@ verification email):
 | New chat message | The receiver. Only the first unread message in a thread emails; reading the thread re-arms it | The chat thread |
 | Outbid | The person who just lost the highest bid | The auction |
 | Auction ended with bids | The winner ("You won…") and the seller ("ended at $…") | Their chat with each other |
+| Password changed or reset | The account owner | `/forgot-password`, in case it was not them |
 
 Notifications never block or break the request that caused them: if email is not configured they
 are skipped with a log line, and send failures are logged, not returned to the user. User-written
@@ -225,6 +258,7 @@ ALTER TABLE payments ADD CONSTRAINT payments_status_check CHECK (status IN ('pen
 ## API
 
 Send JSON. Routes marked 🔒 need the header `Authorization: Bearer <token>` (the token comes from register or login).
+A token issued before the account's last password change or reset is refused (401).
 
 | Method | Path | Description |
 |---|---|---|
@@ -233,6 +267,9 @@ Send JSON. Routes marked 🔒 need the header `Authorization: Bearer <token>` (t
 | POST | `/api/auth/login` | `{ email, password }` → `{ user, token }`. `403` until the email is verified |
 | POST | `/api/auth/verify-email` | `{ token }` → verifies the email, which unlocks signing in |
 | POST | `/api/auth/resend-verification` | `{ email, password }` → emails a new verification link (the old one stops working) |
+| POST | `/api/auth/forgot-password` | `{ email }` → always `{ requested: true }`, whether or not the account exists. Emails a `/reset-password?token=` link that works once, for 1 hour; at most one email per account every 2 minutes. `400` if not a `.edu.kh` email |
+| POST | `/api/auth/reset-password` | `{ token, password }` → `{ reset: true }`. 8+ characters. Signs out every session and verifies the email. `400` if the link is invalid, used or expired |
+| POST 🔒 | `/api/auth/change-password` | `{ currentPassword, newPassword }` → `{ token }` for this device; every other session is signed out. `400` if the current password is wrong |
 | GET 🔒 | `/api/auth/me` | The logged-in user |
 | GET | `/api/listings` | Browse and search (ranked, typo tolerant; see Search above). Query: `query`, `category`, `condition`, `type`, `minPrice`, `maxPrice`, `status` (default `active`) |
 | GET | `/api/listings/:id` | One listing, with seller info |
@@ -275,8 +312,9 @@ Errors always look like `{ "error": "message", "details": { "field": "message" }
   Stripe and Cloudinary helpers, and the KHQR builder and Bakong answers. No database or network needed.
 - `npm run test:api` runs the API tests in `test/api/`. Each file starts the real app on a free port
   and sends it real HTTP requests, so routes, SQL and database rules are tested together: sign-up and
-  verification, owner-only changes, messaging, bidding (including five bids at the same moment),
-  payments with Stripe switched off, KHQR payments (with Bakong replaced by a fake), and reviews.
+  verification, password reset and change, owner-only changes, messaging, bidding (including five
+  bids at the same moment), payments with Stripe switched off, KHQR payments (with Bakong replaced by
+  a fake), and reviews.
 
 The API tests need their own database, because `test/api/reset-db.js` wipes it before every run.
 Create it once, then put its URL in `.env` as `TEST_DATABASE_URL` (see `.env.example`):
@@ -288,6 +326,8 @@ docker exec <container> createdb -U <user> uniswap_test    # PostgreSQL in Docke
 
 The tests refuse to run if `TEST_DATABASE_URL` is the same database as `DATABASE_URL`. They switch
 off email, Stripe, Bakong, Telegram and Cloudinary, so a test run never sends anything.
+While email is off the API prints verification and reset links in its log; `test/api/helpers.js`
+hides those lines and keeps them (`loggedLinks`), so a test opens a reset link the way a person would.
 
 ## Security
 
@@ -296,7 +336,10 @@ off email, Stripe, Bakong, Telegram and Cloudinary, so a test run never sends an
 - **Verified members only:** an account cannot sign in until the link sent to its `.edu.kh` address is opened, so a
   made-up or borrowed email gets nowhere. An unverified sign-up is replaced if the email registers again, so a
   stranger cannot block the real owner. Every protected request re-checks that the account exists and is verified.
-- **Auth:** signed JWTs expire after 7 days; listings can only be changed or deleted by their owner.
+- **Auth:** signed JWTs expire after 7 days; changing or resetting the password signs out every session
+  started before it; listings can only be changed or deleted by their owner.
+- **Password reset:** the same answer for every campus email, only the token's hash is stored, the link
+  works once for 1 hour, at most one email per account every 2 minutes.
 - **Privacy:** emails and Bakong account IDs appear only on your own account, never on public
   profiles. (A buyer does see the seller's Bakong account inside the KHQR, as with any bank transfer.)
 - **Secrets:** live in `.env` (git-ignored). Nothing secret is committed.

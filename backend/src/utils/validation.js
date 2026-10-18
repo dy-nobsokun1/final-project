@@ -16,13 +16,18 @@ export function isCampusEmail(email) {
   return typeof email === "string" && CAMPUS_EMAIL.test(email.trim());
 }
 
+/** One password rule for sign-up, reset and change, so all three say the same thing. Null when it is fine. */
+export function passwordError(password) {
+  if (typeof password !== "string" || password.length < 8) return "Password must be at least 8 characters.";
+  return null;
+}
+
 export function validateRegistration({ name, email, password, major, graduationYear }) {
   const errors = {};
   if (typeof name !== "string" || !name.trim()) errors.name = "Name is required.";
   if (!isCampusEmail(email)) errors.email = "Use your campus email (ending in .edu.kh).";
-  if (typeof password !== "string" || password.length < 8) {
-    errors.password = "Password must be at least 8 characters.";
-  }
+  const problem = passwordError(password);
+  if (problem) errors.password = problem;
   // Optional profile fields.
   if (major !== undefined && typeof major !== "string") errors.major = "Major must be text.";
   if (graduationYear !== undefined && graduationYear !== null && !Number.isInteger(graduationYear)) {

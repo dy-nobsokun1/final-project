@@ -205,3 +205,23 @@ export function notifyLatePayment({ listing_id: listingId, buyer_id: buyerId, am
     ]);
   });
 }
+
+/**
+ * The password was changed or reset: tell the owner, in case it was not them (by Telegram too,
+ * in case the inbox itself was taken over).
+ */
+export function notifyPasswordChanged(userId) {
+  inBackground(async () => {
+    const user = await findUser(userId);
+    if (!user) return;
+    await deliver({
+      to: user,
+      subject: "Your UniSwap password was changed",
+      lines: [`Hi ${user.name},`,
+        "Your UniSwap password was just changed. Devices signed in with the old password have been signed out.",
+        "If you did not do this, reset your password now."],
+      link: appLink("/forgot-password"),
+      linkLabel: "Reset my password",
+    });
+  });
+}
