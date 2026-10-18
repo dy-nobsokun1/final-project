@@ -8,6 +8,10 @@ import { query, withTransaction } from "./pool.js";
 // Stripe's checkout page and our KHQR codes both expire after this long.
 export const PAYMENT_MINUTES = 30;
 
+// How long after a payment starts it may still be confirmed: PAYMENT_MINUTES plus 5 minutes in case
+// Bakong reports a payment made just before its QR expired a little late.
+export const CONFIRM_MINUTES = PAYMENT_MINUTES + 5;
+
 /**
  * Call inside withTransaction when a buyer starts paying. Locks the listing so two buyers cannot
  * start at the same moment, works out the amount, and refuses (409) if the item is already paid
@@ -76,15 +80,12 @@ export async function markPaid(paymentId) {
   return payment;
 }
 
-/**
- * KHQR payments that may still be paid: started in the last PAYMENT_MINUTES, plus 5 minutes in
- * case Bakong reports a payment made just before its QR expired a little late.
- */
+/** KHQR payments that may still be confirmed: started in the last CONFIRM_MINUTES. */
 export async function findOpenKhqrPayments() {
   const { rows } = await query(
     `SELECT id, khqr FROM payments
      WHERE method = 'khqr' AND status = 'pending' AND created_at > now() - make_interval(mins => $1)`,
-    [PAYMENT_MINUTES + 5],
+    [CONFIRM_MINUTES],
   );
   return rows;
 }

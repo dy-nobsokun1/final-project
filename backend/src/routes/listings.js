@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { buildBrowseQuery, findListingById } from "../db/listings.js";
-import { query } from "../db/pool.js";
+import { CONFIRM_MINUTES } from "../db/payments.js";
+import { query, withTransaction } from "../db/pool.js";
 import { requireAuth } from "../middleware/auth.js";
 import { HttpError } from "../utils/httpError.js";
 import { toListing } from "../utils/serializers.js";
@@ -105,8 +106,37 @@ listingsRouter.patch("/:id", requireAuth, async (req, res) => {
 });
 
 // DELETE /api/listings/:id  (owner only)
+// Deleting a listing also deletes its payments and reviews (ON DELETE CASCADE in schema.sql), so it
+// is refused (409) once that history matters: the item was sold or traded, it has reviews, money was
+// paid for it, or someone may still be paying for it. An open payment could be paid with no record.
 listingsRouter.delete("/:id", requireAuth, async (req, res) => {
   await findOwnedListing(req.params.id, req.userId);
-  await query("DELETE FROM listings WHERE id = $1", [req.params.id]);
+
+  await withTransaction(async (client) => {
+    // The same row lock a buyer takes when they start paying, so nobody can start in between.
+    const { rows: [listing] } = await client.query(
+      "SELECT status FROM listings WHERE id = $1 FOR UPDATE", [req.params.id]);
+    if (!listing) throw new HttpError(404, "Listing not found.");
+    if (listing.status === "sold" || listing.status === "traded") {
+      throw new HttpError(409, "A sold or traded listing stays on your profile with its reviews, so it cannot be deleted.");
+    }
+    // Also after "Make available again": its reviews must not disappear with it.
+    const { rows: reviews } = await client.query("SELECT 1 FROM reviews WHERE listing_id = $1 LIMIT 1", [req.params.id]);
+    if (reviews.length) throw new HttpError(409, "People have reviewed this deal, so the listing cannot be deleted.");
+
+    const { rows: payments } = await client.query(
+      `SELECT status FROM payments
+       WHERE listing_id = $1 AND (status <> 'pending' OR created_at > now() - make_interval(mins => $2))`,
+      [req.params.id, CONFIRM_MINUTES],
+    );
+    if (payments.some((payment) => payment.status !== "pending")) {
+      throw new HttpError(409, "Someone has paid for this listing, so it cannot be deleted. Mark it sold instead.");
+    }
+    if (payments.length) {
+      throw new HttpError(409, `Someone is paying for this right now, so it cannot be deleted. Try again in ${CONFIRM_MINUTES} minutes.`);
+    }
+
+    await client.query("DELETE FROM listings WHERE id = $1", [req.params.id]);
+  });
   res.status(204).end();
 });

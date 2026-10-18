@@ -80,3 +80,26 @@ test("an unpaid QR expires after 30 minutes, and the buyer can then get a new on
   assert.deepEqual((await khqrStatus(buyer, paymentId)).body, { status: "expired" });
   assert.notEqual((await startKhqr(buyer, listing)).body.paymentId, paymentId);
 });
+
+test("a listing cannot be deleted while someone may be paying for it, or once it was paid", async () => {
+  const [seller, buyer] = await Promise.all([api.createUser(), api.createUser()]);
+  await api.request("PATCH", "/api/users/me", { token: seller.token, body: { bakongAccountId: "seller@aclb" } });
+  const deleteListing = (listing) => api.request("DELETE", `/api/listings/${listing.id}`, { token: seller.token });
+
+  // An open QR can still be paid, and deleting the listing would also delete its payment record.
+  const open = await api.createListing(seller);
+  const { paymentId } = (await startKhqr(buyer, open)).body;
+  assert.equal((await deleteListing(open)).status, 409);
+  // 35 minutes later nobody can confirm that QR any more, so an abandoned one no longer blocks it.
+  await api.sql("UPDATE payments SET created_at = now() - interval '36 minutes' WHERE id = $1", [paymentId]);
+  assert.equal((await deleteListing(open)).status, 204);
+
+  // Paid, then made available again by the seller: the payment record must still stay.
+  const paid = await api.createListing(seller);
+  const started = (await startKhqr(buyer, paid)).body;
+  paidMd5s.add(khqrMd5(started.qr));
+  assert.deepEqual((await khqrStatus(buyer, started.paymentId)).body, { status: "paid" });
+  await api.request("PATCH", `/api/listings/${paid.id}`, { token: seller.token, body: { status: "active" } });
+  assert.equal((await deleteListing(paid)).status, 409);
+  assert.deepEqual(await api.sql("SELECT status FROM payments WHERE id = $1", [started.paymentId]), [{ status: "paid" }]);
+});

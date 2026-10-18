@@ -42,9 +42,9 @@ Putting it online (Supabase, Render, Vercel, Cloudinary, Stripe, Telegram): [`DE
 
 - `npm test` (in `backend/`): 22 unit tests for validation, the search query, the Stripe and
   Cloudinary helpers, and the KHQR builder (checked against the National Bank's own library).
-- `npm run test:api` (in `backend/`): 32 tests that send real requests to the running API, covering
+- `npm run test:api` (in `backend/`): 40 tests that send real requests to the running API, covering
   sign-up and verification, owner-only changes, messaging, simultaneous bids, card and KHQR
-  payments, and reviews.
+  payments, reviews, and refusing to delete a listing whose payments or reviews must stay.
   They use a separate test database (see [Testing](backend/README.md#testing)).
 
 ### Not done yet
@@ -55,7 +55,6 @@ Putting it online (Supabase, Render, Vercel, Cloudinary, Stripe, Telegram): [`DE
 - **KHQR on Render:** Bakong only answers Cambodian IP addresses, so KHQR works when the API runs
   in Cambodia (e.g. a laptop for the demo), not on Render.
 - **Possible next steps:** real-time chat, safe meetup spots, and notification settings.
-- **Known gap:** deleting a listing also deletes its reviews.
 
 ## Run locally
 
