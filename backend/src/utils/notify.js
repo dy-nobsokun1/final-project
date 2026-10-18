@@ -293,7 +293,8 @@ export function notifyWantedMatches({ id: listingId, title }) {
  * and buyer_id), or null if any of them is gone.
  */
 async function findOfferPeople({ listing_id: listingId, buyer_id: buyerId }) {
-  const { rows: [listing] } = await query("SELECT title, price, status, user_id FROM listings WHERE id = $1", [listingId]);
+  const { rows: [listing] } = await query(
+    "SELECT title, price, status, listing_type, user_id FROM listings WHERE id = $1", [listingId]);
   if (!listing) return null;
   const [buyer, seller] = await Promise.all([findUser(buyerId), findUser(listing.user_id)]);
   return buyer && seller ? { listing, buyer, seller } : null;
@@ -336,20 +337,25 @@ export function notifyOfferAccepted(offer) {
 }
 
 /**
- * An offer was declined: by the seller (the item is still available), or because the item was sold,
- * reserved or paid for another way. The listing's status at sending time tells which.
+ * An offer was declined: by the seller (the item is still available), because the item was sold,
+ * reserved or paid for another way, or because the seller changed it from a sale to another type,
+ * which takes no offers. The listing's status and type at sending time tell which.
  */
 export function notifyOfferDeclined(offer) {
   inBackground(async () => {
     const people = await findOfferPeople(offer);
     if (!people) return;
     const { listing, buyer, seller } = people;
+    let reason = `${seller.name} declined your offer of ${money(offer.amount)} for "${listing.title}". It is still available: you can make a new offer.`;
+    if (listing.status !== "active") {
+      reason = `Your offer of ${money(offer.amount)} for "${listing.title}" was declined because the item is no longer available.`;
+    } else if (listing.listing_type !== "sale") {
+      reason = `Your offer of ${money(offer.amount)} for "${listing.title}" was declined because ${seller.name} changed it from an item for sale to a kind of listing that takes no offers.`;
+    }
     await deliver({
       to: buyer,
       subject: `Your offer for "${listing.title}" was declined`,
-      lines: [`Hi ${buyer.name},`, listing.status === "active"
-        ? `${seller.name} declined your offer of ${money(offer.amount)} for "${listing.title}". It is still available: you can make a new offer.`
-        : `Your offer of ${money(offer.amount)} for "${listing.title}" was declined because the item is no longer available.`],
+      lines: [`Hi ${buyer.name},`, reason],
       link: appLink(`/listings/${offer.listing_id}`),
       linkLabel: "See the listing",
     });

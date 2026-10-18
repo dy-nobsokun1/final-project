@@ -154,8 +154,9 @@ export interface KhqrPayment {
 /**
  * "refund_due": the payment went through after the item was already sold, or reserved for another
  * buyer, so the seller must refund it.
- * "unavailable": not paid, and the item has been sold or traded another way, or reserved for another
- * buyer, so the QR must not be paid.
+ * "unavailable": not paid, and the item has been sold or traded another way or reserved for another
+ * buyer, the amount this buyer would pay has changed, or the seller changed their Bakong account,
+ * so the QR must not be paid.
  */
 export type KhqrStatus = "paid" | "pending" | "expired" | "refund_due" | "unavailable";
 

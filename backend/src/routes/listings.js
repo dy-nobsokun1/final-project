@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { buildBrowseQuery, findListingById } from "../db/listings.js";
 import { findItemsForWanted, findWantedForItem } from "../db/matches.js";
-import { updateOffersForStatus } from "../db/offers.js";
+import { declinePendingOffers, updateOffersForStatus } from "../db/offers.js";
 import { confirmOpenKhqrPayments, RECHECK_HOURS } from "../db/payments.js";
 import { query, withTransaction } from "../db/pool.js";
 import { requireAuth } from "../middleware/auth.js";
@@ -116,14 +116,6 @@ listingsRouter.patch("/:id", requireAuth, async (req, res) => {
   if ((changes.status === "sold" || changes.status === "traded") && listing.status !== changes.status) {
     await confirmOpenKhqrPayments(listing.id).catch((error) => console.error("[bakong]", error.message));
   }
-  // A listing someone paid for online stays with that sale: its payment and reviews point at that
-  // buyer, and nobody could pay for it online again. Selling it again means a new listing.
-  if (changes.status === "active" && listing.status !== "active") {
-    const { rows: paid } = await query("SELECT 1 FROM payments WHERE listing_id = $1 AND status = 'paid' LIMIT 1", [listing.id]);
-    if (paid.length) {
-      throw new HttpError(409, "Someone paid for this online, so it cannot be made available again. If the deal fell through and you refunded them, post the item again as a new listing.");
-    }
-  }
   const nextType = changes.listingType ?? listing.listing_type;
   if (nextType === "auction" && !(changes.auctionEndsAt ?? listing.auction_ends_at)) {
     throw new HttpError(400, "An auction needs an end date and time.", { auctionEndsAt: "Required for an auction." });
@@ -144,15 +136,30 @@ listingsRouter.patch("/:id", requireAuth, async (req, res) => {
     const { rows: [current] } = await client.query(
       "SELECT id, status, reserved_for, listing_type FROM listings WHERE id = $1 FOR UPDATE", [listing.id]);
     if (!current) throw new HttpError(404, "Listing not found.");
+    // A listing someone paid for online stays with that sale: its payment and reviews point at that
+    // buyer, and nobody could pay for it online again. Selling it again means a new listing. Checked
+    // under the lock, so a payment markPaid recorded a moment ago (it takes the same lock) counts.
+    if (changes.status === "active" && current.status !== "active") {
+      const { rows: paid } = await client.query(
+        "SELECT 1 FROM payments WHERE listing_id = $1 AND status = 'paid' LIMIT 1", [listing.id]);
+      if (paid.length) {
+        throw new HttpError(409, "Someone paid for this online, so it cannot be made available again. If the deal fell through and you refunded them, post the item again as a new listing.");
+      }
+    }
     if (current.reserved_for && changes.listingType !== undefined && changes.listingType !== current.listing_type) {
       throw new HttpError(409, "This item is reserved for a buyer whose offer you accepted, so its type is locked. Make it available again first.");
     }
-    const changed = await updateOffersForStatus(client, current, changes.status);
+    const { cancelled, declined } = await updateOffersForStatus(client, current, changes.status);
+    // Only items for sale take offers, so a new type declines the pending ones. Otherwise they would
+    // wait, hidden from their buyers, and come back if the item became a sale again.
+    if (current.listing_type === "sale" && changes.listingType !== undefined && changes.listingType !== "sale") {
+      declined.push(...(await declinePendingOffers(client, current.id)));
+    }
     await client.query(
       `UPDATE listings SET ${setSql}, updated_at = now() WHERE id = $1`,
       [listing.id, ...fields.map((field) => changes[field])],
     );
-    return changed;
+    return { cancelled, declined };
   });
   for (const offer of offerChanges.cancelled) notifyOfferCancelled(offer);
   for (const offer of offerChanges.declined) notifyOfferDeclined(offer);

@@ -16,6 +16,13 @@ test("an item reserved by an accepted offer can be paid only by that buyer, at t
   assert.throws(() => amountToPay(reserved, "b"), { status: 403 });
 });
 
+test("the reserved buyer pays the asking price instead once the seller lowers it below the agreed price", () => {
+  const reserved = { ...forSale, status: "reserved", reserved_for: "a", agreed_price: "20.00" };
+  assert.equal(amountToPay({ ...reserved, price: "30.00" }, "a"), 20);
+  assert.equal(amountToPay({ ...reserved, price: "15.00" }, "a"), 15);
+  assert.throws(() => amountToPay({ ...reserved, price: "0.00" }, "a"), { status: 400 });
+});
+
 test("an item reserved by its owner without an offer cannot be paid online", () => {
   assert.throws(() => amountToPay({ ...forSale, status: "reserved" }, "b"), { status: 400 });
 });

@@ -30,10 +30,14 @@ export function formatListingPrice(listing: Pick<Listing, "listingType" | "price
 export function payableAmount(listing: ListingWithSeller, userId: string | null, myOffer: Offer | null): number | null {
   if (userId === null || userId === listing.seller.id) return null;
   if (listing.listingType === "sale") {
-    // An accepted offer of yours on a reserved item means it is reserved for you: the API changes
-    // listings.reserved_for and the offer together (routes/offers.js).
-    if (listing.status === "reserved") return myOffer?.status === "accepted" ? myOffer.amount : null;
-    return listing.status === "active" && listing.price > 0 ? listing.price : null;
+    let amount = listing.status === "active" ? listing.price : 0;
+    // An accepted offer of yours on a reserved item means it is reserved for you (the API changes
+    // listings.reserved_for and the offer together, routes/offers.js): you pay the agreed price, or
+    // the asking price if the seller has lowered it below that since.
+    if (listing.status === "reserved" && myOffer?.status === "accepted") {
+      amount = Math.min(myOffer.amount, listing.price);
+    }
+    return amount > 0 ? amount : null;
   }
   if (listing.auction && listing.status === "reserved" && listing.auction.leadingBidderId === userId) {
     return listing.auction.highestBid;

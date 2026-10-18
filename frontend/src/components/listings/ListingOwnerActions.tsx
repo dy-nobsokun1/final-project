@@ -36,21 +36,27 @@ export function ListingOwnerActions({ listingId, listingType, status }: ListingO
   return (
     <div className="flex flex-col gap-2">
       <div className="flex flex-wrap gap-2">
+        {/* A reserved item (an accepted offer, a won auction) is usually sold next. Selling it straight
+            from "reserved" keeps the buyer an accepted offer reserved it for, so the two can review each other. */}
+        {status === "active" || status === "reserved" ? (
+          <Button disabled={isBusy} onClick={() => run(() => updateListingStatus(listingId, closedStatus))}>
+            Mark as {closedStatus}
+          </Button>
+        ) : null}
         {status === "active" ? (
-          <>
-            <Button disabled={isBusy} onClick={() => run(() => updateListingStatus(listingId, closedStatus))}>
-              Mark as {closedStatus}
-            </Button>
-            <Button
-              variant="secondary"
-              disabled={isBusy}
-              onClick={() => run(() => updateListingStatus(listingId, "reserved"))}
-            >
-              Mark reserved
-            </Button>
-          </>
+          <Button
+            variant="secondary"
+            disabled={isBusy}
+            onClick={() => run(() => updateListingStatus(listingId, "reserved"))}
+          >
+            Mark reserved
+          </Button>
         ) : (
-          <Button disabled={isBusy} onClick={() => run(() => updateListingStatus(listingId, "active"))}>
+          <Button
+            variant={status === "reserved" ? "secondary" : "default"}
+            disabled={isBusy}
+            onClick={() => run(() => updateListingStatus(listingId, "active"))}
+          >
             Make available again
           </Button>
         )}

@@ -20,6 +20,7 @@ const api = await startApi({ env: { BAKONG_TOKEN: "test-token" } });
 after(() => api.close());
 const { khqrMd5 } = await import("../../src/utils/khqr.js");
 const { markPaid } = await import("../../src/db/payments.js");
+const { pool } = await import("../../src/db/pool.js");
 
 const offer = (user, listing, amount) =>
   api.request("POST", `/api/listings/${listing.id}/offers`, { token: user?.token, body: { amount } });
@@ -306,6 +307,89 @@ test("marking the item sold keeps the offer's buyer, so they and the owner can r
   assert.equal((await review(a, seller)).status, 201);
   assert.equal((await review(seller, a)).status, 201);
   assert.equal((await review(b, seller)).status, 403);
+});
+
+test("a payment recorded while the owner makes the item available again wins: the relist is refused", async () => {
+  const [seller, a] = await Promise.all([api.createUser("Seller"), api.createUser("Buyer A")]);
+  const listing = await api.createListing(seller);
+  const made = (await offer(a, listing, 20)).body.offer;
+  await answer(seller, made.id, "accept");
+  // A's card payment (a Stripe-style row; Stripe itself is off in tests), about to be confirmed.
+  const [{ id: paymentId }] = await api.sql(
+    "INSERT INTO payments (listing_id, buyer_id, amount, stripe_session_id) VALUES ($1, $2, 20, $3) RETURNING id",
+    [listing.id, a.id, `cs_test_relist_${made.id}`],
+  );
+
+  // markPaid holds the listing's lock while it records the payment and marks the item sold, and the
+  // owner clicks "Make available again" at that very moment. Done here by hand, to control the timing.
+  const markPaidConnection = await pool.connect();
+  try {
+    await markPaidConnection.query("BEGIN");
+    await markPaidConnection.query("SELECT 1 FROM listings WHERE id = $1 FOR UPDATE", [listing.id]);
+    const [{ pid }] = (await markPaidConnection.query("SELECT pg_backend_pid() AS pid")).rows;
+    const relist = patch(seller, listing, { status: "active" });
+    // Wait until the PATCH is waiting for that lock.
+    await waitFor(async () => (await api.sql(
+      "SELECT 1 FROM pg_stat_activity WHERE $1::int = ANY(pg_blocking_pids(pid))", [pid])).length > 0);
+    await markPaidConnection.query("UPDATE payments SET status = 'paid', paid_at = now() WHERE id = $1", [paymentId]);
+    await markPaidConnection.query("UPDATE listings SET status = 'sold', updated_at = now() WHERE id = $1", [listing.id]);
+    await markPaidConnection.query("COMMIT");
+
+    const refused = await relist;
+    assert.equal(refused.status, 409);
+    assert.match(refused.body.error, /post the item again as a new listing/);
+  } finally {
+    markPaidConnection.release();
+  }
+  assert.equal((await getListing(listing)).status, "sold");
+  assert.equal(await reservedFor(listing), a.id);
+  assert.equal(await offerStatus(made.id), "accepted");
+});
+
+test("changing an item for sale to another type declines its pending offers, so they cannot come back", async () => {
+  const [seller, a] = await Promise.all([api.createUser("Seller"), api.createUser("Buyer A")]);
+  const listing = await api.createListing(seller);
+  const made = (await offer(a, listing, 20)).body.offer;
+
+  assert.equal((await patch(seller, listing, { listingType: "trade" })).status, 200);
+  assert.equal(await offerStatus(made.id), "declined");
+  await waitFor(() => emailed(a, "was declined"));
+  assert.equal((await patch(seller, listing, { listingType: "sale" })).status, 200);
+  assert.deepEqual((await sellerOffers(seller, listing)).body.offers, []);
+  assert.equal((await answer(seller, made.id, "accept")).status, 409);
+});
+
+test("an open QR is withdrawn once its buyer would pay a different amount, but not by a manual Mark reserved", async () => {
+  const [seller, a] = await Promise.all([sellerWithBakong(), api.createUser("Buyer A")]);
+  const status = async (paying) => (await khqrStatus(a, paying.paymentId)).body.status;
+
+  // A opens a full-price QR, then offers less on the same page, and the seller accepts.
+  const first = await api.createListing(seller); // $25
+  const fullPrice = (await startKhqr(a, first)).body;
+  const made = (await offer(a, first, 20)).body.offer;
+  assert.equal((await answer(seller, made.id, "accept")).status, 200);
+  assert.equal(await status(fullPrice), "unavailable");
+  // The QR at the agreed price stays, until the seller makes the item available again at $25.
+  const agreed = (await startKhqr(a, first)).body;
+  assert.equal(agreed.amount, 20);
+  assert.equal(await status(agreed), "pending");
+  assert.equal((await patch(seller, first, { status: "active" })).status, 200);
+  assert.equal(await status(agreed), "unavailable");
+
+  // The seller lowers the asking price below the agreed one: A now pays the lower price.
+  const second = await api.createListing(seller); // $25
+  const accepted = (await offer(a, second, 20)).body.offer;
+  await answer(seller, accepted.id, "accept");
+  const atTwenty = (await startKhqr(a, second)).body;
+  assert.equal((await patch(seller, second, { price: 15 })).status, 200);
+  assert.equal(await status(atTwenty), "unavailable");
+  assert.equal((await startKhqr(a, second)).body.amount, 15);
+
+  // A manual "Mark reserved" records no buyer, so it leaves the QR as it is (README "Known limitations").
+  const third = await api.createListing(seller);
+  const open = (await startKhqr(a, third)).body;
+  assert.equal((await patch(seller, third, { status: "reserved" })).status, 200);
+  assert.equal(await status(open), "pending");
 });
 
 test("pending offers are declined when the item is reserved, sold or paid for another way", async () => {

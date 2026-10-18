@@ -5,20 +5,24 @@ import { HttpError } from "./httpError.js";
  * Only two things can be paid online: an item for sale, and an auction you won.
  * Trades, giveaways and "wanted" posts are settled in person.
  * An item for sale costs its price while it is available. Once the seller accepts an offer, it is
- * reserved for that buyer (reserved_for): only they can pay, at the offer's price (agreed_price).
+ * reserved for that buyer (reserved_for): only they can pay, at the offer's price (agreed_price), or
+ * at the asking price if the seller has lowered it below that since.
  */
 export function amountToPay(listing, buyerId) {
   if (listing.user_id === buyerId) throw new HttpError(400, "You cannot pay for your own listing.");
 
   if (listing.listing_type === "sale") {
-    // Reserved by an accepted offer (routes/offers.js): only that buyer can pay, at the offer's price.
+    let amount = Number(listing.price);
+    // Reserved by an accepted offer (routes/offers.js): only that buyer can pay, at the offer's price,
+    // unless the asking price is now lower.
     if (listing.status === "reserved" && listing.reserved_for) {
       if (listing.reserved_for !== buyerId) throw new HttpError(403, "This item is reserved for another buyer.");
-      return Number(listing.agreed_price);
+      amount = Math.min(Number(listing.agreed_price), amount);
+    } else if (listing.status !== "active") {
+      throw new HttpError(400, "This item is no longer available.");
     }
-    if (listing.status !== "active") throw new HttpError(400, "This item is no longer available.");
-    if (Number(listing.price) <= 0) throw new HttpError(400, "This item has no price to pay.");
-    return Number(listing.price);
+    if (amount <= 0) throw new HttpError(400, "This item has no price to pay.");
+    return amount;
   }
   if (listing.listing_type === "auction") {
     if (listing.status !== "reserved" || listing.leading_bidder_id !== buyerId) {

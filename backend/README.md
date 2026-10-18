@@ -232,16 +232,18 @@ declines it.
   moment cannot both win (a unique index allows one accepted offer per listing, too). It is refused
   (409) while another buyer is paying (30 minutes, as for payments), and once the asking price is at
   or below the offer.
-- **While reserved this way, only that buyer can pay online**, at the offer's price (`amountToPay` in
-  `src/utils/payments.js` reads it through `LISTING_SELECT`'s private `agreed_price`; it never appears
-  in the API's listing JSON). Anyone else's payment that is confirmed late becomes `refund_due`, and
-  their open QR reports `unavailable`. They can also meet and pay in person.
+- **While reserved this way, only that buyer can pay online**, at the offer's price, or at the asking
+  price if the seller has lowered it below that since (`amountToPay` in `src/utils/payments.js` reads
+  the offer's price through `LISTING_SELECT`'s private `agreed_price`; it never appears in the API's
+  listing JSON). Anyone else's payment that is confirmed late becomes `refund_due`, and their open QR
+  reports `unavailable`. They can also meet and pay in person.
 - **"Make available again"** clears `reserved_for` and cancels the accepted offer (`cancelled`); the
-  item's price applies again. **"Mark as sold"** keeps `reserved_for`, so that buyer and the owner can
-  review each other. While an accepted offer reserves the item, its type is locked and it cannot be
-  deleted (409).
-- Pending offers are declined when the item is sold (also by an online payment), traded, or reserved
-  another way. Offers do not expire.
+  item's price applies again. **"Mark as sold"** (the owner's page offers it on a reserved item too)
+  keeps `reserved_for`, so that buyer and the owner can review each other. While an accepted offer
+  reserves the item, its type is locked and it cannot be deleted (409).
+- Pending offers are declined when the item is sold (also by an online payment), traded, reserved
+  another way, or changed from a sale to another type (only items for sale take offers). Offers do
+  not expire.
 - Statuses: `pending` → `accepted` | `declined` | `withdrawn`; `accepted` → `cancelled`.
 
 **Upgrading a database created before offers?** Run this once (psql or the Supabase SQL editor)
@@ -328,7 +330,7 @@ verification email):
 | A new listing matches your wanted post | Students whose active wanted post it matches (at most 10 wanted posts per new listing, one message per student, verified accounts only). Only when the listing is posted, never when it is edited | The new listing |
 | New or changed offer | The seller | The listing |
 | Offer accepted | The buyer | The listing |
-| Offer declined (by the seller, or because the item was sold or reserved another way) | The buyer | The listing |
+| Offer declined (by the seller, or because the item was sold or reserved another way, or is no longer for sale) | The buyer | The listing |
 | Accepted offer cancelled ("Make available again") | The buyer | Their chat with the seller |
 
 Notifications never block or break the request that caused them: if email is not configured they
@@ -343,7 +345,8 @@ service's web API with `fetch`.
 
 - **Stripe Checkout, test mode only** (`services/stripe.js`, `routes/payments.js`). An item for sale,
   or an auction you won, can be paid by card on Stripe's own page. The amount comes from
-  `utils/payments.js`: the price, the agreed price of your accepted offer, or your winning bid.
+  `utils/payments.js`: the price, the agreed price of your accepted offer (or the price, if lower),
+  or your winning bid.
   When the buyer returns, `/confirm` asks Stripe whether they paid. The webhook (with a verified
   signature) covers buyers who close the tab. Both call `markPaid`, which only acts once, marks the
   listing sold and notifies both people. While one buyer is checking out (30 minutes), others get
@@ -357,8 +360,12 @@ service's web API with `fetch`.
   5 seconds, and `server.js` checks open QRs once a minute for buyers who close the page. If a
   confirmation is held up (Bakong down, an expired token, the API switched off), `server.js` keeps
   re-checking unconfirmed QRs for 24 hours, at start-up and every 15 minutes. Both call
-  `markPaid`. A QR expires after 30 minutes, the same lock as Stripe. Bakong only answers requests
-  from Cambodian IP addresses, so this works when the API runs in Cambodia (see `DEPLOY.md`).
+  `markPaid`. A QR expires after 30 minutes, the same lock as Stripe. While it is open, the QR
+  screen is told `unavailable` (and takes the QR away) once the item is sold, traded or reserved for
+  someone else, the seller changes their Bakong account, or `amountToPay` would now ask this buyer
+  for a different amount (their offer was accepted, the price changed, or the seller made the item
+  available again after accepting their offer). Bakong only answers requests from Cambodian IP
+  addresses, so this works when the API runs in Cambodia (see `DEPLOY.md`).
 - **Cloudinary** (`services/cloudinary.js`): signed uploads. Without it, photos go to `backend/uploads/`.
 - **Telegram** (`services/telegram.js`, `routes/telegram.js`, `utils/telegramBot.js`). Settings gives
   a one-time `t.me/<bot>?start=<code>` link. The bot (long polling, so no public URL is needed)
@@ -422,7 +429,7 @@ A token issued before the account's last password change or reset is refused (40
 | GET | `/api/listings` | Browse and search (ranked, typo tolerant; see Search above). Query: `query`, `category`, `condition`, `type`, `minPrice`, `maxPrice`, `status` (default `active`) |
 | GET | `/api/listings/:id` | One listing, with seller info |
 | POST 🔒 | `/api/listings` | `{ title, category, condition, description?, listingType?, price?, cashTopup?, imageUrls?, auctionEndsAt?, minIncrement? }`. `imageUrls`: up to 6 URLs from `POST /api/uploads`, the first is the cover (see Photos above). `auctionEndsAt` (ISO date) is required for an auction. For a wanted post, `price` is the budget (0 = any price). A new item alerts students whose wanted posts it matches (see Wanted matches above) |
-| PATCH 🔒 | `/api/listings/:id` | Owner only. Any subset of fields, e.g. `{ "status": "sold" }`. `imageUrls` replaces the whole list; photos the listing already has may stay. `409` for `{ "status": "active" }` on an item someone paid for online (post it as a new listing instead). Lowering the price of an available item for sale alerts everyone who saved it. Making an item reserved by an accepted offer available again cancels that offer; `409` for changing `listingType` while it is (see Offers above) |
+| PATCH 🔒 | `/api/listings/:id` | Owner only. Any subset of fields, e.g. `{ "status": "sold" }`. `imageUrls` replaces the whole list; photos the listing already has may stay. `409` for `{ "status": "active" }` on an item someone paid for online (post it as a new listing instead). Lowering the price of an available item for sale alerts everyone who saved it. Making an item reserved by an accepted offer available again cancels that offer; `409` for changing `listingType` while it is. Changing an item for sale to another type declines its pending offers (see Offers above) |
 | DELETE 🔒 | `/api/listings/:id` | Owner only. `409` if it is sold or traded, has reviews, someone paid for it, a payment for it is unconfirmed and less than 24 hours old (it may still be confirmed), or it is reserved by an accepted offer: deleting would also erase its payments, reviews and offers |
 | GET | `/api/listings/:id/bids` | An auction's bids, highest first, with bidder name |
 | POST 🔒 | `/api/listings/:id/bids` | `{ amount }`. Place a bid (see Auctions above) |
@@ -443,8 +450,8 @@ A token issued before the account's last password change or reset is refused (40
 | POST 🔒 | `/api/payments/checkout` | `{ listingId }` → `{ url }` of Stripe's payment page |
 | POST 🔒 | `/api/payments/confirm` | `{ sessionId }` → `{ status: "paid" \| "pending" \| "refund_due" }`, checked with Stripe |
 | POST | `/api/payments/webhook` | Called by Stripe only, with a signature check |
-| POST 🔒 | `/api/payments/khqr` | `{ listingId }` → `{ paymentId, qr, amount, expiresAt }`. Asking again within 30 minutes returns the same QR, as long as it still pays the seller's current Bakong account. First records any earlier QR for the item that was paid but not yet confirmed: `409` if it was this buyer's. `400` if the seller has no Bakong account. `403` if the item is reserved for another buyer; for the buyer it is reserved for, the amount is the agreed price. `503` if Bakong cannot be reached right now (no QR is shown that could not be confirmed) |
-| GET 🔒 | `/api/payments/khqr/:id` | Buyer only → `{ status: "paid" \| "pending" \| "expired" \| "refund_due" \| "unavailable" }`, checked with Bakong. `refund_due`: paid after the item was already sold or reserved for another buyer. `unavailable`: not paid, and the item has been sold or traded another way or reserved for another buyer, or the seller changed the Bakong account this QR pays, so the QR should not be paid |
+| POST 🔒 | `/api/payments/khqr` | `{ listingId }` → `{ paymentId, qr, amount, expiresAt }`. Asking again within 30 minutes returns the same QR, as long as it still pays the seller's current Bakong account. First records any earlier QR for the item that was paid but not yet confirmed: `409` if it was this buyer's. `400` if the seller has no Bakong account. `403` if the item is reserved for another buyer; for the buyer it is reserved for, the amount is the agreed price (or the asking price, if lower). `503` if Bakong cannot be reached right now (no QR is shown that could not be confirmed) |
+| GET 🔒 | `/api/payments/khqr/:id` | Buyer only → `{ status: "paid" \| "pending" \| "expired" \| "refund_due" \| "unavailable" }`, checked with Bakong. `refund_due`: paid after the item was already sold or reserved for another buyer. `unavailable`: not paid, and the item has been sold or traded another way or reserved for another buyer, the seller changed the Bakong account this QR pays, or this buyer would now pay a different amount (see KHQR above), so the QR should not be paid |
 | GET 🔒 | `/api/users/me/telegram` | `{ enabled, connected }` |
 | POST 🔒 | `/api/users/me/telegram` | `{ link }`: one-time link that opens the bot |
 | DELETE 🔒 | `/api/users/me/telegram` | Disconnect Telegram |

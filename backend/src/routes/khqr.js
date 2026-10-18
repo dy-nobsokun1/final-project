@@ -1,11 +1,13 @@
 import { randomUUID } from "node:crypto";
 import { Router } from "express";
+import { LISTING_SELECT } from "../db/listings.js";
 import { confirmOpenKhqrPayments, lockListingForPayment, markPaid, PAYMENT_MINUTES } from "../db/payments.js";
 import { query, withTransaction } from "../db/pool.js";
 import { requireAuth } from "../middleware/auth.js";
 import { checkBakongReachable, isBakongConfigured, isKhqrPaid } from "../services/bakong.js";
 import { HttpError } from "../utils/httpError.js";
 import { buildKhqr, khqrPaysAccount, toAsciiName } from "../utils/khqr.js";
+import { amountToPay } from "../utils/payments.js";
 import { isUuid } from "../utils/validation.js";
 
 // KHQR payments: the buyer scans a QR with any Cambodian banking app, and the money goes straight
@@ -21,6 +23,21 @@ const toKhqrPayment = (payment) => ({
   amount: Number(payment.amount),
   expiresAt: expiresAt(payment),
 });
+
+/**
+ * What `buyerId` would be asked to pay for `listing` (a LISTING_SELECT row) if they started paying
+ * now, or null if they cannot pay for it online now. A null leaves an open QR as it is: e.g. the
+ * owner marked a sale item reserved by hand, which does not cancel a payment already in progress
+ * (README "Known limitations").
+ */
+function amountOwedNow(listing, buyerId) {
+  try {
+    return amountToPay(listing, buyerId);
+  } catch (error) {
+    if (error instanceof HttpError) return null;
+    throw error;
+  }
+}
 
 // POST /api/payments/khqr  { listingId }  (logged in) -> { paymentId, qr, amount, expiresAt }
 khqrRouter.post("/", requireAuth, async (req, res) => {
@@ -116,21 +133,28 @@ khqrRouter.get("/:id", requireAuth, async (req, res) => {
     return res.json({ status: marked.status });
   }
   // Not paid, as far as Bakong knew a moment ago. Read everything again in one go: this same
-  // payment may have been recorded meanwhile (by the background check, or a second tab).
+  // payment may have been recorded meanwhile (by the background check, or a second tab). The listing
+  // comes as LISTING_SELECT reads it, so amountToPay can work out what this buyer would pay now.
   const { rows: [latest] } = await query(
-    `SELECT p.status, l.status AS listing_status, l.reserved_for, u.bakong_account_id
-     FROM payments p JOIN listings l ON l.id = p.listing_id JOIN users u ON u.id = l.user_id
+    `SELECT p.status AS payment_status, listing.*, seller.bakong_account_id
+     FROM payments p
+     CROSS JOIN LATERAL (${LISTING_SELECT} WHERE l.id = p.listing_id) listing
+     JOIN users seller ON seller.id = listing.user_id
      WHERE p.id = $1`,
     [payment.id],
   );
   if (!latest) throw new HttpError(404, "Payment not found."); // its listing was deleted meanwhile
-  if (latest.status !== "pending") return res.json({ status: latest.status });
+  if (latest.payment_status !== "pending") return res.json({ status: latest.payment_status });
   // "unavailable" takes the QR off the buyer's screen so they do not pay it: the item went another
-  // way (sold or traded, or reserved for another buyer whose offer the seller accepted), or the
-  // seller changed or removed the Bakong account this QR pays.
-  const isGone = latest.listing_status === "sold" || latest.listing_status === "traded"
+  // way (sold or traded, or reserved for another buyer whose offer the seller accepted), the seller
+  // changed or removed the Bakong account this QR pays, or this buyer would now pay a different
+  // amount (their offer was accepted, the price changed, or the seller made the item available
+  // again after accepting their offer).
+  const isGone = latest.status === "sold" || latest.status === "traded"
     || (latest.reserved_for !== null && latest.reserved_for !== payment.buyer_id);
   const paysCurrentAccount = Boolean(latest.bakong_account_id) && khqrPaysAccount(payment.khqr, latest.bakong_account_id);
-  if (isGone || !paysCurrentAccount) return res.json({ status: "unavailable" });
+  const owed = amountOwedNow(latest, payment.buyer_id);
+  const isRepriced = owed !== null && owed !== Number(payment.amount);
+  if (isGone || !paysCurrentAccount || isRepriced) return res.json({ status: "unavailable" });
   res.json({ status: payment.is_expired ? "expired" : "pending" });
 });

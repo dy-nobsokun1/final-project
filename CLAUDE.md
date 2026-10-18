@@ -118,9 +118,9 @@ Its log: `/tmp/uniswap-cloud-setup.log`. Use the `implement_backend` branch.
   has an unconfirmed payment that may still be confirmed (`RECHECK_HOURS`, 24, in `db/payments.js`,
   + 1 minute of slack), or is reserved by an accepted offer. It locks the listing row like `lockListingForPayment`, so no payment can start
   between the check and the delete. The owner's Delete button is hidden on sold and traded listings.
-  `PATCH` refuses (409) to make a listing `active` again once it has a `paid` payment: that sale's
-  payment and reviews point at its buyer, so selling it again means a new listing. The README's
-  "Known limitations" lists the payment rules kept on purpose.
+  `PATCH` refuses (409) to make a listing `active` again once it has a `paid` payment (checked on the
+  row it re-reads under the lock): that sale's payment and reviews point at its buyer, so selling it
+  again means a new listing. The README's "Known limitations" lists the payment rules kept on purpose.
 - **Saved listings:** `saved_listings` (PK `user_id` + `listing_id`, cascades), `routes/saved.js`. Pages get
   hearts via `GET /api/users/me/saved/ids` and pass `savedIds` to `ListingGrid` (leave it out for grids of
   your own listings). `save_count` is in `LISTING_SELECT`; test helpers `skippedEmails()` and `waitFor()`
@@ -136,10 +136,14 @@ Its log: `/tmp/uniswap-cloud-setup.log`. Use the `implement_backend` branch.
   withdraws the old); every offer change locks the listing row. Accept sets `listings.reserved_for` +
   `reserved`, declines the others, and is refused (409) while another buyer is paying. `amountToPay`
   lets only `reserved_for` pay, at `agreed_price` (from the accepted offer via `LISTING_SELECT`, never
-  serialized); `markPaid` makes anyone else's payment `refund_due` and declines pending offers when it
-  sells; KHQR status says `unavailable`. `updateOffersForStatus` (PATCH, now in a transaction) cancels
-  on Make available again and declines pending offers when the item leaves `active`. Mark as sold
-  keeps `reserved_for`, which `findDealPartner` uses. While it is set, the type is locked and DELETE is refused.
+  serialized) or the asking price if lower (`payableAmount` in the frontend mirrors it); `markPaid`
+  makes anyone else's payment `refund_due` and declines pending offers when it sells. KHQR status
+  says `unavailable` for other buyers' QRs once it is reserved, and for any QR whose amount is no longer what
+  `amountToPay` would charge its buyer (a manual "Mark reserved" leaves QRs alone).
+  `updateOffersForStatus` (PATCH, in a transaction) cancels on Make available again and declines
+  pending offers when the item leaves `active`; PATCH also declines them when the type stops being
+  `sale`. Mark as sold (offered on reserved items too) keeps `reserved_for`, which `findDealPartner`
+  uses. While it is set, the type is locked and DELETE is refused.
 - **Messaging:** there is no conversations table. A thread is all messages between two users about
   one listing (this follows the ER diagram).
 - **Uploads:** `POST /api/uploads` with raw image bytes (max 5 MB), saved to `backend/uploads/`

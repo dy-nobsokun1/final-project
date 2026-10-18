@@ -53,10 +53,10 @@ Putting it online (Supabase, Render, Vercel, Cloudinary, Stripe, Telegram): [`DE
 
 ### Tested
 
-- `npm test` (in `backend/`): 31 unit tests for validation (including the photo rules), the search
+- `npm test` (in `backend/`): 32 unit tests for validation (including the photo rules), the search
   query and wanted-post matching, the payment amount rules, the Stripe and Cloudinary helpers, and
   the KHQR builder (checked against the National Bank's own library).
-- `npm run test:api` (in `backend/`): 87 tests that send real requests to the running API, covering
+- `npm run test:api` (in `backend/`): 90 tests that send real requests to the running API, covering
   sign-up and verification, password reset and change, owner-only changes, messaging, simultaneous
   bids, card and KHQR payments, reviews, saved listings, listing photos, wanted-post matching and
   alerts, offers (including two accepted at the same moment), and refusing to delete a listing whose
@@ -83,11 +83,13 @@ Putting it online (Supabase, Render, Vercel, Cloudinary, Stripe, Telegram): [`DE
   cancelling could refund the very buyer the seller meant). An accepted offer does record the buyer:
   then only they can pay, and anyone else's late payment is recorded as a refund the seller owes.
 - **Offers do not expire.** A pending offer stays until the buyer withdraws or changes it, the seller
-  answers it, or the item is sold or reserved another way. An accepted offer keeps the item reserved
-  until it is sold or the seller makes it available again.
-- **"Make available again" does not cancel a payment already in progress.** A buyer whose accepted
-  offer was cancelled while their QR was open can still pay the agreed price shown on it, and that
-  completes the sale, the same as whoever pays first.
+  answers it, or the item is sold, reserved another way or no longer for sale. An accepted offer
+  keeps the item reserved until it is sold or the seller makes it available again.
+- **A withdrawn QR can still be paid if it was already scanned.** When the amount a buyer would pay
+  changes while their KHQR is open (the seller changed the price, accepted their offer, or made the
+  item available again after accepting it), the QR leaves their screen. A banking app that already
+  read it can still pay it until it expires (30 minutes): that completes the sale at the QR's amount,
+  the same as whoever pays first, and the two settle any difference.
 - **An item paid for online cannot be made available again.** Its payment and reviews belong to
   that sale. If the deal falls through, the seller refunds the buyer and posts the item as a new
   listing.
