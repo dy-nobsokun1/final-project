@@ -14,12 +14,18 @@ const FAILURES_BEFORE_WARNING = 3;
  * check every 5 seconds regardless would only pile them up behind a slow one.
  * - paid / refund_due: goes to the listing page, which confirms it again and explains the result.
  * - expired / unavailable: stops. Without any answer, the QR's own expiry time still ends it,
- *   since banking apps refuse an expired KHQR.
+ *   since banking apps refuse an expired KHQR. Then nobody knows yet whether it was paid, which
+ *   `isUnsure` reports, so the screen does not invite the buyer to pay again.
  */
 export function useKhqrStatus(listingId: string, payment: KhqrPayment | null) {
   const router = useRouter();
   // Kept per payment, so a new QR starts again from "pending".
-  const [answer, setAnswer] = useState<{ paymentId: string; status: KhqrStatus; failures: number } | null>(null);
+  const [answer, setAnswer] = useState<{
+    paymentId: string;
+    status: KhqrStatus;
+    failures: number;
+    isGuess: boolean;
+  } | null>(null);
 
   useEffect(() => {
     if (!payment) return;
@@ -30,11 +36,13 @@ export function useKhqrStatus(listingId: string, payment: KhqrPayment | null) {
     let timer: ReturnType<typeof setTimeout> | undefined;
 
     async function check() {
-      const reply = await checkKhqrPayment(paymentId); // null: the API or Bakong did not answer
+      // null: the API or Bakong did not answer. The call itself can also fail in the browser
+      // (network down, or a new deployment), which must not stop the checks either.
+      const reply = await checkKhqrPayment(paymentId).catch(() => null);
       if (isStopped) return;
       failures = reply === null ? failures + 1 : 0;
       const status = reply ?? (Date.now() >= expiresAt ? "expired" : "pending");
-      setAnswer({ paymentId, status, failures });
+      setAnswer({ paymentId, status, failures, isGuess: reply === null });
       if (status === "paid" || status === "refund_due") router.replace(`/listings/${listingId}?khqr=${paymentId}`);
       else if (status === "pending") timer = setTimeout(check, CHECK_EVERY_MS);
     }
@@ -50,5 +58,6 @@ export function useKhqrStatus(listingId: string, payment: KhqrPayment | null) {
   return {
     status: current?.status ?? "pending",
     isFailing: (current?.failures ?? 0) >= FAILURES_BEFORE_WARNING,
+    isUnsure: current?.status === "expired" && current.isGuess,
   };
 }

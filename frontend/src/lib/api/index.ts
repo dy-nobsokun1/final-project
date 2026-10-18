@@ -72,27 +72,14 @@ export async function getPaymentOptions(): Promise<{ card: boolean; khqr: boolea
 }
 
 /**
- * A payment's status for the listing page's banner, or null on any API error: payments switched
- * off (503), Stripe or Bakong not answering (502), or not this user's payment (404). The banner is
- * optional, so none of these may stop the listing page from loading.
- */
-async function paymentStatusOrNull<T>(request: Promise<{ status: T }>): Promise<T | null> {
-  try {
-    return (await request).status;
-  } catch (error) {
-    if (error instanceof ApiError) return null;
-    throw error;
-  }
-}
-
-/**
  * Whether a KHQR has been paid. The API asks Bakong itself each time, so the browser cannot mark
- * anything paid. Null if the payment is not this user's, or the API could not tell.
+ * anything paid. Null if the payment is not this user's (or does not exist).
  */
 export async function getKhqrStatus(paymentId: string): Promise<KhqrStatus | null> {
-  return paymentStatusOrNull(
+  const result = await orNull(
     apiFetch<{ status: KhqrStatus }>(`/api/payments/khqr/${encodeURIComponent(paymentId)}`),
   );
+  return result?.status ?? null;
 }
 
 /**
@@ -100,12 +87,27 @@ export async function getKhqrStatus(paymentId: string): Promise<KhqrStatus | nul
  * the payment went through, so a hand-typed URL cannot mark anything paid.
  */
 export async function confirmPayment(sessionId: string): Promise<"paid" | "pending" | "refund_due" | null> {
-  return paymentStatusOrNull(
+  const result = await orNull(
     apiFetch<{ status: "paid" | "pending" | "refund_due" }>("/api/payments/confirm", {
       method: "POST",
       body: JSON.stringify({ sessionId }),
     }),
   );
+  return result?.status ?? null;
+}
+
+/**
+ * For the listing page's banner after paying: the payment's status, or "unconfirmed" when the API
+ * could not tell right now (payments switched off, or Stripe or Bakong not answering). The page
+ * then still loads, and the buyer is told not to pay again.
+ */
+export async function paymentBannerStatus<T>(request: Promise<T | null>): Promise<T | "unconfirmed" | null> {
+  try {
+    return await request;
+  } catch (error) {
+    if (error instanceof ApiError) return "unconfirmed";
+    throw error;
+  }
 }
 
 /** An auction's bids, highest first. */

@@ -12,7 +12,7 @@ import type { KhqrPayment, KhqrStatus } from "@/types";
 const STATUS_NOTES: Partial<Record<KhqrStatus, string>> = {
   expired:
     "This QR has expired. If you paid it before then, do not pay again: UniSwap keeps checking with Bakong and will let you know.",
-  unavailable: "This item has just been sold, so its QR was withdrawn. Do not pay it.",
+  unavailable: "This QR was withdrawn: the item was sold, or the seller changed their Bakong account. Do not pay it.",
   paid: "Payment received. Loading...",
   refund_due: "Payment received. Loading...",
 };
@@ -32,8 +32,12 @@ export function KhqrPayButton({ listingId, priceLabel, sellerName }: KhqrPayButt
   const [payment, setPayment] = useState<KhqrPayment | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isBusy, setIsBusy] = useState(false);
-  const { status, isFailing } = useKhqrStatus(listingId, payment);
-  const canStart = payment === null || status === "expired";
+  const { status, isFailing, isUnsure } = useKhqrStatus(listingId, payment);
+  // After an expiry nobody could confirm, offering a new QR would invite paying twice.
+  const canStart = payment === null || (status === "expired" && !isUnsure);
+  const note = isUnsure
+    ? "This QR has expired, and UniSwap could not check with Bakong whether it was paid. Do not pay again: refresh this page in a few minutes to see."
+    : payment ? STATUS_NOTES[status] : null;
 
   async function handleClick() {
     setIsBusy(true);
@@ -59,7 +63,7 @@ export function KhqrPayButton({ listingId, priceLabel, sellerName }: KhqrPayButt
         </Button>
       ) : null}
       <p role="status" className="text-xs text-muted-foreground">
-        {(payment ? STATUS_NOTES[status] : null) ?? "Real money, paid straight to the seller. UniSwap never holds it."}
+        {note ?? "Real money, paid straight to the seller. UniSwap never holds it."}
       </p>
       {error ? (
         <p role="alert" className="text-sm text-foreground">

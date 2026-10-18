@@ -17,6 +17,7 @@ import {
   getKhqrStatus,
   getListingById,
   getPaymentOptions,
+  paymentBannerStatus,
 } from "@/lib/api";
 import { CATEGORIES, conditionLabel, listingTypeLabel, statusLabel } from "@/lib/constants";
 import { formatListingPrice, formatRelativeTime } from "@/lib/utils";
@@ -27,6 +28,7 @@ const PAYMENT_BANNERS = {
   pending: "Your payment is still processing. Refresh this page in a moment.",
   refund_due:
     "Your payment went through, but the item had already been sold. The seller has been asked to refund you: message them if you have not heard back.",
+  unconfirmed: "We could not check your payment just now. Do not pay again: refresh this page in a moment.",
 } as const;
 
 /** Detail view for a single listing. */
@@ -37,8 +39,8 @@ export default async function ListingDetailPage({ params, searchParams }: PagePr
   // Back from Stripe (?session_id=) or from a paid KHQR (?khqr=): confirm with the API first, so the
   // listing below already shows as sold. The API checks with Stripe or Bakong, never trusting the URL.
   const payment = !user ? null
-    : typeof sessionId === "string" ? await confirmPayment(sessionId)
-    : typeof khqrPaymentId === "string" ? await getKhqrStatus(khqrPaymentId)
+    : typeof sessionId === "string" ? await paymentBannerStatus(confirmPayment(sessionId))
+    : typeof khqrPaymentId === "string" ? await paymentBannerStatus(getKhqrStatus(khqrPaymentId))
     : null;
   const [listing, paymentOptions] = await Promise.all([getListingById(id), getPaymentOptions()]);
 

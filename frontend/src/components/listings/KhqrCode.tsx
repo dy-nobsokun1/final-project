@@ -25,10 +25,14 @@ export function KhqrCode({ payment, sellerName, isFailing }: KhqrCodeProps) {
       <p className="text-2xl font-semibold">{formatPrice(payment.amount)}</p>
       <p className="text-sm">Paid straight to {sellerName}&apos;s Bakong account.</p>
       <p role="status" className="text-xs text-neutral-600">
-        {isFailing
-          ? "UniSwap cannot reach Bakong to confirm payments right now. If you have already paid, do not pay again: it will be confirmed once Bakong answers."
-          : `Waiting for your payment... This code expires at ${expires}.`}
+        {isFailing ? "" : "Waiting for your payment... "}This code expires at {expires}.
       </p>
+      {isFailing ? (
+        <p role="alert" className="text-xs font-medium text-neutral-900">
+          UniSwap cannot reach Bakong to confirm payments right now. If you have already paid, do not pay
+          again: it will be confirmed once Bakong answers.
+        </p>
+      ) : null}
     </div>
   );
 }
