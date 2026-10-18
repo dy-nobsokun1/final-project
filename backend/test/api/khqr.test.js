@@ -3,12 +3,15 @@ import { after, test } from "node:test";
 import { startApi } from "./helpers.js";
 
 // KHQR is switched on for this file, but Bakong itself is replaced: requests to its API get
-// "paid" for the MD5s in `paidMd5s` and "not found" for everything else. All other requests
-// (the tests calling our API) go through as normal.
+// "paid" for the MD5s in `paidMd5s` and "not found" for everything else, or a 403 (as from outside
+// Cambodia) while `bakong.isDown` is true. All other requests (the tests calling our API) go
+// through as normal.
 const realFetch = globalThis.fetch;
 const paidMd5s = new Set();
+const bakong = { isDown: false };
 globalThis.fetch = async (url, options) => {
   if (!String(url).startsWith("https://api-bakong.nbc.gov.kh/")) return realFetch(url, options);
+  if (bakong.isDown) return Response.json({ error: "forbidden" }, { status: 403 });
   const { md5 } = JSON.parse(options.body);
   return Response.json(paidMd5s.has(md5)
     ? { responseCode: 0, data: { hash: "test" } }
@@ -80,6 +83,23 @@ test("an unpaid QR expires after 30 minutes, and the buyer can then get a new on
   await api.sql("UPDATE payments SET created_at = now() - interval '31 minutes' WHERE id = $1", [paymentId]);
   assert.deepEqual((await khqrStatus(buyer, paymentId)).body, { status: "expired" });
   assert.notEqual((await startKhqr(buyer, listing)).body.paymentId, paymentId);
+});
+
+test("no QR is shown while Bakong cannot be reached, since its payment could not be confirmed", async () => {
+  const [seller, buyer] = await Promise.all([api.createUser(), api.createUser()]);
+  await api.request("PATCH", "/api/users/me", { token: seller.token, body: { bakongAccountId: "seller@aclb" } });
+  const listing = await api.createListing(seller);
+
+  bakong.isDown = true;
+  try {
+    const refused = await startKhqr(buyer, listing);
+    assert.equal(refused.status, 503);
+    assert.match(refused.body.error, /cannot reach Bakong/);
+    assert.deepEqual(await api.sql("SELECT id FROM payments WHERE listing_id = $1", [listing.id]), []);
+  } finally {
+    bakong.isDown = false;
+  }
+  assert.equal((await startKhqr(buyer, listing)).status, 201);
 });
 
 test("an unconfirmed QR keeps being re-checked for 24 hours, then is left alone", async () => {

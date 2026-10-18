@@ -249,7 +249,7 @@ Send JSON. Routes marked 🔒 need the header `Authorization: Bearer <token>` (t
 | POST 🔒 | `/api/payments/checkout` | `{ listingId }` → `{ url }` of Stripe's payment page |
 | POST 🔒 | `/api/payments/confirm` | `{ sessionId }` → `{ status: "paid" \| "pending" }`, checked with Stripe |
 | POST | `/api/payments/webhook` | Called by Stripe only, with a signature check |
-| POST 🔒 | `/api/payments/khqr` | `{ listingId }` → `{ paymentId, qr, amount, expiresAt }`. Asking again within 30 minutes returns the same QR. `400` if the seller has no Bakong account |
+| POST 🔒 | `/api/payments/khqr` | `{ listingId }` → `{ paymentId, qr, amount, expiresAt }`. Asking again within 30 minutes returns the same QR. `400` if the seller has no Bakong account. `503` if Bakong cannot be reached right now (no QR is shown that could not be confirmed) |
 | GET 🔒 | `/api/payments/khqr/:id` | Buyer only → `{ status: "paid" \| "pending" \| "expired" }`, checked with Bakong |
 | GET 🔒 | `/api/users/me/telegram` | `{ enabled, connected }` |
 | POST 🔒 | `/api/users/me/telegram` | `{ link }`: one-time link that opens the bot |

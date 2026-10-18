@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import { config } from "../config.js";
 import { khqrMd5 } from "../utils/khqr.js";
 
@@ -21,11 +22,24 @@ export async function isKhqrPaid(khqr) {
     body: JSON.stringify({ md5: khqrMd5(khqr) }),
     signal: AbortSignal.timeout(10_000),
   });
-  if (response.status === 403) throw new Error("Bakong refused the request (it only accepts Cambodian IP addresses).");
+  if (response.status === 401) throw new Error("Bakong refused the token (HTTP 401): BAKONG_TOKEN is wrong or has expired.");
+  if (response.status === 403) throw new Error("Bakong refused the request (HTTP 403): it only accepts Cambodian IP addresses.");
   if (!response.ok) throw new Error(`Bakong check failed: HTTP ${response.status}`);
   const result = await response.json();
   if (result.responseCode === 0) return true;
   // errorCode 1: nobody has paid this QR yet. 3: a payment was tried but failed.
   if (result.errorCode === 1 || result.errorCode === 3) return false;
+  if (result.errorCode === 6) {
+    throw new Error(`Bakong refused the token: ${result.responseMessage}. BAKONG_TOKEN is wrong or has expired.`);
+  }
   throw new Error(`Bakong check failed: ${result.responseMessage}`);
+}
+
+/**
+ * Throws unless Bakong answers this API right now (a valid token, from a Cambodian IP address).
+ * Asked before showing a QR, so nobody pays real money into a QR that UniSwap could not confirm.
+ * It asks about a random text that no QR can have, so the answer is always "not paid".
+ */
+export async function checkBakongReachable() {
+  await isKhqrPaid(`uniswap-check-${randomUUID()}`);
 }

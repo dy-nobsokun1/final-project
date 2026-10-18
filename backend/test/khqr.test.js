@@ -6,7 +6,7 @@ import { after, test } from "node:test";
 process.env.DATABASE_URL ??= "postgres://unused";
 process.env.JWT_SECRET ??= "unused";
 const { buildKhqr, crc16, khqrMd5, toAsciiName } = await import("../src/utils/khqr.js");
-const { isKhqrPaid } = await import("../src/services/bakong.js");
+const { checkBakongReachable, isKhqrPaid } = await import("../src/services/bakong.js");
 const { isBakongAccountId } = await import("../src/utils/validation.js");
 
 test("CRC-16 gives the standard check value for CRC-16/CCITT-FALSE", () => {
@@ -58,5 +58,16 @@ test("Bakong's answer: paid, not paid yet, failed, and a refused (non-Cambodian)
   answer({ error: "forbidden" }, 403);
   await assert.rejects(isKhqrPaid("any qr"), /Cambodian IP/);
   answer({ responseCode: 1, errorCode: 6, responseMessage: "Unauthorized" });
-  await assert.rejects(isKhqrPaid("any qr"), /Unauthorized/);
+  await assert.rejects(isKhqrPaid("any qr"), /Unauthorized.*wrong or has expired/);
+  answer({ error: "unauthorized" }, 401);
+  await assert.rejects(isKhqrPaid("any qr"), /BAKONG_TOKEN is wrong or has expired/);
+});
+
+test("before showing a QR, the API checks that Bakong answers at all", async () => {
+  const realFetch = globalThis.fetch;
+  after(() => { globalThis.fetch = realFetch; });
+  globalThis.fetch = async () => Response.json({ responseCode: 1, errorCode: 1, responseMessage: "Transaction could not be found." });
+  await checkBakongReachable(); // answered "not paid": reachable
+  globalThis.fetch = async () => Response.json({ error: "forbidden" }, { status: 403 });
+  await assert.rejects(checkBakongReachable(), /Cambodian IP/);
 });

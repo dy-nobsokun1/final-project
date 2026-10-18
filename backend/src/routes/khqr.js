@@ -3,7 +3,7 @@ import { Router } from "express";
 import { lockListingForPayment, markPaid, PAYMENT_MINUTES } from "../db/payments.js";
 import { query, withTransaction } from "../db/pool.js";
 import { requireAuth } from "../middleware/auth.js";
-import { isBakongConfigured, isKhqrPaid } from "../services/bakong.js";
+import { checkBakongReachable, isBakongConfigured, isKhqrPaid } from "../services/bakong.js";
 import { HttpError } from "../utils/httpError.js";
 import { buildKhqr, toAsciiName } from "../utils/khqr.js";
 
@@ -24,6 +24,14 @@ const toKhqrPayment = (payment) => ({
 // POST /api/payments/khqr  { listingId }  (logged in) -> { paymentId, qr, amount, expiresAt }
 khqrRouter.post("/", requireAuth, async (req, res) => {
   if (!isBakongConfigured) throw new HttpError(503, "KHQR payment is not set up yet.");
+  // A QR only makes sense if we can see it being paid. Asked before the transaction below, so no
+  // listing stays locked while we wait for Bakong.
+  try {
+    await checkBakongReachable();
+  } catch (error) {
+    console.error("[bakong]", error.message);
+    throw new HttpError(503, "KHQR payment is unavailable right now because UniSwap cannot reach Bakong. Please try again later.");
+  }
 
   const payment = await withTransaction(async (client) => {
     // Refuses if the item is already paid for, or someone else is paying right now.
