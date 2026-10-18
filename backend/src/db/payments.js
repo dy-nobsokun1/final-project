@@ -81,12 +81,19 @@ export async function markPaid(paymentId) {
   return payment;
 }
 
-/** KHQR payments that may still be confirmed: started in the last CONFIRM_MINUTES. */
-export async function findOpenKhqrPayments() {
+// A KHQR still unconfirmed after CONFIRM_MINUTES keeps being checked (less often) for this long, in
+// case its confirmation was held up: Bakong down, an expired token, or the API switched off a while.
+export const RECHECK_HOURS = 24;
+
+/**
+ * KHQR payments still waiting for Bakong: started in the last CONFIRM_MINUTES or, with
+ * `includeOlder`, in the last RECHECK_HOURS.
+ */
+export async function findOpenKhqrPayments({ includeOlder = false } = {}) {
   const { rows } = await query(
     `SELECT id, khqr FROM payments
      WHERE method = 'khqr' AND status = 'pending' AND created_at > now() - make_interval(mins => $1)`,
-    [CONFIRM_MINUTES],
+    [includeOlder ? RECHECK_HOURS * 60 : CONFIRM_MINUTES],
   );
   return rows;
 }

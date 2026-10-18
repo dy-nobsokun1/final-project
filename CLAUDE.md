@@ -93,7 +93,8 @@ Its log: `/tmp/uniswap-cloud-setup.log`. Use the `implement_backend` branch.
   set in Settings); UniSwap never holds money. `utils/khqr.js` builds the QR text by hand (no package;
   matches NBC's `bakong-khqr` library exactly, see `test/khqr.test.js`). `services/bakong.js` checks
   `check_transaction_by_md5`; `routes/khqr.js` + a once-a-minute check in `server.js` call `markPaid`
-  (now keyed by payment id). `payments.method` is `stripe` or `khqr`. A payment confirmed after the
+  (now keyed by payment id). That check covers QRs up to `CONFIRM_MINUTES` (35) old; at start-up and
+  every 15 minutes it also re-checks unconfirmed ones up to `RECHECK_HOURS` (24) old. `payments.method` is `stripe` or `khqr`. A payment confirmed after the
   item was already sold becomes `refund_due` (not `paid`); the listing is untouched and both people
   are told the seller must refund (`notifyLatePayment`). Bakong only accepts Cambodian
   IPs, so it does not work from Render. Token in `BAKONG_TOKEN`, expires 13 Jan 2027.

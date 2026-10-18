@@ -42,19 +42,34 @@ void runAuctionCheck();
 setInterval(runAuctionCheck, AUCTION_CHECK_MS);
 
 // Also once a minute, ask Bakong about KHQR payments still waiting. The QR screen already checks
-// every few seconds; this covers a buyer who pays and then closes the page.
+// every few seconds; this covers a buyer who pays and then closes the page. The first run and every
+// 15th one also re-check older unconfirmed QRs (up to RECHECK_HOURS), so a payment whose confirmation
+// was held up (e.g. the token expired, or the API was off) is still recorded once checks work again.
 const KHQR_CHECK_MS = 60 * 1000;
+const OLDER_KHQR_EVERY = 15;
+let khqrRuns = 0;
+let isKhqrCheckRunning = false;
 
 async function runKhqrCheck() {
-  for (const payment of await findOpenKhqrPayments()) {
-    try {
-      if (await isKhqrPaid(payment.khqr)) await markPaid(payment.id);
-    } catch (error) {
-      console.error(`[bakong] could not check payment ${payment.id}:`, error.message);
+  if (isKhqrCheckRunning) return; // the previous run is still waiting for Bakong
+  isKhqrCheckRunning = true;
+  try {
+    const includeOlder = khqrRuns % OLDER_KHQR_EVERY === 0;
+    khqrRuns += 1;
+    for (const payment of await findOpenKhqrPayments({ includeOlder })) {
+      try {
+        if (await isKhqrPaid(payment.khqr)) await markPaid(payment.id);
+      } catch (error) {
+        console.error(`[bakong] could not check payment ${payment.id}:`, error.message);
+      }
     }
+  } finally {
+    isKhqrCheckRunning = false;
   }
 }
 
 if (isBakongConfigured) {
-  setInterval(() => runKhqrCheck().catch((error) => console.error("[bakong]", error.message)), KHQR_CHECK_MS);
+  const runSafely = () => runKhqrCheck().catch((error) => console.error("[bakong]", error.message));
+  void runSafely();
+  setInterval(runSafely, KHQR_CHECK_MS);
 }

@@ -18,6 +18,7 @@ globalThis.fetch = async (url, options) => {
 const api = await startApi({ env: { BAKONG_TOKEN: "test-token" } });
 after(() => api.close());
 const { khqrMd5 } = await import("../../src/utils/khqr.js");
+const { findOpenKhqrPayments } = await import("../../src/db/payments.js");
 
 const startKhqr = (user, listing) => api.request("POST", "/api/payments/khqr", {
   token: user.token,
@@ -79,6 +80,21 @@ test("an unpaid QR expires after 30 minutes, and the buyer can then get a new on
   await api.sql("UPDATE payments SET created_at = now() - interval '31 minutes' WHERE id = $1", [paymentId]);
   assert.deepEqual((await khqrStatus(buyer, paymentId)).body, { status: "expired" });
   assert.notEqual((await startKhqr(buyer, listing)).body.paymentId, paymentId);
+});
+
+test("an unconfirmed QR keeps being re-checked for 24 hours, then is left alone", async () => {
+  const [seller, buyer] = await Promise.all([api.createUser(), api.createUser()]);
+  await api.request("PATCH", "/api/users/me", { token: seller.token, body: { bakongAccountId: "seller@aclb" } });
+  const { paymentId } = (await startKhqr(buyer, await api.createListing(seller))).body;
+  const isChecked = async (options) => (await findOpenKhqrPayments(options)).some((payment) => payment.id === paymentId);
+  const age = (interval) => api.sql("UPDATE payments SET created_at = now() - $2::interval WHERE id = $1", [paymentId, interval]);
+
+  assert.equal(await isChecked(), true); // new: checked every minute
+  await age("3 hours");
+  assert.equal(await isChecked(), false);
+  assert.equal(await isChecked({ includeOlder: true }), true); // held up: still checked every 15 minutes
+  await age("25 hours");
+  assert.equal(await isChecked({ includeOlder: true }), false);
 });
 
 test("a listing cannot be deleted while someone may be paying for it, or once it was paid", async () => {

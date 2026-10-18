@@ -174,7 +174,9 @@ service's web API with `fetch`.
   the seller: UniSwap never holds it. `utils/khqr.js` writes the QR text itself (EMVCo fields plus a
   CRC-16 checksum, checked against the National Bank's own library in `test/khqr.test.js`). Bakong
   finds a payment by the MD5 of that text, so the QR screen asks `GET /api/payments/khqr/:id` every
-  5 seconds, and `server.js` checks open QRs once a minute for buyers who close the page. Both call
+  5 seconds, and `server.js` checks open QRs once a minute for buyers who close the page. If a
+  confirmation is held up (Bakong down, an expired token, the API switched off), `server.js` keeps
+  re-checking unconfirmed QRs for 24 hours, at start-up and every 15 minutes. Both call
   `markPaid`. A QR expires after 30 minutes, the same lock as Stripe. Bakong only answers requests
   from Cambodian IP addresses, so this works when the API runs in Cambodia (see `DEPLOY.md`).
 - **Cloudinary** (`services/cloudinary.js`): signed uploads. Without it, photos go to `backend/uploads/`.
