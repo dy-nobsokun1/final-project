@@ -44,9 +44,9 @@ backend/
 │   ├── server.js       starts the HTTP server
 │   ├── app.js          Express app: middleware + routes
 │   ├── config.js       reads environment variables
-│   ├── db/             schema.sql, connection pool, shared listing query, wanted-post matching
+│   ├── db/             schema.sql, connection pool, shared listing query, wanted-post matching, offer helpers
 │   ├── middleware/     requireAuth (JWT), CORS, error handler
-│   ├── routes/         auth, listings, bids, reviews, saved, users, messages, payments, telegram, uploads
+│   ├── routes/         auth, listings, bids, offers, reviews, saved, users, messages, payments, telegram, uploads
 │   └── utils/          validation, password hashing, tokens, JSON serializers, email
 └── test/               unit tests; test/api/ holds the API tests (see Testing)
 ```
@@ -54,8 +54,9 @@ backend/
 ## Database
 
 Tables follow the ER diagram in the proposal (Figure 2): `users`, `listings`, `messages`,
-`reviews`. `saved_listings` was added for saved listings and is not in the ER diagram (see Saved
-listings below). See [`src/db/schema.sql`](src/db/schema.sql). Allowed values are enforced twice, in
+`reviews`. `saved_listings` was added for saved listings, and `offers` (with `listings.reserved_for`)
+for price offers; neither is in the ER diagram (see Saved listings and Offers below). See
+[`src/db/schema.sql`](src/db/schema.sql). Allowed values are enforced twice, in
 the API (`utils/validation.js`) and in the database (`CHECK` constraints):
 
 - **category:** textbooks, electronics, furniture, clothing, bikes, other
@@ -214,14 +215,67 @@ CREATE TABLE IF NOT EXISTS bids (
 CREATE INDEX IF NOT EXISTS bids_listing_idx ON bids (listing_id, amount DESC);
 ```
 
+### Offers
+
+A buyer can offer less than the asking price of an item for sale (`src/routes/offers.js`,
+`src/db/offers.js`). The seller accepts it, which reserves the item for that buyer at that price, or
+declines it.
+
+- Only available (`active`) items for sale with a price take offers; auctions, trades, giveaways and
+  wanted posts do not. The amount must be below the asking price, after rounding to cents.
+- One pending offer per buyer per listing (a partial unique index). A new amount replaces the pending
+  one (which becomes `withdrawn`), so the seller can never accept an amount that changed under them.
+  The buyer can also withdraw a pending offer.
+- **Accepting** locks the listing row (`SELECT ... FOR UPDATE`, the same lock a buyer takes to start
+  paying) and, in one transaction, accepts the offer, declines every other pending offer and sets the
+  listing to `reserved` with `listings.reserved_for` = the buyer. Two offers accepted at the same
+  moment cannot both win (a unique index allows one accepted offer per listing, too). It is refused
+  (409) while another buyer is paying (30 minutes, as for payments), and once the asking price is at
+  or below the offer.
+- **While reserved this way, only that buyer can pay online**, at the offer's price (`amountToPay` in
+  `src/utils/payments.js` reads it through `LISTING_SELECT`'s private `agreed_price`; it never appears
+  in the API's listing JSON). Anyone else's payment that is confirmed late becomes `refund_due`, and
+  their open QR reports `unavailable`. They can also meet and pay in person.
+- **"Make available again"** clears `reserved_for` and cancels the accepted offer (`cancelled`); the
+  item's price applies again. **"Mark as sold"** keeps `reserved_for`, so that buyer and the owner can
+  review each other. While an accepted offer reserves the item, its type is locked and it cannot be
+  deleted (409).
+- Pending offers are declined when the item is sold (also by an online payment), traded, or reserved
+  another way. Offers do not expire.
+- Statuses: `pending` → `accepted` | `declined` | `withdrawn`; `accepted` → `cancelled`.
+
+**Upgrading a database created before offers?** Run this once (psql or the Supabase SQL editor)
+**before** starting the new API (every listing query now reads `offers` and `reserved_for`). It keeps
+your data and is safe to re-run:
+
+```sql
+ALTER TABLE listings ADD COLUMN IF NOT EXISTS reserved_for UUID REFERENCES users(id) ON DELETE SET NULL;
+ALTER TABLE listings DROP CONSTRAINT IF EXISTS listings_reserved_for_not_active;
+ALTER TABLE listings ADD CONSTRAINT listings_reserved_for_not_active CHECK (status <> 'active' OR reserved_for IS NULL);
+CREATE TABLE IF NOT EXISTS offers (
+  id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  listing_id UUID NOT NULL REFERENCES listings(id) ON DELETE CASCADE,
+  buyer_id   UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  amount     NUMERIC(10, 2) NOT NULL CHECK (amount > 0),
+  status     TEXT NOT NULL DEFAULT 'pending' CHECK (status IN
+               ('pending', 'accepted', 'declined', 'withdrawn', 'cancelled')),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS offers_listing_idx ON offers (listing_id, status);
+CREATE UNIQUE INDEX IF NOT EXISTS offers_one_pending_idx ON offers (listing_id, buyer_id) WHERE status = 'pending';
+CREATE UNIQUE INDEX IF NOT EXISTS offers_one_accepted_idx ON offers (listing_id) WHERE status = 'accepted';
+```
+
 ### Reviews
 
 Once a listing is marked `sold` or `traded`, its owner and a person they dealt with can rate each
 other: 1 to 5 whole stars and an optional comment of up to 1000 characters.
 
 - "Dealt with" means the person who bought it, as far as UniSwap knows: whoever **paid online**
-  (card or KHQR), or else the **winner of an auction**. Only for deals settled in person, where
-  UniSwap cannot know the buyer, it means both people wrote at least one message about that listing.
+  (card or KHQR), or else the **winner of an auction**, or else the buyer whose **offer the owner
+  accepted**. Only for other deals settled in person, where UniSwap cannot know the buyer, it means
+  both people wrote at least one message about that listing.
   So someone who only asked a question cannot review, and neither can a stranger.
 - `GET /api/listings/:id/reviews/can-review?revieweeId=` gives the same answer, so the chat page only
   shows the review form when the review would be accepted.
@@ -272,6 +326,10 @@ verification email):
 | Password changed or reset | The account owner | `/forgot-password`, in case it was not them |
 | Price drop | Everyone who saved the item, when its owner lowers the price of an available item for sale | The listing |
 | A new listing matches your wanted post | Students whose active wanted post it matches (at most 10 wanted posts per new listing, one message per student, verified accounts only). Only when the listing is posted, never when it is edited | The new listing |
+| New or changed offer | The seller | The listing |
+| Offer accepted | The buyer | The listing |
+| Offer declined (by the seller, or because the item was sold or reserved another way) | The buyer | The listing |
+| Accepted offer cancelled ("Make available again") | The buyer | Their chat with the seller |
 
 Notifications never block or break the request that caused them: if email is not configured they
 are skipped with a log line, and send failures are logged, not returned to the user. User-written
@@ -285,10 +343,11 @@ service's web API with `fetch`.
 
 - **Stripe Checkout, test mode only** (`services/stripe.js`, `routes/payments.js`). An item for sale,
   or an auction you won, can be paid by card on Stripe's own page. The amount comes from
-  `utils/payments.js`. When the buyer returns, `/confirm` asks Stripe whether they paid. The
-  webhook (with a verified signature) covers buyers who close the tab. Both call `markPaid`, which
-  only acts once, marks the listing sold and notifies both people. While one buyer is checking out
-  (30 minutes), others get 409. Live keys are refused.
+  `utils/payments.js`: the price, the agreed price of your accepted offer, or your winning bid.
+  When the buyer returns, `/confirm` asks Stripe whether they paid. The webhook (with a verified
+  signature) covers buyers who close the tab. Both call `markPaid`, which only acts once, marks the
+  listing sold and notifies both people. While one buyer is checking out (30 minutes), others get
+  409. Live keys are refused.
 - **KHQR through Bakong, real money** (`utils/khqr.js`, `services/bakong.js`, `routes/khqr.js`).
   Sellers add their Bakong account ID (e.g. `name@aclb`) in Settings. A buyer then gets a one-time
   KHQR for the exact amount, scans it with any Cambodian banking app, and the money goes straight to
@@ -333,9 +392,10 @@ ALTER TABLE payments ALTER COLUMN stripe_session_id DROP NOT NULL;
 ```
 
 **Late payments.** A payment can be confirmed after the item is already gone: a KHQR paid just before
-it expired but reported late, after someone else bought the item or the seller marked it sold. The
-money really moved, so `markPaid` records it as `refund_due` instead of `paid`, leaves the listing
-alone, and emails both people that the seller must refund it. The buyer's page says so too.
+it expired but reported late, after someone else bought the item, the seller marked it sold, or the
+seller accepted another buyer's offer (the item is then reserved for that buyer only). The money
+really moved, so `markPaid` records it as `refund_due` instead of `paid`, leaves the listing alone,
+and emails both people that the seller must refund it. The buyer's page says so too.
 **Upgrading a database created before `refund_due`?** Run this once; it keeps your data and is safe to re-run:
 
 ```sql
@@ -362,11 +422,17 @@ A token issued before the account's last password change or reset is refused (40
 | GET | `/api/listings` | Browse and search (ranked, typo tolerant; see Search above). Query: `query`, `category`, `condition`, `type`, `minPrice`, `maxPrice`, `status` (default `active`) |
 | GET | `/api/listings/:id` | One listing, with seller info |
 | POST 🔒 | `/api/listings` | `{ title, category, condition, description?, listingType?, price?, cashTopup?, imageUrls?, auctionEndsAt?, minIncrement? }`. `imageUrls`: up to 6 URLs from `POST /api/uploads`, the first is the cover (see Photos above). `auctionEndsAt` (ISO date) is required for an auction. For a wanted post, `price` is the budget (0 = any price). A new item alerts students whose wanted posts it matches (see Wanted matches above) |
-| PATCH 🔒 | `/api/listings/:id` | Owner only. Any subset of fields, e.g. `{ "status": "sold" }`. `imageUrls` replaces the whole list; photos the listing already has may stay. `409` for `{ "status": "active" }` on an item someone paid for online (post it as a new listing instead). Lowering the price of an available item for sale alerts everyone who saved it |
-| DELETE 🔒 | `/api/listings/:id` | Owner only. `409` if it is sold or traded, has reviews, someone paid for it, or a payment for it is unconfirmed and less than 24 hours old (it may still be confirmed): deleting would also erase its payments and reviews |
+| PATCH 🔒 | `/api/listings/:id` | Owner only. Any subset of fields, e.g. `{ "status": "sold" }`. `imageUrls` replaces the whole list; photos the listing already has may stay. `409` for `{ "status": "active" }` on an item someone paid for online (post it as a new listing instead). Lowering the price of an available item for sale alerts everyone who saved it. Making an item reserved by an accepted offer available again cancels that offer; `409` for changing `listingType` while it is (see Offers above) |
+| DELETE 🔒 | `/api/listings/:id` | Owner only. `409` if it is sold or traded, has reviews, someone paid for it, a payment for it is unconfirmed and less than 24 hours old (it may still be confirmed), or it is reserved by an accepted offer: deleting would also erase its payments, reviews and offers |
 | GET | `/api/listings/:id/bids` | An auction's bids, highest first, with bidder name |
 | POST 🔒 | `/api/listings/:id/bids` | `{ amount }`. Place a bid (see Auctions above) |
 | GET | `/api/listings/:id/matches` | `{ listings }`, at most 4, best first: for a wanted post, active items that match it; for any other listing, active wanted posts it matches (see Wanted matches above). Empty when the listing is not active |
+| POST 🔒 | `/api/listings/:id/offers` | `{ amount }` → `201 { offer }`. Below the asking price, on someone else's available item for sale; replaces your pending offer (see Offers above) |
+| GET 🔒 | `/api/listings/:id/offers` | Owner only → `{ offers }`: pending ones highest first, plus the accepted one |
+| GET 🔒 | `/api/listings/:id/offers/mine` | `{ offer }`: your latest offer on it, in any status, or `null` |
+| POST 🔒 | `/api/offers/:id/accept` | Seller → `{ offer }`. Reserves the item for that buyer at that price and declines the others. `409` if the offer is no longer open, the item is not available, or another buyer is paying |
+| POST 🔒 | `/api/offers/:id/decline` | Seller → `{ offer }`. The item stays available |
+| POST 🔒 | `/api/offers/:id/withdraw` | The buyer, pending offers only → `{ offer }` |
 | GET | `/api/listings/:id/reviews` | Reviews about this listing's deal (at most one per person) |
 | GET 🔒 | `/api/listings/:id/reviews/can-review?revieweeId=` | `{ allowed, reason }`: whether you may review that person for this listing |
 | POST 🔒 | `/api/listings/:id/reviews` | `{ revieweeId, rating, comment? }`. 1-5 stars, once the listing is sold or traded (see Reviews above) |
@@ -377,8 +443,8 @@ A token issued before the account's last password change or reset is refused (40
 | POST 🔒 | `/api/payments/checkout` | `{ listingId }` → `{ url }` of Stripe's payment page |
 | POST 🔒 | `/api/payments/confirm` | `{ sessionId }` → `{ status: "paid" \| "pending" \| "refund_due" }`, checked with Stripe |
 | POST | `/api/payments/webhook` | Called by Stripe only, with a signature check |
-| POST 🔒 | `/api/payments/khqr` | `{ listingId }` → `{ paymentId, qr, amount, expiresAt }`. Asking again within 30 minutes returns the same QR, as long as it still pays the seller's current Bakong account. First records any earlier QR for the item that was paid but not yet confirmed: `409` if it was this buyer's. `400` if the seller has no Bakong account. `503` if Bakong cannot be reached right now (no QR is shown that could not be confirmed) |
-| GET 🔒 | `/api/payments/khqr/:id` | Buyer only → `{ status: "paid" \| "pending" \| "expired" \| "refund_due" \| "unavailable" }`, checked with Bakong. `refund_due`: paid after the item was already sold. `unavailable`: not paid, and the item has been sold or traded another way, or the seller changed the Bakong account this QR pays, so the QR should not be paid |
+| POST 🔒 | `/api/payments/khqr` | `{ listingId }` → `{ paymentId, qr, amount, expiresAt }`. Asking again within 30 minutes returns the same QR, as long as it still pays the seller's current Bakong account. First records any earlier QR for the item that was paid but not yet confirmed: `409` if it was this buyer's. `400` if the seller has no Bakong account. `403` if the item is reserved for another buyer; for the buyer it is reserved for, the amount is the agreed price. `503` if Bakong cannot be reached right now (no QR is shown that could not be confirmed) |
+| GET 🔒 | `/api/payments/khqr/:id` | Buyer only → `{ status: "paid" \| "pending" \| "expired" \| "refund_due" \| "unavailable" }`, checked with Bakong. `refund_due`: paid after the item was already sold or reserved for another buyer. `unavailable`: not paid, and the item has been sold or traded another way or reserved for another buyer, or the seller changed the Bakong account this QR pays, so the QR should not be paid |
 | GET 🔒 | `/api/users/me/telegram` | `{ enabled, connected }` |
 | POST 🔒 | `/api/users/me/telegram` | `{ link }`: one-time link that opens the bot |
 | DELETE 🔒 | `/api/users/me/telegram` | Disconnect Telegram |
@@ -402,13 +468,14 @@ Errors always look like `{ "error": "message", "details": { "field": "message" }
 ## Testing
 
 - `npm test` runs the unit tests in `test/*.test.js`: validation, the search query builder, the
-  Stripe and Cloudinary helpers, and the KHQR builder and Bakong answers. No database or network needed.
+  payment amount rules, the Stripe and Cloudinary helpers, and the KHQR builder and Bakong answers.
+  No database or network needed.
 - `npm run test:api` runs the API tests in `test/api/`. Each file starts the real app on a free port
   and sends it real HTTP requests, so routes, SQL and database rules are tested together: sign-up and
   verification, password reset and change, owner-only changes, messaging, bidding (including five
   bids at the same moment), payments with Stripe switched off, KHQR payments (with Bakong replaced by
-  a fake), reviews, saved listings (including who gets a price-drop alert), listing photo rules, and
-  wanted-post matching and alerts.
+  a fake), reviews, saved listings (including who gets a price-drop alert), listing photo rules,
+  wanted-post matching and alerts, and offers (including two accepted at the same moment).
 
 The API tests need their own database, because `test/api/reset-db.js` wipes it before every run.
 Create it once, then put its URL in `.env` as `TEST_DATABASE_URL` (see `.env.example`):

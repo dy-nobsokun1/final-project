@@ -3,12 +3,13 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { AuctionPanel } from "@/components/listings/AuctionPanel";
-import { KhqrPayButton } from "@/components/listings/KhqrPayButton";
+import { BuyerOfferPanel } from "@/components/listings/BuyerOfferPanel";
 import { ListingGallery } from "@/components/listings/ListingGallery";
 import { ListingHeading } from "@/components/listings/ListingHeading";
 import { ListingMatches } from "@/components/listings/ListingMatches";
 import { ListingOwnerActions } from "@/components/listings/ListingOwnerActions";
-import { PayButton } from "@/components/listings/PayButton";
+import { ListingPayButtons } from "@/components/listings/ListingPayButtons";
+import { SellerOffersPanel } from "@/components/listings/SellerOffersPanel";
 import { UserAvatar } from "@/components/profile/UserAvatar";
 import { VerifiedBadge } from "@/components/profile/VerifiedBadge";
 import { Badge } from "@/components/ui/badge";
@@ -19,18 +20,19 @@ import {
   getCurrentUser,
   getKhqrStatus,
   getListingById,
+  getMyOffer,
   getPaymentOptions,
   paymentBannerStatus,
 } from "@/lib/api";
 import { CATEGORIES, conditionLabel, listingTypeLabel, statusLabel } from "@/lib/constants";
-import { formatListingPrice, formatRelativeTime } from "@/lib/utils";
+import { formatRelativeTime, payableAmount } from "@/lib/utils";
 
 /** What a buyer sees after returning from a payment, by its status. */
 const PAYMENT_BANNERS = {
   paid: "Payment received. The item is yours: message the seller to arrange the handover.",
   pending: "Your payment is still processing. Refresh this page in a moment.",
   refund_due:
-    "Your payment went through, but the item had already been sold. The seller has been asked to refund you: message them if you have not heard back.",
+    "Your payment went through, but the item had already been sold or reserved for another buyer. The seller has been asked to refund you: message them if you have not heard back.",
   unconfirmed: "We could not check your payment just now. Do not pay again: refresh this page in a moment.",
 } as const;
 
@@ -52,13 +54,11 @@ export default async function ListingDetailPage({ params, searchParams }: PagePr
 
   const category = CATEGORIES.find((item) => item.value === listing.category);
   const isOwner = user?.id === listing.seller.id;
-  // Mirrors the API's rule (backend/src/utils/payments.js): an item for sale, or an auction you won.
-  const canPay = user !== null && !isOwner && (
-    (listing.listingType === "sale" && listing.status === "active" && listing.price > 0)
-    || (listing.auction !== null && listing.status === "reserved" && listing.auction.leadingBidderId === user.id)
-  );
-  // KHQR also needs the seller to have added a Bakong account, since the money goes straight to them.
-  const canPayByKhqr = canPay && paymentOptions.khqr && listing.seller.acceptsKhqr;
+  // Offers are for items for sale. Your accepted offer reserves the item for you at that price.
+  const canOffer = user !== null && !isOwner && listing.listingType === "sale";
+  const myOffer = canOffer ? await getMyOffer(listing.id) : null;
+  // Mirrors the API's rule (backend/src/utils/payments.js). Null when this viewer cannot pay online.
+  const payAmount = payableAmount(listing, user?.id ?? null, myOffer);
 
   return (
     <div className="flex flex-col gap-6">
@@ -91,7 +91,7 @@ export default async function ListingDetailPage({ params, searchParams }: PagePr
                 </Badge>
               ) : null}
             </div>
-            <ListingHeading listing={listing} />
+            <ListingHeading listing={listing} myOffer={myOffer} />
           </div>
 
           <p className="leading-relaxed text-foreground">{listing.description}</p>
@@ -100,13 +100,12 @@ export default async function ListingDetailPage({ params, searchParams }: PagePr
             <AuctionPanel listing={{ ...listing, auction: listing.auction }} bids={bids} userId={user?.id ?? null} />
           ) : null}
 
-          {canPayByKhqr ? (
-            <KhqrPayButton listingId={listing.id} priceLabel={formatListingPrice(listing)} sellerName={listing.seller.name} />
-          ) : null}
-          {canPay && paymentOptions.card ? (
-            <PayButton listingId={listing.id} priceLabel={formatListingPrice(listing)} />
+          {canOffer ? <BuyerOfferPanel listing={listing} offer={myOffer} /> : null}
+          {payAmount !== null ? (
+            <ListingPayButtons listing={listing} amount={payAmount} options={paymentOptions} />
           ) : null}
 
+          {isOwner && listing.listingType === "sale" ? <SellerOffersPanel listing={listing} /> : null}
           {isOwner ? (
             <ListingOwnerActions
               listingId={listing.id}

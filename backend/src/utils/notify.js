@@ -174,7 +174,10 @@ export function notifyPaid({ listing_id: listingId, buyer_id: buyerId, amount })
   });
 }
 
-/** A payment arrived after the item was already sold (see markPaid): the buyer must be refunded. */
+/**
+ * A payment arrived after the item was already sold, or reserved for another buyer whose offer the
+ * seller accepted (see markPaid): the buyer must be refunded.
+ */
 export function notifyLatePayment({ listing_id: listingId, buyer_id: buyerId, amount }) {
   inBackground(async () => {
     const { rows } = await query("SELECT title, user_id FROM listings WHERE id = $1", [listingId]);
@@ -187,7 +190,7 @@ export function notifyLatePayment({ listing_id: listingId, buyer_id: buyerId, am
         to: seller,
         subject: `Refund needed: ${buyer.name} paid ${money(amount)} for "${title}"`,
         lines: [`Hi ${seller.name},`,
-          `${buyer.name}'s payment of ${money(amount)} for "${title}" arrived after the item was already sold.`,
+          `${buyer.name}'s payment of ${money(amount)} for "${title}" arrived after the item was already sold or reserved for another buyer.`,
           `Please send the ${money(amount)} back to ${buyer.name}, and message them to confirm.`,
           `If you sold the item to ${buyer.name} yourself, this was their payment for it: nothing needs refunding.`],
         link: threadLink(listingId, buyerId),
@@ -195,9 +198,9 @@ export function notifyLatePayment({ listing_id: listingId, buyer_id: buyerId, am
       }),
       deliver({
         to: buyer,
-        subject: `Your payment for "${title}" arrived after it was sold`,
+        subject: `Your payment for "${title}" arrived too late`,
         lines: [`Hi ${buyer.name},`,
-          `Your payment of ${money(amount)} for "${title}" went through, but the item had already been sold.`,
+          `Your payment of ${money(amount)} for "${title}" went through, but the item had already been sold or reserved for another buyer.`,
           `${seller.name} has been asked to refund you. Message them if you have not heard back.`,
           `If ${seller.name} gave you the item, this was your payment for it: no refund is due.`],
         link: threadLink(listingId, sellerId),
@@ -282,5 +285,91 @@ export function notifyWantedMatches({ id: listingId, title }) {
         linkLabel: "See the listing",
       });
     }
+  });
+}
+
+/**
+ * The listing, buyer and seller an offer notification is about (`offer` is a row with listing_id
+ * and buyer_id), or null if any of them is gone.
+ */
+async function findOfferPeople({ listing_id: listingId, buyer_id: buyerId }) {
+  const { rows: [listing] } = await query("SELECT title, price, status, user_id FROM listings WHERE id = $1", [listingId]);
+  if (!listing) return null;
+  const [buyer, seller] = await Promise.all([findUser(buyerId), findUser(listing.user_id)]);
+  return buyer && seller ? { listing, buyer, seller } : null;
+}
+
+/** A buyer made (or changed) an offer: tell the seller. */
+export function notifyOfferMade(offer) {
+  inBackground(async () => {
+    const people = await findOfferPeople(offer);
+    if (!people) return;
+    const { listing, buyer, seller } = people;
+    await deliver({
+      to: seller,
+      subject: `${buyer.name} offered ${money(offer.amount)} for "${listing.title}"`,
+      lines: [`Hi ${seller.name},`,
+        `${buyer.name} offered ${money(offer.amount)} for "${listing.title}" (you asked ${money(listing.price)}).`,
+        "Accept it to reserve the item for them at that price, or decline it."],
+      link: appLink(`/listings/${offer.listing_id}`),
+      linkLabel: "Answer the offer",
+    });
+  });
+}
+
+/** The seller accepted an offer: the item is now reserved for that buyer at the offer's price. */
+export function notifyOfferAccepted(offer) {
+  inBackground(async () => {
+    const people = await findOfferPeople(offer);
+    if (!people) return;
+    const { listing, buyer, seller } = people;
+    await deliver({
+      to: buyer,
+      subject: `${seller.name} accepted your offer for "${listing.title}"`,
+      lines: [`Hi ${buyer.name},`,
+        `${seller.name} accepted your offer of ${money(offer.amount)} for "${listing.title}". It is now reserved for you at that price.`,
+        "Pay online from the listing page, or message them to meet on campus and pay in person."],
+      link: appLink(`/listings/${offer.listing_id}`),
+      linkLabel: "Open the listing",
+    });
+  });
+}
+
+/**
+ * An offer was declined: by the seller (the item is still available), or because the item was sold,
+ * reserved or paid for another way. The listing's status at sending time tells which.
+ */
+export function notifyOfferDeclined(offer) {
+  inBackground(async () => {
+    const people = await findOfferPeople(offer);
+    if (!people) return;
+    const { listing, buyer, seller } = people;
+    await deliver({
+      to: buyer,
+      subject: `Your offer for "${listing.title}" was declined`,
+      lines: [`Hi ${buyer.name},`, listing.status === "active"
+        ? `${seller.name} declined your offer of ${money(offer.amount)} for "${listing.title}". It is still available: you can make a new offer.`
+        : `Your offer of ${money(offer.amount)} for "${listing.title}" was declined because the item is no longer available.`],
+      link: appLink(`/listings/${offer.listing_id}`),
+      linkLabel: "See the listing",
+    });
+  });
+}
+
+/** The seller made an item available again, so the accepted offer that reserved it no longer does. */
+export function notifyOfferCancelled(offer) {
+  inBackground(async () => {
+    const people = await findOfferPeople(offer);
+    if (!people) return;
+    const { listing, buyer, seller } = people;
+    await deliver({
+      to: buyer,
+      subject: `"${listing.title}" is no longer reserved for you`,
+      lines: [`Hi ${buyer.name},`,
+        `${seller.name} made "${listing.title}" available again, so your accepted offer of ${money(offer.amount)} no longer reserves it.`,
+        `Message ${seller.name} if you still want it.`],
+      link: threadLink(offer.listing_id, listing.user_id),
+      linkLabel: `Message ${seller.name}`,
+    });
   });
 }

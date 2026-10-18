@@ -1,11 +1,12 @@
 import { Router } from "express";
 import { buildBrowseQuery, findListingById } from "../db/listings.js";
 import { findItemsForWanted, findWantedForItem } from "../db/matches.js";
+import { updateOffersForStatus } from "../db/offers.js";
 import { confirmOpenKhqrPayments, RECHECK_HOURS } from "../db/payments.js";
 import { query, withTransaction } from "../db/pool.js";
 import { requireAuth } from "../middleware/auth.js";
 import { HttpError } from "../utils/httpError.js";
-import { notifyPriceDrop, notifyWantedMatches } from "../utils/notify.js";
+import { notifyOfferCancelled, notifyOfferDeclined, notifyPriceDrop, notifyWantedMatches } from "../utils/notify.js";
 import { toListing } from "../utils/serializers.js";
 import { parseListingFilters, validateListing } from "../utils/validation.js";
 import { uploadedPhotoPrefix } from "./uploads.js";
@@ -135,10 +136,26 @@ listingsRouter.patch("/:id", requireAuth, async (req, res) => {
 
   // Column names come from our own whitelist above; values are always $n parameters.
   const setSql = fields.map((field, i) => `${WRITABLE_COLUMNS[field]} = $${i + 2}`).join(", ");
-  await query(
-    `UPDATE listings SET ${setSql}, updated_at = now() WHERE id = $1`,
-    [req.params.id, ...fields.map((field) => changes[field])],
-  );
+  // Locked like accepting an offer, so the two cannot cross. The row is read again under the lock:
+  // confirmOpenKhqrPayments may just have sold it, or an offer been accepted since findOwnedListing.
+  // Offers are updated first: "Make available again" must clear reserved_for before the status
+  // becomes active (CHECK in schema.sql).
+  const offerChanges = await withTransaction(async (client) => {
+    const { rows: [current] } = await client.query(
+      "SELECT id, status, reserved_for, listing_type FROM listings WHERE id = $1 FOR UPDATE", [listing.id]);
+    if (!current) throw new HttpError(404, "Listing not found.");
+    if (current.reserved_for && changes.listingType !== undefined && changes.listingType !== current.listing_type) {
+      throw new HttpError(409, "This item is reserved for a buyer whose offer you accepted, so its type is locked. Make it available again first.");
+    }
+    const changed = await updateOffersForStatus(client, current, changes.status);
+    await client.query(
+      `UPDATE listings SET ${setSql}, updated_at = now() WHERE id = $1`,
+      [listing.id, ...fields.map((field) => changes[field])],
+    );
+    return changed;
+  });
+  for (const offer of offerChanges.cancelled) notifyOfferCancelled(offer);
+  for (const offer of offerChanges.declined) notifyOfferDeclined(offer);
   const updated = await findListingById(req.params.id);
   // An item for sale got cheaper and is still available: tell everyone who saved it. Compared as stored
   // (to the cent), so saving the edit form without changing the price sends nothing.
@@ -150,19 +167,23 @@ listingsRouter.patch("/:id", requireAuth, async (req, res) => {
 });
 
 // DELETE /api/listings/:id  (owner only)
-// Deleting a listing also deletes its payments and reviews (ON DELETE CASCADE in schema.sql), so it
-// is refused (409) once that history matters: the item was sold or traded, it has reviews, money was
-// paid for it, or a payment for it may still be confirmed. That payment would be lost with no record.
+// Deleting a listing also deletes its payments, reviews and offers (ON DELETE CASCADE in schema.sql),
+// so it is refused (409) once that history matters: the item was sold or traded, it has reviews,
+// money was paid for it, or a payment for it may still be confirmed. That payment would be lost with
+// no record. It is also refused while an accepted offer reserves the item for a buyer.
 listingsRouter.delete("/:id", requireAuth, async (req, res) => {
   await findOwnedListing(req.params.id, req.userId);
 
   await withTransaction(async (client) => {
     // The same row lock a buyer takes when they start paying, so nobody can start in between.
     const { rows: [listing] } = await client.query(
-      "SELECT status FROM listings WHERE id = $1 FOR UPDATE", [req.params.id]);
+      "SELECT status, reserved_for FROM listings WHERE id = $1 FOR UPDATE", [req.params.id]);
     if (!listing) throw new HttpError(404, "Listing not found.");
     if (listing.status === "sold" || listing.status === "traded") {
       throw new HttpError(409, "Sold and traded listings stay on your public profile as a record of the deal, so they cannot be deleted.");
+    }
+    if (listing.reserved_for) {
+      throw new HttpError(409, "You accepted an offer, so this item is reserved for that buyer. Make it available again first (they will be told), then delete it.");
     }
     // Also after "Make available again": its reviews must not disappear with it.
     const { rows: reviews } = await client.query("SELECT 1 FROM reviews WHERE listing_id = $1 LIMIT 1", [req.params.id]);

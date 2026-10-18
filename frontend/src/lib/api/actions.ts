@@ -289,6 +289,49 @@ export async function placeBid(listingId: string, amount: number): Promise<Actio
   return {};
 }
 
+/** Offers less than the asking price. A new offer replaces your pending one. The API enforces the rules. */
+export async function makeOffer(listingId: string, amount: number): Promise<ActionResult> {
+  try {
+    await apiFetch(`/api/listings/${encodeURIComponent(listingId)}/offers`, {
+      method: "POST",
+      body: JSON.stringify({ amount }),
+    });
+  } catch (error) {
+    return toActionError(error);
+  }
+  refresh(); // re-render the listing so the offer's status shows
+  return {};
+}
+
+/**
+ * Accepts, declines or withdraws an offer. Not exported, so it is not a Server Action itself:
+ * `step` only ever comes from the three wrappers below, never from the browser.
+ */
+async function changeOffer(offerId: string, step: "accept" | "decline" | "withdraw"): Promise<ActionResult> {
+  try {
+    await apiFetch(`/api/offers/${encodeURIComponent(offerId)}/${step}`, { method: "POST" });
+  } catch (error) {
+    return toActionError(error);
+  }
+  refresh(); // re-render the listing: its status, the offers and the pay buttons
+  return {};
+}
+
+/** The seller accepts an offer: the item is reserved for that buyer at that price. */
+export async function acceptOffer(offerId: string): Promise<ActionResult> {
+  return changeOffer(offerId, "accept");
+}
+
+/** The seller declines an offer. The item stays available. */
+export async function declineOffer(offerId: string): Promise<ActionResult> {
+  return changeOffer(offerId, "decline");
+}
+
+/** The buyer takes back their pending offer. */
+export async function withdrawOffer(offerId: string): Promise<ActionResult> {
+  return changeOffer(offerId, "withdraw");
+}
+
 /** Rates the other person in a finished deal. The API checks who may review whom. */
 export async function submitReview(
   listingId: string,

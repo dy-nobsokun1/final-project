@@ -68,6 +68,19 @@ export function toBid(row) {
   };
 }
 
+/** Expects an offer row with the buyer's public info (OFFER_SELECT in db/offers.js). Never an email. */
+export function toOffer(row) {
+  return {
+    id: row.id,
+    listingId: row.listing_id,
+    amount: Number(row.amount),
+    status: row.status,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+    buyer: { id: row.buyer_id, name: row.buyer_name, avatarUrl: row.buyer_avatar_url, isVerified: row.buyer_is_verified },
+  };
+}
+
 /** Expects a review row joined with reviewer and listing columns (REVIEW_SELECT in routes/reviews.js). */
 export function toReview(row) {
   return {

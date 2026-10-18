@@ -12,7 +12,8 @@ import type { KhqrPayment, KhqrStatus } from "@/types";
 const STATUS_NOTES: Partial<Record<KhqrStatus, string>> = {
   expired:
     "This QR has expired. If you paid it before then, do not pay again: UniSwap keeps checking with Bakong and will let you know.",
-  unavailable: "This QR was withdrawn: the item was sold, or the seller changed their Bakong account. Do not pay it.",
+  unavailable:
+    "This QR was withdrawn: the item was sold or reserved for another buyer, or the seller changed their Bakong account. Do not pay it.",
   paid: "Payment received. Loading...",
   refund_due: "Payment received. Loading...",
 };

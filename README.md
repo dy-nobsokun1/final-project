@@ -25,6 +25,8 @@ Putting it online (Supabase, Render, Vercel, Cloudinary, Stripe, Telegram): [`DE
 - **Saved listings:** the heart on another student's listing saves it to a Saved page, where sold
   items stay, marked sold. A listing shows how many students saved it, never who. When the owner
   lowers the price of an item for sale, everyone who saved it is told.
+- **Offers:** offer less than the asking price on an item for sale. The seller accepts or declines;
+  accepting reserves the item for that buyer, who can then pay the agreed price online or in person.
 - **Wanted alerts:** when someone posts an item that matches your wanted post (same search rules,
   same category, within your budget), you get an email (and a Telegram message, if connected), and
   your wanted post's page lists matching items. Sellers see who is looking for something like theirs.
@@ -34,11 +36,13 @@ Putting it online (Supabase, Render, Vercel, Cloudinary, Stripe, Telegram): [`DE
   moment can never both win. When time runs out, the item is reserved for the highest bidder.
 - **Messaging:** a private thread per listing between its owner and each interested student, with
   unread counts.
-- **Reviews and ratings:** once a listing is sold or traded, its owner and the person they chatted
-  with can rate each other (1 to 5 stars and a comment). Profiles show the average and every review.
+- **Reviews and ratings:** once a listing is sold or traded, its owner and the buyer (whoever paid
+  online, won the auction or had their offer accepted; for other in-person deals, someone they
+  chatted with) can rate each other (1 to 5 stars and a comment). Profiles show the average and
+  every review.
 - **Notifications:** by email, and by Telegram for students who connect it in Settings: new
-  messages, being outbid, auction results, payments, password changes, price drops on items you saved,
-  and a new listing that matches your wanted post.
+  messages, being outbid, auction results, offers, payments, password changes, price drops on items
+  you saved, and a new listing that matches your wanted post.
 - **Card payments (Stripe test mode):** pay for an item for sale or an auction you won. Live keys
   are refused, so no real card can ever be charged.
 - **KHQR payments (Bakong):** sellers add their Bakong account in Settings; buyers scan a QR with
@@ -49,13 +53,14 @@ Putting it online (Supabase, Render, Vercel, Cloudinary, Stripe, Telegram): [`DE
 
 ### Tested
 
-- `npm test` (in `backend/`): 27 unit tests for validation (including the photo rules), the search
-  query and wanted-post matching, the Stripe and Cloudinary helpers, and the KHQR builder (checked
-  against the National Bank's own library).
-- `npm run test:api` (in `backend/`): 73 tests that send real requests to the running API, covering
+- `npm test` (in `backend/`): 31 unit tests for validation (including the photo rules), the search
+  query and wanted-post matching, the payment amount rules, the Stripe and Cloudinary helpers, and
+  the KHQR builder (checked against the National Bank's own library).
+- `npm run test:api` (in `backend/`): 87 tests that send real requests to the running API, covering
   sign-up and verification, password reset and change, owner-only changes, messaging, simultaneous
   bids, card and KHQR payments, reviews, saved listings, listing photos, wanted-post matching and
-  alerts, and refusing to delete a listing whose payments or reviews must stay.
+  alerts, offers (including two accepted at the same moment), and refusing to delete a listing whose
+  payments or reviews must stay.
   They use a separate test database (see [Testing](backend/README.md#testing)).
 
 ### Not done yet
@@ -73,9 +78,16 @@ Putting it online (Supabase, Render, Vercel, Cloudinary, Stripe, Telegram): [`DE
   30 minutes), other buyers are told someone is paying. This is what stops two people paying for
   the same item, but it also means any signed-in student can hold an item for 30 minutes without
   paying. Every account is a verified `.edu.kh` student, and the item can still be sold in person.
-- **"Mark reserved" does not cancel a payment already in progress.** Whoever pays first buys the
-  item, and both people are told. (Reserved does not record *who* it is reserved for, so cancelling
-  could refund the very buyer the seller meant.)
+- **A manual "Mark reserved" does not cancel a payment already in progress:** whoever pays first
+  buys the item, and both people are told (it does not record who the item is reserved for, so
+  cancelling could refund the very buyer the seller meant). An accepted offer does record the buyer:
+  then only they can pay, and anyone else's late payment is recorded as a refund the seller owes.
+- **Offers do not expire.** A pending offer stays until the buyer withdraws or changes it, the seller
+  answers it, or the item is sold or reserved another way. An accepted offer keeps the item reserved
+  until it is sold or the seller makes it available again.
+- **"Make available again" does not cancel a payment already in progress.** A buyer whose accepted
+  offer was cancelled while their QR was open can still pay the agreed price shown on it, and that
+  completes the sale, the same as whoever pays first.
 - **An item paid for online cannot be made available again.** Its payment and reviews belong to
   that sale. If the deal falls through, the seller refunds the buyer and posts the item as a new
   listing.

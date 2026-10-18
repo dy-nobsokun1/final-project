@@ -8,7 +8,9 @@ import { validateReview } from "../utils/validation.js";
 
 // Reviews follow the ER diagram: each one is about one listing, written by one user about another.
 // Who may review whom: once a listing is sold or traded, its owner and the person they dealt with
-// can rate each other, once per listing (see reviewBlocker below for who counts as "dealt with").
+// can rate each other, once per listing (see reviewBlocker below for who counts as "dealt with"):
+// whoever paid online, else the auction winner, else the buyer whose offer was accepted; otherwise
+// (settled in person) someone who chatted with the owner both ways.
 
 const REVIEW_SELECT = `
   SELECT r.*, u.name AS reviewer_name, u.avatar_url AS reviewer_avatar_url, l.title AS listing_title
@@ -22,7 +24,8 @@ export const userReviewsRouter = Router({ mergeParams: true });
 
 /**
  * The person the owner completed the deal with, when UniSwap knows it: whoever paid online
- * (card or KHQR), or else the winner of an auction. null for a deal settled in person.
+ * (card or KHQR), or else the winner of an auction, or else the buyer whose offer the owner
+ * accepted. null for any other deal settled in person.
  */
 async function findDealPartner(listing) {
   const { rows } = await query(
@@ -30,13 +33,16 @@ async function findDealPartner(listing) {
     [listing.id],
   );
   if (rows[0]) return rows[0].buyer_id;
-  return listing.listing_type === "auction" ? listing.leading_bidder_id : null;
+  if (listing.listing_type === "auction") return listing.leading_bidder_id;
+  // The buyer whose offer the owner accepted (routes/offers.js). "Mark as sold" keeps it and "Make
+  // available again" clears it.
+  return listing.reserved_for;
 }
 
 /**
  * Why `reviewerId` may not review `revieweeId` about this listing (an HttpError), or null if they may.
  * The two must be the listing's owner and the person they dealt with:
- *  - if someone paid online, or won the auction, only that person;
+ *  - if someone paid online, won the auction, or had their offer accepted, only that person;
  *  - otherwise (settled in person), someone who chatted with the owner about it, both ways.
  */
 async function reviewBlocker(listing, reviewerId, revieweeId) {

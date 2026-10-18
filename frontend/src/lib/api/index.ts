@@ -9,6 +9,7 @@ import type {
   ListingFilters,
   ListingWithSeller,
   Message,
+  Offer,
   Review,
   ReviewSummary,
   User,
@@ -127,6 +128,22 @@ export async function getListingMatches(listingId: string): Promise<ListingWithS
     apiFetch<{ listings: ListingWithSeller[] }>(`/api/listings/${encodeURIComponent(listingId)}/matches`),
   );
   return result?.listings ?? [];
+}
+
+/** The signed-in user's latest offer on a listing, in any status, or null. */
+export async function getMyOffer(listingId: string): Promise<Offer | null> {
+  const result = await orNull(
+    apiFetch<{ offer: Offer | null }>(`/api/listings/${encodeURIComponent(listingId)}/offers/mine`),
+  );
+  return result?.offer ?? null;
+}
+
+/** The open offers on your own listing, highest first, and the accepted one. Owner only. */
+export async function getListingOffers(listingId: string): Promise<Offer[]> {
+  const result = await orNull(
+    apiFetch<{ offers: Offer[] }>(`/api/listings/${encodeURIComponent(listingId)}/offers`),
+  );
+  return result?.offers ?? [];
 }
 
 export async function getListingById(id: string): Promise<ListingWithSeller | null> {

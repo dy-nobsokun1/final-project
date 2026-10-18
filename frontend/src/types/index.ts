@@ -123,6 +123,26 @@ export interface ListingWithSeller extends Listing {
   seller: Pick<User, "id" | "name" | "avatarUrl" | "isVerified"> & { acceptsKhqr: boolean };
 }
 
+/**
+ * Where an offer stands. "withdrawn": the buyer took it back or replaced it with a new amount.
+ * "cancelled": it was accepted, and then the seller made the item available again.
+ */
+export type OfferStatus = "pending" | "accepted" | "declined" | "withdrawn" | "cancelled";
+
+/**
+ * A price offer below the asking price on an item for sale. Accepting it reserves the item for that
+ * buyer at that price (backend/src/routes/offers.js).
+ */
+export interface Offer {
+  id: string;
+  listingId: string;
+  amount: number;
+  status: OfferStatus;
+  createdAt: string;
+  updatedAt: string;
+  buyer: Pick<User, "id" | "name" | "avatarUrl" | "isVerified">;
+}
+
 /** A KHQR to pay for one listing, valid until `expiresAt`. `qr` is the text the QR code encodes. */
 export interface KhqrPayment {
   paymentId: string;
@@ -132,8 +152,10 @@ export interface KhqrPayment {
 }
 
 /**
- * "refund_due": the payment went through after the item was already sold, so the seller must refund it.
- * "unavailable": not paid, and the item has been sold or traded another way, so the QR must not be paid.
+ * "refund_due": the payment went through after the item was already sold, or reserved for another
+ * buyer, so the seller must refund it.
+ * "unavailable": not paid, and the item has been sold or traded another way, or reserved for another
+ * buyer, so the QR must not be paid.
  */
 export type KhqrStatus = "paid" | "pending" | "expired" | "refund_due" | "unavailable";
 

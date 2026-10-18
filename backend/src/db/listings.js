@@ -4,13 +4,18 @@ import { query } from "./pool.js";
 // a card without a second request (matches ListingWithSeller in the frontend).
 // Auction listings also get their highest bid, its bidder, the bid count and whether bidding has ended.
 // Every listing also gets save_count: how many students saved it (who they are stays private).
+// agreed_price is the price agreed in the accepted offer of the buyer the item is reserved for
+// (reserved_for, routes/offers.js), else null. It is private: toListing leaves it out, and only
+// amountToPay (utils/payments.js) reads it. offers_one_accepted_idx guarantees at most one such offer.
 export const LISTING_SELECT = `
   SELECT l.*, u.name AS seller_name, u.avatar_url AS seller_avatar_url,
          u.is_verified AS seller_is_verified, u.bakong_account_id IS NOT NULL AS seller_accepts_khqr,
          l.auction_ends_at <= now() AS auction_ended,
          top.amount AS highest_bid, top.bidder_id AS leading_bidder_id,
          (SELECT COUNT(*)::int FROM bids b WHERE b.listing_id = l.id) AS bid_count,
-         (SELECT COUNT(*)::int FROM saved_listings sv WHERE sv.listing_id = l.id) AS save_count
+         (SELECT COUNT(*)::int FROM saved_listings sv WHERE sv.listing_id = l.id) AS save_count,
+         (SELECT o.amount FROM offers o
+          WHERE o.listing_id = l.id AND o.buyer_id = l.reserved_for AND o.status = 'accepted') AS agreed_price
   FROM listings l
   JOIN users u ON u.id = l.user_id
   LEFT JOIN LATERAL (

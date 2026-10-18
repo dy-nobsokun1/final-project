@@ -1,6 +1,6 @@
 // `cn` is provided by the `cn` package that shadcn/ui installs and configures.
 // The helpers below are application-specific and are not part of shadcn.
-import type { Listing } from "@/types";
+import type { Listing, ListingWithSeller, Offer } from "@/types";
 
 export { cn } from "cn";
 
@@ -24,6 +24,21 @@ export function formatListingPrice(listing: Pick<Listing, "listingType" | "price
   if (listing.auction) return formatPrice(listing.auction.highestBid ?? listing.price);
   if (listing.listingType === "trade" && listing.price === 0) return "Trade";
   return formatPrice(listing.price);
+}
+
+/** How much this viewer can pay online for a listing, or null. Mirrors amountToPay in backend/src/utils/payments.js. */
+export function payableAmount(listing: ListingWithSeller, userId: string | null, myOffer: Offer | null): number | null {
+  if (userId === null || userId === listing.seller.id) return null;
+  if (listing.listingType === "sale") {
+    // An accepted offer of yours on a reserved item means it is reserved for you: the API changes
+    // listings.reserved_for and the offer together (routes/offers.js).
+    if (listing.status === "reserved") return myOffer?.status === "accepted" ? myOffer.amount : null;
+    return listing.status === "active" && listing.price > 0 ? listing.price : null;
+  }
+  if (listing.auction && listing.status === "reserved" && listing.auction.leadingBidderId === userId) {
+    return listing.auction.highestBid;
+  }
+  return null;
 }
 
 const RELATIVE_UNITS: Array<[Intl.RelativeTimeFormatUnit, number]> = [

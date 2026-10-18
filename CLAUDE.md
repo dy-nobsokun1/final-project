@@ -93,7 +93,8 @@ Its log: `/tmp/uniswap-cloud-setup.log`. Use the `implement_backend` branch.
 - **Notifications:** `utils/notify.js` (fire-and-forget, never throws). New message (first unread
   per thread only), outbid, auction won/ended, password changed, price drop on a saved listing
   (`notifyPriceDrop`, called from PATCH in `routes/listings.js`), new listing matching a wanted post
-  (create only, not edits). Add new events there; Telegram can reuse it later.
+  (create only, not edits), offer made/accepted/declined/cancelled. Add new events there; Telegram
+  can reuse it later.
 - **Optional services** (`backend/src/services/`, plain `fetch`, no packages), each off until its env
   keys are set: Stripe Checkout **test mode only** (`routes/payments.js`; `markPaid` is idempotent and
   marks the item sold; the webhook needs the raw body, so it is mounted before `express.json` in
@@ -109,13 +110,13 @@ Its log: `/tmp/uniswap-cloud-setup.log`. Use the `implement_backend` branch.
   answer, so nobody can pay a QR that could not be confirmed. `confirmOpenKhqrPayments(listingId)`
   (`db/payments.js`) asks Bakong about a listing's unconfirmed QRs and records the paid ones; it
   runs before a new QR or card checkout and before the owner marks the item sold or traded. `payments.method` is `stripe` or `khqr`. A payment confirmed after the
-  item was already sold becomes `refund_due` (not `paid`); the listing is untouched and both people
+  item was already sold (or reserved for another buyer by an accepted offer) becomes `refund_due` (not `paid`); the listing is untouched and both people
   are told the seller must refund (`notifyLatePayment`). Bakong only accepts Cambodian
   IPs, so it does not work from Render. Token in `BAKONG_TOKEN`, expires 13 Jan 2027.
-- **Deleting listings:** payments and reviews are `ON DELETE CASCADE`, so `DELETE /api/listings/:id`
+- **Deleting listings:** payments, reviews and offers are `ON DELETE CASCADE`, so `DELETE /api/listings/:id`
   refuses (409) when the listing is sold/traded, has reviews, has a paid or `refund_due` payment,
-  or has an unconfirmed payment that may still be confirmed (`RECHECK_HOURS`, 24, in `db/payments.js`,
-  + 1 minute of slack). It locks the listing row like `lockListingForPayment`, so no payment can start
+  has an unconfirmed payment that may still be confirmed (`RECHECK_HOURS`, 24, in `db/payments.js`,
+  + 1 minute of slack), or is reserved by an accepted offer. It locks the listing row like `lockListingForPayment`, so no payment can start
   between the check and the delete. The owner's Delete button is hidden on sold and traded listings.
   `PATCH` refuses (409) to make a listing `active` again once it has a `paid` payment: that sale's
   payment and reviews point at its buyer, so selling it again means a new listing. The README's
@@ -130,6 +131,15 @@ Its log: `/tmp/uniswap-cloud-setup.log`. Use the `implement_backend` branch.
   budget (0 = any), both active, different owners, verified posters); `GET /api/listings/:id/matches`
   (the owner's listing page shows it in `ListingMatches`); alerts from POST only (`notifyWantedMatches`,
   at most 10 posts, one message per student).
+- **Offers:** `routes/offers.js` + `db/offers.js`, table `offers` (pending/accepted/declined/withdrawn/
+  cancelled); sale listings only, below the asking price; one pending offer per buyer (a new one
+  withdraws the old); every offer change locks the listing row. Accept sets `listings.reserved_for` +
+  `reserved`, declines the others, and is refused (409) while another buyer is paying. `amountToPay`
+  lets only `reserved_for` pay, at `agreed_price` (from the accepted offer via `LISTING_SELECT`, never
+  serialized); `markPaid` makes anyone else's payment `refund_due` and declines pending offers when it
+  sells; KHQR status says `unavailable`. `updateOffersForStatus` (PATCH, now in a transaction) cancels
+  on Make available again and declines pending offers when the item leaves `active`. Mark as sold
+  keeps `reserved_for`, which `findDealPartner` uses. While it is set, the type is locked and DELETE is refused.
 - **Messaging:** there is no conversations table. A thread is all messages between two users about
   one listing (this follows the ER diagram).
 - **Uploads:** `POST /api/uploads` with raw image bytes (max 5 MB), saved to `backend/uploads/`
@@ -146,10 +156,10 @@ Its log: `/tmp/uniswap-cloud-setup.log`. Use the `implement_backend` branch.
 ## Status and roadmap
 
 Done (week 5): auth with email verification, forgot/change password, listings CRUD with five types (incl. auction) and statuses,
-ranked typo-tolerant search and filters, auctions/bidding, saved listings with price-drop alerts, up to 6 photos per listing, wanted match alerts, email + Telegram notifications, Stripe test payments, KHQR payments via Bakong, Cloudinary photos, profiles, per-listing messaging, photo
+ranked typo-tolerant search and filters, auctions/bidding, saved listings with price-drop alerts, up to 6 photos per listing, wanted match alerts, offers that reserve an item for the buyer, email + Telegram notifications, Stripe test payments, KHQR payments via Bakong, Cloudinary photos, profiles, per-listing messaging, photo
 uploads; frontend fully wired to the API. Reviews and ratings once a listing is sold or traded,
-between the owner and the buyer: whoever paid online, else the auction winner, else (in-person
-deals) someone who chatted with the owner both ways (`reviewBlocker` in `routes/reviews.js`). API tests in `backend/test/api/`.
+between the owner and the buyer: whoever paid online, else the auction winner, else the buyer whose
+offer was accepted, else (in-person deals) someone who chatted with the owner both ways (`reviewBlocker` in `routes/reviews.js`). API tests in `backend/test/api/`.
 
 Built but needs the team's own accounts/keys (see `DEPLOY.md`): Supabase database, Render + Vercel
 deployment, Cloudinary photos, Stripe test payments, Telegram bot.

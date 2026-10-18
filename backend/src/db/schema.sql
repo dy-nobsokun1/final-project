@@ -3,7 +3,7 @@
 -- Extra user fields (major, bio, ...) match the frontend's User type in frontend/src/types.
 -- WARNING: re-running this drops all data. Development only.
 
-DROP TABLE IF EXISTS saved_listings, payments, bids, reviews, messages, listings, users CASCADE;
+DROP TABLE IF EXISTS offers, saved_listings, payments, bids, reviews, messages, listings, users CASCADE;
 
 -- pg_trgm ships with PostgreSQL (and is available on Supabase). Search uses it to tolerate typos.
 CREATE EXTENSION IF NOT EXISTS pg_trgm;
@@ -61,6 +61,10 @@ CREATE TABLE listings (
   min_increment   NUMERIC(10, 2) NOT NULL DEFAULT 1 CHECK (min_increment > 0),
   status       TEXT NOT NULL DEFAULT 'active' CHECK (status IN
                  ('active', 'reserved', 'sold', 'traded')),
+  -- Set while the item is reserved for one buyer whose offer the seller accepted (routes/offers.js):
+  -- only they can pay for it online, at the offer's price. 'Mark as sold' keeps it (the item went to
+  -- them in person); 'Make available again' clears it.
+  reserved_for UUID REFERENCES users(id) ON DELETE SET NULL,
   created_at   TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at   TIMESTAMPTZ NOT NULL DEFAULT now(),
   -- Full-text search words, kept up to date by PostgreSQL itself. Title words weigh most ('A'),
@@ -70,7 +74,9 @@ CREATE TABLE listings (
     || setweight(to_tsvector('english', description), 'B')
     || setweight(to_tsvector('english', category), 'C')
   ) STORED,
-  CONSTRAINT listings_auction_needs_end CHECK (listing_type <> 'auction' OR auction_ends_at IS NOT NULL)
+  CONSTRAINT listings_auction_needs_end CHECK (listing_type <> 'auction' OR auction_ends_at IS NOT NULL),
+  -- A reservation only means something while the item is not available to everyone.
+  CONSTRAINT listings_reserved_for_not_active CHECK (status <> 'active' OR reserved_for IS NULL)
 );
 
 CREATE INDEX listings_browse_idx ON listings (status, created_at DESC);
@@ -88,6 +94,26 @@ CREATE TABLE bids (
 
 CREATE INDEX bids_listing_idx ON bids (listing_id, amount DESC);
 
+-- Price offers on items for sale (routes/offers.js). A buyer offers less than the asking price; the
+-- seller accepts it (the item is reserved for that buyer at that price) or declines it.
+--   pending  -> accepted | declined | withdrawn (by the buyer, or replaced by their newer offer)
+--   accepted -> cancelled (the seller made the item available again)
+CREATE TABLE offers (
+  id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  listing_id UUID NOT NULL REFERENCES listings(id) ON DELETE CASCADE,
+  buyer_id   UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  amount     NUMERIC(10, 2) NOT NULL CHECK (amount > 0),
+  status     TEXT NOT NULL DEFAULT 'pending' CHECK (status IN
+               ('pending', 'accepted', 'declined', 'withdrawn', 'cancelled')),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()  -- when the status last changed
+);
+
+CREATE INDEX offers_listing_idx ON offers (listing_id, status);
+-- The database itself guarantees one pending offer per buyer per listing, and one accepted offer per listing.
+CREATE UNIQUE INDEX offers_one_pending_idx ON offers (listing_id, buyer_id) WHERE status = 'pending';
+CREATE UNIQUE INDEX offers_one_accepted_idx ON offers (listing_id) WHERE status = 'accepted';
+
 -- Online payments: by card through Stripe Checkout (test mode), or by KHQR straight to the seller's
 -- Bakong account. A row is created when the buyer starts paying ("pending") and becomes "paid" once
 -- Stripe or Bakong confirms it; the listing is then marked sold.
@@ -99,7 +125,8 @@ CREATE TABLE payments (
   method            TEXT NOT NULL DEFAULT 'stripe' CHECK (method IN ('stripe', 'khqr')),
   stripe_session_id TEXT UNIQUE, -- Stripe only
   khqr              TEXT,        -- KHQR only: the exact QR text shown; Bakong finds the payment by its MD5
-  -- refund_due: the money moved, but only after the item was already sold, so the seller must refund it.
+  -- refund_due: the money moved, but only after the item was already sold (or reserved for another
+  -- buyer, see offers), so the seller must refund it.
   status            TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'paid', 'refund_due')),
   created_at        TIMESTAMPTZ NOT NULL DEFAULT now(),
   paid_at           TIMESTAMPTZ,

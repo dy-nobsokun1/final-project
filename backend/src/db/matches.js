@@ -41,7 +41,7 @@ function matchSql(item, wanted, term) {
 
 // In both queries, LISTING_SELECT's `l` is the listing returned and `u` its owner. The LATERAL
 // subquery works out each wanted post's search term once. The aliases w, n and t do not clash with
-// LISTING_SELECT's own (l, u, top, b, sv).
+// LISTING_SELECT's own (l, u, top, b, sv, o).
 
 /** Active items that match wanted post `wantedId`, best match first (rows like LISTING_SELECT's). */
 export async function findItemsForWanted(wantedId, limit) {

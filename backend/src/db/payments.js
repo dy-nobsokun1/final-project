@@ -1,9 +1,10 @@
 import { isBakongConfigured, isKhqrPaid } from "../services/bakong.js";
 import { HttpError } from "../utils/httpError.js";
-import { notifyLatePayment, notifyPaid } from "../utils/notify.js";
+import { notifyLatePayment, notifyOfferDeclined, notifyPaid } from "../utils/notify.js";
 import { amountToPay } from "../utils/payments.js";
 import { isUuid } from "../utils/validation.js";
 import { LISTING_SELECT } from "./listings.js";
+import { declinePendingOffers } from "./offers.js";
 import { query, withTransaction } from "./pool.js";
 
 // How long a buyer has to pay once they start. Meanwhile, other buyers are told someone is paying.
@@ -46,21 +47,25 @@ export async function lockListingForPayment(client, listingId, buyerId) {
  * row (with its new status) the first time, otherwise null.
  *
  * A payment can arrive after the item is already gone: a KHQR paid just before it expired but
- * reported late, after someone else bought the item or the seller marked it sold. The money has
- * really moved, so the payment becomes "refund_due" instead of "paid", the listing is left alone,
- * and both people are told the seller must send the money back.
+ * reported late, after someone else bought the item, the seller marked it sold, or the seller
+ * accepted another buyer's offer, which reserves it for that buyer. The money has really moved, so
+ * the payment becomes "refund_due" instead of "paid", the listing is left alone, and both people are
+ * told the seller must send the money back.
  */
 export async function markPaid(paymentId) {
-  const payment = await withTransaction(async (client) => {
+  const result = await withTransaction(async (client) => {
     const { rows: [pending] } = await client.query(
-      "SELECT listing_id FROM payments WHERE id = $1 AND status = 'pending'", [paymentId]);
+      "SELECT listing_id, buyer_id FROM payments WHERE id = $1 AND status = 'pending'", [paymentId]);
     if (!pending) return null;
     // Locked, so two payments confirmed at the same moment are handled one after the other:
     // the second one sees the first one's "sold".
     const { rows: [listing] } = await client.query(
-      "SELECT status FROM listings WHERE id = $1 FOR UPDATE", [pending.listing_id]);
+      "SELECT status, reserved_for FROM listings WHERE id = $1 FOR UPDATE", [pending.listing_id]);
     if (!listing) return null; // deleted while this call waited for the lock (its payments went with it)
-    const isLate = listing.status === "sold" || listing.status === "traded";
+    // Too late if the item already went another way, or the seller accepted another buyer's offer,
+    // which reserves it for that buyer only (routes/offers.js).
+    const isReservedForOther = listing.reserved_for !== null && listing.reserved_for !== pending.buyer_id;
+    const isLate = listing.status === "sold" || listing.status === "traded" || isReservedForOther;
 
     const { rows } = await client.query(
       `UPDATE payments SET status = $2, paid_at = now()
@@ -69,18 +74,22 @@ export async function markPaid(paymentId) {
       [paymentId, isLate ? "refund_due" : "paid"],
     );
     if (!rows[0]) return null; // another call recorded it while this one waited for the lock
+    let declinedOffers = [];
     if (!isLate) {
       await client.query("UPDATE listings SET status = 'sold', updated_at = now() WHERE id = $1", [rows[0].listing_id]);
+      declinedOffers = await declinePendingOffers(client, rows[0].listing_id); // sold: waiting offers can no longer be accepted
     }
-    return rows[0];
+    return { payment: rows[0], declinedOffers };
   });
 
+  const payment = result?.payment ?? null;
   if (payment?.status === "refund_due") {
-    console.error(`[payments] payment ${paymentId} arrived after listing ${payment.listing_id} was sold: refund due`);
+    console.error(`[payments] payment ${paymentId} arrived after listing ${payment.listing_id} was sold or reserved for another buyer: refund due`);
     notifyLatePayment(payment);
   } else if (payment) {
     notifyPaid(payment);
   }
+  for (const offer of result?.declinedOffers ?? []) notifyOfferDeclined(offer);
   return payment;
 }
 
