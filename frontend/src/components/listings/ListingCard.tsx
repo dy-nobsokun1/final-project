@@ -1,3 +1,4 @@
+import { Images } from "lucide-react";
 import Link from "next/link";
 import { ListingImage } from "@/components/listings/ListingImage";
 import { SaveButton } from "@/components/listings/SaveButton";
@@ -45,6 +46,12 @@ export function ListingCard({ listing, saved }: ListingCardProps) {
                 {statusLabel(listing.status)}
               </Badge>
             </span>
+          ) : null}
+          {listing.imageUrls.length > 1 ? (
+            <Badge variant="secondary" className="absolute bottom-2 right-2">
+              <Images aria-hidden="true" />
+              {listing.imageUrls.length}<span className="sr-only"> photos</span>
+            </Badge>
           ) : null}
         </div>
 

@@ -127,6 +127,11 @@ Its log: `/tmp/uniswap-cloud-setup.log`. Use the `implement_backend` branch.
   one listing (this follows the ER diagram).
 - **Uploads:** `POST /api/uploads` with raw image bytes (max 5 MB), saved to `backend/uploads/`
   (git-ignored). Must move to Cloudinary before deploying, because Render wipes the disk on restart.
+  A listing has up to 6 photos; `imageUrls[0]` is the cover. `validateListing` enforces `MAX_PHOTOS`,
+  no duplicates and own-upload URLs only (`uploadedPhotoPrefix` in `routes/uploads.js`), but keeps
+  photos the listing already has; a DB `CHECK` limits it to 6 too. The form uploads each photo when it
+  is picked (`uploadListingPhoto`, `useListingPhotos`, `PhotoPicker`) and submits only the URLs, as
+  hidden `imageUrls` inputs. The listing page shows them with `ListingGallery`.
 - **Schema changes:** existing databases do not update themselves. For each change, provide an
   idempotent SQL snippet in `backend/README.md` (see the "Search" section) as well as editing `schema.sql`.
 - **SQL safety:** always use `$1, $2…` parameters. Only whitelisted column names may be built into SQL.
@@ -134,7 +139,7 @@ Its log: `/tmp/uniswap-cloud-setup.log`. Use the `implement_backend` branch.
 ## Status and roadmap
 
 Done (week 5): auth with email verification, forgot/change password, listings CRUD with five types (incl. auction) and statuses,
-ranked typo-tolerant search and filters, auctions/bidding, saved listings with price-drop alerts, email + Telegram notifications, Stripe test payments, KHQR payments via Bakong, Cloudinary photos, profiles, per-listing messaging, photo
+ranked typo-tolerant search and filters, auctions/bidding, saved listings with price-drop alerts, up to 6 photos per listing, email + Telegram notifications, Stripe test payments, KHQR payments via Bakong, Cloudinary photos, profiles, per-listing messaging, photo
 uploads; frontend fully wired to the API. Reviews and ratings once a listing is sold or traded,
 between the owner and the buyer: whoever paid online, else the auction winner, else (in-person
 deals) someone who chatted with the owner both ways (`reviewBlocker` in `routes/reviews.js`). API tests in `backend/test/api/`.

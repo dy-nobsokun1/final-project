@@ -68,6 +68,7 @@ export async function waitFor(check, ms = 2000) {
 
 /**
  * Starts the app on a free port and returns what the tests need: request() for HTTP calls,
+ * baseUrl, for requests request() cannot make, like raw image uploads,
  * createUser() and createListing() for test data, sql() to set up cases the API does not allow
  * (like an auction that already ended), loggedLinks() to open a link the app would have emailed,
  * skippedEmails() to see which notifications it would have emailed (wait for them with waitFor,
@@ -143,5 +144,5 @@ export async function startApi({ env = {} } = {}) {
     await pool.end();
   }
 
-  return { request, sql, createUser, createListing, loggedLinks, skippedEmails, close };
+  return { baseUrl, request, sql, createUser, createListing, loggedLinks, skippedEmails, close };
 }

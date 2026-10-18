@@ -122,6 +122,6 @@ School Outlook accounts cannot send email from apps. Use a Gmail account:
 - [ ] The Render log shows the services you expect switched on
 - [ ] The Vercel site lists the demo listings (so the database and `API_URL` are right)
 - [ ] Register with a `.edu.kh` email, receive the verification email, and log in
-- [ ] Post a listing with a photo: the image URL starts with `https://res.cloudinary.com/`
+- [ ] Post a listing with two photos: both image URLs start with `https://res.cloudinary.com/`
 - [ ] Pay for an item with the test card: it becomes sold, and the seller and buyer get emails
 - [ ] (API running in Cambodia) Pay a $0.01 item by KHQR: it becomes sold within a few seconds

@@ -40,11 +40,29 @@ function isMoney(value) {
   return typeof value === "number" && Number.isFinite(value) && value >= 0;
 }
 
+/** Most photos one listing can have. The first one is the cover. Also a CHECK in schema.sql. */
+export const MAX_PHOTOS = 6;
+
+// A generated file name: letters, digits, _, - and / (Cloudinary adds a version and a folder), then one
+// of the extensions routes/uploads.js gives files. No ".", "?" or "#" before the extension, so the URL
+// cannot climb folders or carry extra parts.
+const UPLOADED_FILE = /^[\w/-]+\.(jpg|png|webp|gif)$/;
+
+/** True for a photo URL that this API's upload route could have returned: `prefix` then a generated file name. */
+export function isUploadedPhotoUrl(url, prefix) {
+  return typeof url === "string" && typeof prefix === "string" && url.length <= 300
+    && url.startsWith(prefix) && UPLOADED_FILE.test(url.slice(prefix.length));
+}
+
 /**
  * Checks a listing body. With `partial: true` (PATCH) only the fields present are checked.
  * Returns an object of field -> message; empty means valid.
+ * - `photoPrefix`: where our uploads live right now (uploadedPhotoPrefix in routes/uploads.js). A new
+ *   photo URL must start with it. Without it no new photo URL is accepted, so a forgotten option fails closed.
+ * - `currentPhotos`: the photos the listing already has, which an edit may keep even if they are not
+ *   uploads (e.g. the demo pictures in db-seed.js).
  */
-export function validateListing(body, { partial = false } = {}) {
+export function validateListing(body, { partial = false, photoPrefix, currentPhotos = [] } = {}) {
   const errors = {};
   const has = (field) => body[field] !== undefined;
   const check = (field, ok, message) => {
@@ -66,9 +84,18 @@ export function validateListing(body, { partial = false } = {}) {
   if (has("cashTopup") && body.cashTopup !== null && !isMoney(body.cashTopup)) {
     errors.cashTopup = "Cash top-up must be a number >= 0.";
   }
-  if (has("imageUrls") && !(Array.isArray(body.imageUrls)
-    && body.imageUrls.every((url) => typeof url === "string"))) {
-    errors.imageUrls = "Image URLs must be a list of strings.";
+  if (has("imageUrls")) {
+    const urls = body.imageUrls;
+    if (!Array.isArray(urls) || !urls.every((url) => typeof url === "string")) {
+      errors.imageUrls = "Image URLs must be a list of strings.";
+    } else if (urls.length > MAX_PHOTOS) {
+      errors.imageUrls = `A listing can have at most ${MAX_PHOTOS} photos.`;
+    } else if (new Set(urls).size < urls.length) {
+      errors.imageUrls = "Each photo can only be added once.";
+    } else if (urls.some((url) => !currentPhotos.includes(url) && !isUploadedPhotoUrl(url, photoPrefix))) {
+      // A new photo must be one of our own uploads: an image on another site could track who views the listing.
+      errors.imageUrls = "Photos must be uploaded through UniSwap.";
+    }
   }
   if (has("status") && !STATUSES.includes(body.status)) {
     errors.status = `Status must be one of: ${STATUSES.join(", ")}.`;

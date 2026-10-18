@@ -20,8 +20,8 @@ Putting it online (Supabase, Render, Vercel, Cloudinary, Stripe, Telegram): [`DE
   password? A one-hour, single-use link is emailed to your campus address, and you can change your
   password in Settings. Either one signs out every other device.
 - **Listings:** sell, ask for something ("wanted"), trade (with a cash top-up for uneven trades),
-  give away, or auction. Photos, owner-only editing and deleting, and the statuses active,
-  reserved, sold and traded.
+  give away, or auction. Up to 6 photos each (the first is the cover), shown as a gallery,
+  owner-only editing and deleting, and the statuses active, reserved, sold and traded.
 - **Saved listings:** the heart on another student's listing saves it to a Saved page, where sold
   items stay, marked sold. A listing shows how many students saved it, never who. When the owner
   lowers the price of an item for sale, everyone who saved it is told.
@@ -45,12 +45,13 @@ Putting it online (Supabase, Render, Vercel, Cloudinary, Stripe, Telegram): [`DE
 
 ### Tested
 
-- `npm test` (in `backend/`): 24 unit tests for validation, the search query, the Stripe and
-  Cloudinary helpers, and the KHQR builder (checked against the National Bank's own library).
-- `npm run test:api` (in `backend/`): 63 tests that send real requests to the running API, covering
+- `npm test` (in `backend/`): 26 unit tests for validation (including the photo rules), the search
+  query, the Stripe and Cloudinary helpers, and the KHQR builder (checked against the National
+  Bank's own library).
+- `npm run test:api` (in `backend/`): 69 tests that send real requests to the running API, covering
   sign-up and verification, password reset and change, owner-only changes, messaging, simultaneous
-  bids, card and KHQR payments, reviews, saved listings, and refusing to delete a listing whose
-  payments or reviews must stay.
+  bids, card and KHQR payments, reviews, saved listings, listing photos, and refusing to delete a
+  listing whose payments or reviews must stay.
   They use a separate test database (see [Testing](backend/README.md#testing)).
 
 ### Not done yet

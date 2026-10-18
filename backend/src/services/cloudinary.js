@@ -10,6 +10,12 @@ const FOLDER = "uniswap";
 export const isCloudinaryConfigured = Boolean(cloudName && apiKey && apiSecret);
 
 /**
+ * Every photo uploadImage stores has a URL starting with this, e.g.
+ * https://res.cloudinary.com/<cloud>/image/upload/v1712345678/uniswap/abc123.jpg
+ */
+export const CLOUDINARY_PHOTO_PREFIX = `https://res.cloudinary.com/${cloudName}/image/upload/`;
+
+/**
  * Cloudinary's signature: SHA-1 of the signed parameters, sorted by name and joined as
  * "a=1&b=2", with the API secret appended. It proves the upload comes from us without
  * sending the secret itself.

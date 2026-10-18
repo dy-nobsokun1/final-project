@@ -7,6 +7,7 @@ import { HttpError } from "../utils/httpError.js";
 import { notifyPriceDrop } from "../utils/notify.js";
 import { toListing } from "../utils/serializers.js";
 import { parseListingFilters, validateListing } from "../utils/validation.js";
+import { uploadedPhotoPrefix } from "./uploads.js";
 
 export const listingsRouter = Router();
 
@@ -57,7 +58,7 @@ listingsRouter.get("/:id", async (req, res) => {
 
 // POST /api/listings  (logged in)
 listingsRouter.post("/", requireAuth, async (req, res) => {
-  assertValid(req.body);
+  assertValid(req.body, { photoPrefix: uploadedPhotoPrefix(req) });
   const b = req.body;
   const { rows } = await query(
     `INSERT INTO listings
@@ -75,7 +76,8 @@ listingsRouter.post("/", requireAuth, async (req, res) => {
 // PATCH /api/listings/:id  (owner only) -- any subset of fields, e.g. { "status": "sold" }
 listingsRouter.patch("/:id", requireAuth, async (req, res) => {
   const listing = await findOwnedListing(req.params.id, req.userId);
-  assertValid(req.body, { partial: true });
+  // Photos the listing already has may stay; new ones must be our own uploads.
+  assertValid(req.body, { partial: true, photoPrefix: uploadedPhotoPrefix(req), currentPhotos: listing.image_urls });
 
   const changes = { ...req.body };
   const fields = Object.keys(WRITABLE_COLUMNS).filter((field) => changes[field] !== undefined);

@@ -5,19 +5,20 @@ import { useState } from "react";
 import { AuctionFields } from "@/components/forms/AuctionFields";
 import { Field, FieldInput, FieldTextarea } from "@/components/forms/Field";
 import { FieldSelect } from "@/components/forms/FieldSelect";
+import { PhotoPicker } from "@/components/forms/PhotoPicker";
 import { Button } from "@/components/ui/button";
+import { useListingPhotos } from "@/hooks/use-listing-photos";
 import { createListing, updateListing } from "@/lib/api/actions";
 import { CATEGORIES, CONDITIONS, LISTING_TYPES } from "@/lib/constants";
 import type { Listing } from "@/types";
 
-/** Matches the API's upload limit (backend/src/routes/uploads.js). */
-const MAX_PHOTO_BYTES = 5 * 1024 * 1024;
 /** Matches the API's longest auction (MAX_AUCTION_DAYS in backend/src/utils/validation.js). */
 const MAX_AUCTION_MS = 30 * 24 * 60 * 60 * 1000;
 
 /**
- * Create-a-listing form. Checks the fields here for quick feedback, then sends the whole form
- * (photo included) to a Server Action, which uploads the photo and creates the listing via the API.
+ * Create-a-listing form. Checks the fields here for quick feedback, then sends the fields and the
+ * photo URLs to a Server Action, which creates the listing via the API. Photos upload one by one as
+ * soon as they are picked (PhotoPicker), so saving only sends their URLs.
  *
  * Given a `listing`, it edits that listing instead: the fields start filled in and saving updates it.
  * Once an auction has bids, its type, price and auction settings are locked (as in the API).
@@ -27,6 +28,7 @@ export function NewListingForm({ listing }: { listing?: Listing }) {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [listingType, setListingType] = useState<string>(listing?.listingType ?? "sale");
+  const photos = useListingPhotos(listing?.imageUrls ?? []);
   const lockedByBids = (listing?.auction?.bidCount ?? 0) > 0;
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -35,13 +37,12 @@ export function NewListingForm({ listing }: { listing?: Listing }) {
     const title = String(data.get("title") ?? "").trim();
     const price = Number(data.get("price") ?? 0);
     const description = String(data.get("description") ?? "").trim();
-    const photo = data.get("photo");
 
     const next: Record<string, string> = {};
     if (title.length < 5) next.title = "Use at least 5 characters.";
     if (!Number.isFinite(price) || price < 0) next.price = "Enter a valid price.";
     if (description.length < 20) next.description = "Describe the item in at least 20 characters.";
-    if (photo instanceof File && photo.size > MAX_PHOTO_BYTES) next.photo = "Choose a photo under 5 MB.";
+    if (photos.isUploading) next.imageUrls = "Wait for the photos to finish uploading.";
     if (listingType === "auction" && !lockedByBids) {
       // datetime-local gives the user's local time with no zone ("2026-10-04T18:00"). Converting it
       // here, in the browser, keeps the user's time zone; the API receives an exact ISO time.
@@ -138,19 +139,12 @@ export function NewListingForm({ listing }: { listing?: Listing }) {
         </p>
       ) : null}
 
-      <Field label={listing ? "New photo (optional, replaces the current one)" : "Photo (optional)"} error={errors.photo}>
-        <FieldInput
-          name="photo"
-          type="file"
-          accept="image/jpeg,image/png,image/webp,image/gif"
-          className="bg-brand-50/40"
-        />
-      </Field>
+      <PhotoPicker photos={photos} error={errors.imageUrls} />
 
       <div className="flex items-center gap-2">
-        <Button type="submit" size="lg" disabled={isSubmitting}>
-          {listing
-            ? (isSubmitting ? "Saving..." : "Save changes")
+        <Button type="submit" size="lg" disabled={isSubmitting || photos.isUploading}>
+          {photos.isUploading ? "Uploading photos..."
+            : listing ? (isSubmitting ? "Saving..." : "Save changes")
             : (isSubmitting ? "Publishing..." : "Publish listing")}
         </Button>
         <Button type="button" variant="ghost" onClick={() => router.back()}>

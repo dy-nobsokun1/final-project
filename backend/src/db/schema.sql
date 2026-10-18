@@ -53,7 +53,8 @@ CREATE TABLE listings (
   price        NUMERIC(10, 2) NOT NULL DEFAULT 0 CHECK (price >= 0),
   -- Value-gap negotiation: extra cash offered on top of an uneven trade.
   cash_topup   NUMERIC(10, 2) CHECK (cash_topup >= 0),
-  image_urls   TEXT[] NOT NULL DEFAULT '{}',
+  -- Photo URLs, at most 6 (MAX_PHOTOS in utils/validation.js). The first one is the cover.
+  image_urls   TEXT[] NOT NULL DEFAULT '{}' CHECK (cardinality(image_urls) <= 6),
   -- Auctions only: bidding closes at auction_ends_at; each bid must beat the highest by min_increment.
   -- For an auction, `price` is the starting bid.
   auction_ends_at TIMESTAMPTZ,

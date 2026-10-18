@@ -118,6 +118,33 @@ ALTER TABLE listings ADD COLUMN IF NOT EXISTS search_vector TSVECTOR GENERATED A
 CREATE INDEX IF NOT EXISTS listings_search_idx ON listings USING GIN (search_vector);
 ```
 
+### Photos
+
+A listing has up to 6 photos (`imageUrls`); the first one is the cover.
+
+- Each photo is uploaded on its own (`POST /api/uploads`, max 5 MB) as soon as it is picked on the
+  form, because a Server Action may carry at most 6 MB (`frontend/next.config.ts`). Saving the
+  listing only sends the URLs.
+- `validateListing` refuses more than 6 photos, the same photo twice, and any new URL that is not one
+  of our own uploads: it must start with `uploadedPhotoPrefix` (in `src/routes/uploads.js`: the
+  Cloudinary folder once Cloudinary is set up, else this API's `/uploads/`), then a generated file
+  name. An image on another site could track who views the listing.
+- An edit may keep, reorder or remove the photos a listing already has, even ones that are not
+  uploads (like the demo `/listings/...` pictures), but once removed they cannot come back.
+- A `CHECK` in `schema.sql` refuses more than 6 photos too.
+- Known limits: photos that are removed, or uploaded for a listing that is never saved, stay in
+  storage. Without Cloudinary the prefix comes from the request's `Host` header, which a client
+  calling the API directly can choose; deployments use Cloudinary.
+
+**Upgrading a database created before several photos?** Run this once. It keeps your data (a listing
+with more than 6 photos keeps its first 6) and is safe to re-run:
+
+```sql
+UPDATE listings SET image_urls = image_urls[1:6] WHERE cardinality(image_urls) > 6;
+ALTER TABLE listings DROP CONSTRAINT IF EXISTS listings_image_urls_check;
+ALTER TABLE listings ADD CONSTRAINT listings_image_urls_check CHECK (cardinality(image_urls) <= 6);
+```
+
 ### Auctions
 
 A listing with `listingType: "auction"` takes bids until `auctionEndsAt` (at most 30 days away).
@@ -305,8 +332,8 @@ A token issued before the account's last password change or reset is refused (40
 | GET 🔒 | `/api/auth/me` | The logged-in user |
 | GET | `/api/listings` | Browse and search (ranked, typo tolerant; see Search above). Query: `query`, `category`, `condition`, `type`, `minPrice`, `maxPrice`, `status` (default `active`) |
 | GET | `/api/listings/:id` | One listing, with seller info |
-| POST 🔒 | `/api/listings` | `{ title, category, condition, description?, listingType?, price?, cashTopup?, imageUrls?, auctionEndsAt?, minIncrement? }`. `auctionEndsAt` (ISO date) is required for an auction |
-| PATCH 🔒 | `/api/listings/:id` | Owner only. Any subset of fields, e.g. `{ "status": "sold" }`. `409` for `{ "status": "active" }` on an item someone paid for online (post it as a new listing instead). Lowering the price of an available item for sale alerts everyone who saved it |
+| POST 🔒 | `/api/listings` | `{ title, category, condition, description?, listingType?, price?, cashTopup?, imageUrls?, auctionEndsAt?, minIncrement? }`. `imageUrls`: up to 6 URLs from `POST /api/uploads`, the first is the cover (see Photos above). `auctionEndsAt` (ISO date) is required for an auction |
+| PATCH 🔒 | `/api/listings/:id` | Owner only. Any subset of fields, e.g. `{ "status": "sold" }`. `imageUrls` replaces the whole list; photos the listing already has may stay. `409` for `{ "status": "active" }` on an item someone paid for online (post it as a new listing instead). Lowering the price of an available item for sale alerts everyone who saved it |
 | DELETE 🔒 | `/api/listings/:id` | Owner only. `409` if it is sold or traded, has reviews, someone paid for it, or a payment for it is unconfirmed and less than 24 hours old (it may still be confirmed): deleting would also erase its payments and reviews |
 | GET | `/api/listings/:id/bids` | An auction's bids, highest first, with bidder name |
 | POST 🔒 | `/api/listings/:id/bids` | `{ amount }`. Place a bid (see Auctions above) |
@@ -334,10 +361,10 @@ A token issued before the account's last password change or reset is refused (40
 | GET 🔒 | `/api/messages?listingId=&withUserId=` | One thread, oldest first |
 | POST 🔒 | `/api/messages` | `{ listingId, receiverId, body }` |
 | PATCH 🔒 | `/api/messages/read` | `{ listingId, withUserId }` → mark a thread read |
-| POST 🔒 | `/api/uploads` | Raw image bytes with `Content-Type: image/jpeg`, `png`, `webp` or `gif` (max 5 MB) → `{ url }` |
+| POST 🔒 | `/api/uploads` | One photo per request: raw image bytes with `Content-Type: image/jpeg`, `png`, `webp` or `gif` (max 5 MB) → `{ url }` |
 
 Uploaded photos are saved in `backend/uploads/` (git-ignored) and served at `/uploads/<file>`.
-Put the returned `url` in a listing's `imageUrls`.
+Put the returned `url` in a listing's `imageUrls` (at most 6; only URLs from this route are accepted).
 
 JSON field names match the frontend types in `frontend/src/types/index.ts` (camelCase).
 Errors always look like `{ "error": "message", "details": { "field": "message" } }`.
@@ -350,7 +377,7 @@ Errors always look like `{ "error": "message", "details": { "field": "message" }
   and sends it real HTTP requests, so routes, SQL and database rules are tested together: sign-up and
   verification, password reset and change, owner-only changes, messaging, bidding (including five
   bids at the same moment), payments with Stripe switched off, KHQR payments (with Bakong replaced by
-  a fake), reviews, and saved listings (including who gets a price-drop alert).
+  a fake), reviews, saved listings (including who gets a price-drop alert), and listing photo rules.
 
 The API tests need their own database, because `test/api/reset-db.js` wipes it before every run.
 Create it once, then put its URL in `.env` as `TEST_DATABASE_URL` (see `.env.example`):

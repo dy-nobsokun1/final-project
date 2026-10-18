@@ -60,6 +60,7 @@ export interface Listing {
   category: ListingCategory;
   condition: ListingCondition;
   listingType: ListingType;
+  /** Up to 6 photo URLs (MAX_LISTING_PHOTOS). The first one is the cover. */
   imageUrls: string[];
   sellerId: string;
   status: ListingStatus;

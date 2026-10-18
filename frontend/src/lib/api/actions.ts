@@ -152,11 +152,12 @@ export async function updateBakongAccount(bakongAccountId: string | null): Promi
   }
 }
 
-/** Uploads the photo (if any), then creates the listing. Returns the new listing's id. */
+/**
+ * Creates the listing. Returns the new listing's id. The photos were already uploaded one by one as
+ * they were picked (uploadListingPhoto), so the form only carries their URLs.
+ */
 export async function createListing(formData: FormData): Promise<ActionResult & { listingId?: string }> {
   try {
-    const photo = formData.get("photo");
-    const imageUrls = photo instanceof File && photo.size > 0 ? [await uploadPhoto(photo)] : [];
     const { listing } = await apiFetch<{ listing: ListingWithSeller }>("/api/listings", {
       method: "POST",
       body: JSON.stringify({
@@ -166,7 +167,7 @@ export async function createListing(formData: FormData): Promise<ActionResult & 
         condition: formData.get("condition"),
         listingType: formData.get("listingType"),
         price: Number(formData.get("price") || 0),
-        imageUrls,
+        imageUrls: photoUrls(formData),
         // Auctions only. The form has already turned the local date and time into an ISO string.
         ...(formData.get("listingType") === "auction" && {
           auctionEndsAt: formData.get("auctionEndsAt"),
@@ -175,6 +176,20 @@ export async function createListing(formData: FormData): Promise<ActionResult & 
       }),
     });
     return { listingId: listing.id };
+  } catch (error) {
+    return toActionError(error);
+  }
+}
+
+/**
+ * Uploads one listing photo as soon as it is picked on the form. One photo per call keeps each
+ * request under the 6 MB Server Action limit (next.config.ts).
+ */
+export async function uploadListingPhoto(formData: FormData): Promise<ActionResult & { url?: string }> {
+  const photo = formData.get("photo");
+  if (!(photo instanceof File) || photo.size === 0) return { error: "Choose a photo to upload." };
+  try {
+    return { url: await uploadPhoto(photo) };
   } catch (error) {
     return toActionError(error);
   }
@@ -190,14 +205,18 @@ async function uploadPhoto(photo: File): Promise<string> {
   return url;
 }
 
+/** The photo URLs PhotoPicker put in hidden inputs, in order. */
+function photoUrls(formData: FormData): string[] {
+  return formData.getAll("imageUrls").filter((value): value is string => typeof value === "string");
+}
+
 /**
- * Saves an edited listing. A newly chosen photo replaces the old one; with no new photo the old one
- * stays. Once an auction has bids the form leaves out its type and price, so they are not sent:
- * fields set to `undefined` here are dropped by JSON.stringify.
+ * Saves an edited listing. The form starts with the current photos, so its photo URLs are the
+ * complete new list: an empty list removes them all. Once an auction has bids the form leaves out
+ * its type and price, so they are not sent: fields set to `undefined` here are dropped by JSON.stringify.
  */
 export async function updateListing(id: string, formData: FormData): Promise<ActionResult & { listingId?: string }> {
   try {
-    const photo = formData.get("photo");
     const price = formData.get("price");
     const listingType = formData.get("listingType") ?? undefined;
     const isAuction = listingType === "auction";
@@ -214,7 +233,7 @@ export async function updateListing(id: string, formData: FormData): Promise<Act
         // The form has already turned the local end time into an ISO string.
         auctionEndsAt: isAuction ? formData.get("auctionEndsAt") : undefined,
         minIncrement: isAuction ? Number(formData.get("minIncrement") || 1) : undefined,
-        imageUrls: photo instanceof File && photo.size > 0 ? [await uploadPhoto(photo)] : undefined,
+        imageUrls: photoUrls(formData),
       }),
     });
     return { listingId: id };

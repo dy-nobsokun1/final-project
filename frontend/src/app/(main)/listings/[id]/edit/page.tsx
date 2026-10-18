@@ -1,12 +1,11 @@
 import { notFound, redirect } from "next/navigation";
 import { NewListingForm } from "@/components/forms/NewListingForm";
-import { ListingImage } from "@/components/listings/ListingImage";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getListingById, requireUser } from "@/lib/api";
 
 export const metadata = { title: "Edit listing | UniSwap" };
 
-/** Owner-only page for changing a listing's details and photo. The API checks ownership again. */
+/** Owner-only page for changing a listing's details and photos. The API checks ownership again. */
 export default async function EditListingPage({ params }: PageProps<"/listings/[id]/edit">) {
   const { id } = await params;
   const user = await requireUser();
@@ -29,11 +28,6 @@ export default async function EditListingPage({ params }: PageProps<"/listings/[
           <CardTitle>Item details</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
-          <ListingImage
-            src={listing.imageUrls[0]}
-            alt={listing.title}
-            className="aspect-[4/3] w-40 rounded-lg border border-border"
-          />
           <NewListingForm listing={listing} />
         </CardContent>
       </Card>

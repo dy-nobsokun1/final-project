@@ -21,21 +21,21 @@ for (const [name, email, major, year, verified] of users) {
   ids.push(rows[0].id);
 }
 
-// [owner index, title, category, condition, type, price, image]
+// [owner index, title, category, condition, type, price, photos (the first is the cover)]
 const listings = [
-  [0, "Calculus: Early Transcendentals", "textbooks", "good", "sale", 25, "/listings/calculus-book.jpg"],
-  [0, "Used MacBook Air M1", "electronics", "like_new", "sale", 550, "/listings/used-macbook.jpg"],
-  [1, "Mini fridge for dorm", "furniture", "good", "sale", 60, "/listings/mini-fridge.avif"],
-  [1, "City bike - trade for a desk", "bikes", "fair", "trade", 0, "/listings/bike.jpg"],
-  [2, "Winter jacket (free)", "clothing", "good", "giveaway", 0, "/listings/jacket.svg"],
+  [0, "Calculus: Early Transcendentals", "textbooks", "good", "sale", 25, ["/listings/calculus-book.jpg"]],
+  [0, "Used MacBook Air M1", "electronics", "like_new", "sale", 550, ["/listings/used-macbook.jpg", "/listings/laptop.svg"]],
+  [1, "Mini fridge for dorm", "furniture", "good", "sale", 60, ["/listings/mini-fridge.avif"]],
+  [1, "City bike - trade for a desk", "bikes", "fair", "trade", 0, ["/listings/bike.jpg", "/listings/bike.svg"]],
+  [2, "Winter jacket (free)", "clothing", "good", "giveaway", 0, ["/listings/jacket.svg"]],
 ];
 
 const listingIds = [];
-for (const [owner, title, category, condition, type, price, image] of listings) {
+for (const [owner, title, category, condition, type, price, images] of listings) {
   const { rows } = await pool.query(
     `INSERT INTO listings (user_id, title, description, category, condition, listing_type, price, image_urls)
      VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id`,
-    [ids[owner], title, `Demo listing: ${title}.`, category, condition, type, price, [image]],
+    [ids[owner], title, `Demo listing: ${title}.`, category, condition, type, price, images],
   );
   listingIds.push(rows[0].id);
 }

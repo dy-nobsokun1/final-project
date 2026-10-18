@@ -2,8 +2,8 @@ import { ArrowLeft, MapPin } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AuctionPanel } from "@/components/listings/AuctionPanel";
-import { ListingImage } from "@/components/listings/ListingImage";
 import { KhqrPayButton } from "@/components/listings/KhqrPayButton";
+import { ListingGallery } from "@/components/listings/ListingGallery";
 import { ListingHeading } from "@/components/listings/ListingHeading";
 import { ListingOwnerActions } from "@/components/listings/ListingOwnerActions";
 import { PayButton } from "@/components/listings/PayButton";
@@ -75,11 +75,7 @@ export default async function ListingDetailPage({ params, searchParams }: PagePr
       ) : null}
 
       <div className="grid gap-6 md:grid-cols-2">
-        <ListingImage
-          src={listing.imageUrls[0]}
-          alt={listing.title}
-          className="aspect-[4/3] w-full rounded-xl border border-border"
-        />
+        <ListingGallery imageUrls={listing.imageUrls} title={listing.title} />
 
         <div className="flex flex-col gap-4">
           <div className="flex flex-col gap-2">

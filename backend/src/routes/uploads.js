@@ -3,7 +3,7 @@ import { mkdir, writeFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import express, { Router } from "express";
 import { requireAuth } from "../middleware/auth.js";
-import { isCloudinaryConfigured, uploadImage } from "../services/cloudinary.js";
+import { CLOUDINARY_PHOTO_PREFIX, isCloudinaryConfigured, uploadImage } from "../services/cloudinary.js";
 import { HttpError } from "../utils/httpError.js";
 
 // Listing photos are saved to backend/uploads/ and served from /uploads/<file>.
@@ -18,6 +18,21 @@ const EXTENSIONS = {
   "image/webp": "webp",
   "image/gif": "gif",
 };
+
+/** This API's own address for files saved in UPLOAD_DIR. */
+function localUploadPrefix(req) {
+  return `${req.protocol}://${req.get("host")}/uploads/`;
+}
+
+/**
+ * Where photos uploaded through this route are stored right now. A listing may only add photos
+ * from here (validateListing in utils/validation.js). Without Cloudinary the address comes from the
+ * Host header, which a client calling the API directly can choose. That is fine for local demos;
+ * deployments use Cloudinary (see DEPLOY.md).
+ */
+export function uploadedPhotoPrefix(req) {
+  return isCloudinaryConfigured ? CLOUDINARY_PHOTO_PREFIX : localUploadPrefix(req);
+}
 
 export const uploadsRouter = Router();
 
@@ -41,7 +56,8 @@ uploadsRouter.post(
     await mkdir(UPLOAD_DIR, { recursive: true });
     await writeFile(`${UPLOAD_DIR}${fileName}`, req.body);
 
-    // Absolute URL, so the browser can load it no matter which site shows the listing.
-    res.status(201).json({ url: `${req.protocol}://${req.get("host")}/uploads/${fileName}` });
+    // Absolute URL, so the browser can load it no matter which site shows the listing. Built with the
+    // same prefix the listing check uses, so the two cannot drift apart.
+    res.status(201).json({ url: `${localUploadPrefix(req)}${fileName}` });
   },
 );
