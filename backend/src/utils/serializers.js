@@ -35,6 +35,7 @@ export function toListing(row) {
     sellerId: row.user_id,
     status: row.status,
     createdAt: row.created_at,
+    saveCount: row.save_count, // how many students saved it; who saved it is never sent
     auction: row.listing_type === "auction" ? toAuction(row) : null,
     seller: {
       id: row.user_id,

@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { AuctionPanel } from "@/components/listings/AuctionPanel";
 import { ListingImage } from "@/components/listings/ListingImage";
 import { KhqrPayButton } from "@/components/listings/KhqrPayButton";
+import { ListingHeading } from "@/components/listings/ListingHeading";
 import { ListingOwnerActions } from "@/components/listings/ListingOwnerActions";
 import { PayButton } from "@/components/listings/PayButton";
 import { UserAvatar } from "@/components/profile/UserAvatar";
@@ -92,8 +93,7 @@ export default async function ListingDetailPage({ params, searchParams }: PagePr
                 </Badge>
               ) : null}
             </div>
-            <h1 className="text-2xl font-semibold tracking-tight">{listing.title}</h1>
-            <p className="text-3xl font-semibold">{formatListingPrice(listing)}</p>
+            <ListingHeading listing={listing} />
           </div>
 
           <p className="leading-relaxed text-foreground">{listing.description}</p>

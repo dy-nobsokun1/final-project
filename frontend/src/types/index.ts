@@ -64,6 +64,8 @@ export interface Listing {
   sellerId: string;
   status: ListingStatus;
   createdAt: string;
+  /** How many students saved it with the heart. Who saved it is private. */
+  saveCount: number;
   /** Only set for auction listings. */
   auction: AuctionInfo | null;
 }

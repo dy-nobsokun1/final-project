@@ -3,7 +3,7 @@
 -- Extra user fields (major, bio, ...) match the frontend's User type in frontend/src/types.
 -- WARNING: re-running this drops all data. Development only.
 
-DROP TABLE IF EXISTS payments, bids, reviews, messages, listings, users CASCADE;
+DROP TABLE IF EXISTS saved_listings, payments, bids, reviews, messages, listings, users CASCADE;
 
 -- pg_trgm ships with PostgreSQL (and is available on Supabase). Search uses it to tolerate typos.
 CREATE EXTENSION IF NOT EXISTS pg_trgm;
@@ -133,3 +133,17 @@ CREATE TABLE reviews (
   UNIQUE (listing_id, reviewer_id),
   CHECK (reviewer_id <> reviewee_id)
 );
+
+-- Saved listings (the heart button): a private bookmark from one student to one listing.
+-- Not in the proposal's ER diagram; added for the Saved page and price-drop alerts. Deleting the
+-- listing or the student deletes the save too, so saves never block deleting a listing.
+CREATE TABLE saved_listings (
+  user_id    UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  listing_id UUID NOT NULL REFERENCES listings(id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  PRIMARY KEY (user_id, listing_id)  -- saving twice keeps one row
+);
+
+-- The primary key finds one student's saves (it starts with user_id). This index finds everyone who
+-- saved a listing: the save count, price-drop alerts, and the cascade when a listing is deleted.
+CREATE INDEX saved_listings_listing_idx ON saved_listings (listing_id);

@@ -55,10 +55,25 @@ function hideSkippedEmailLogs() {
 }
 
 /**
+ * Waits until check() returns something truthy, for work the app does in the background
+ * (notifications). Fails after `ms`.
+ */
+export async function waitFor(check, ms = 2000) {
+  const deadline = Date.now() + ms;
+  while (!(await check())) {
+    if (Date.now() > deadline) throw new Error("Timed out waiting for background work.");
+    await new Promise((resolve) => setTimeout(resolve, 20));
+  }
+}
+
+/**
  * Starts the app on a free port and returns what the tests need: request() for HTTP calls,
  * createUser() and createListing() for test data, sql() to set up cases the API does not allow
  * (like an auction that already ended), loggedLinks() to open a link the app would have emailed,
- * and close() to stop everything afterwards.
+ * skippedEmails() to see which notifications it would have emailed (wait for them with waitFor,
+ * since they are sent in the background), and close() to stop everything afterwards.
+ * Each test file runs in its own process, but the other tests in the same file add log lines too,
+ * so always filter them by a unique title or email.
  * `env` switches a service back on for one test file, e.g. { BAKONG_TOKEN: "test" } with a fake fetch.
  */
 export async function startApi({ env = {} } = {}) {
@@ -115,10 +130,18 @@ export async function startApi({ env = {} } = {}) {
       .map((line) => new URL(line.slice(line.indexOf(": ") + 2)));
   }
 
+  /**
+   * What notify.js would have emailed so far in this test file, as its log lines:
+   * [notify] email not configured, skipped "<subject>" to <email>
+   */
+  function skippedEmails() {
+    return hiddenLogLines.filter((line) => line.startsWith("[notify] email not configured, skipped "));
+  }
+
   async function close() {
     await new Promise((resolve) => server.close(resolve));
     await pool.end();
   }
 
-  return { request, sql, createUser, createListing, loggedLinks, close };
+  return { request, sql, createUser, createListing, loggedLinks, skippedEmails, close };
 }

@@ -4,6 +4,7 @@ import { confirmOpenKhqrPayments, RECHECK_HOURS } from "../db/payments.js";
 import { query, withTransaction } from "../db/pool.js";
 import { requireAuth } from "../middleware/auth.js";
 import { HttpError } from "../utils/httpError.js";
+import { notifyPriceDrop } from "../utils/notify.js";
 import { toListing } from "../utils/serializers.js";
 import { parseListingFilters, validateListing } from "../utils/validation.js";
 
@@ -116,7 +117,14 @@ listingsRouter.patch("/:id", requireAuth, async (req, res) => {
     `UPDATE listings SET ${setSql}, updated_at = now() WHERE id = $1`,
     [req.params.id, ...fields.map((field) => changes[field])],
   );
-  res.json({ listing: toListing(await findListingById(req.params.id)) });
+  const updated = await findListingById(req.params.id);
+  // An item for sale got cheaper and is still available: tell everyone who saved it. Compared as stored
+  // (to the cent), so saving the edit form without changing the price sends nothing.
+  if (listing.listing_type === "sale" && updated.listing_type === "sale" && updated.status === "active"
+    && Number(updated.price) < Number(listing.price)) {
+    notifyPriceDrop({ listingId: updated.id, title: updated.title, oldPrice: listing.price, newPrice: updated.price });
+  }
+  res.json({ listing: toListing(updated) });
 });
 
 // DELETE /api/listings/:id  (owner only)

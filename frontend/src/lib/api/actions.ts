@@ -245,6 +245,17 @@ export async function deleteListing(id: string): Promise<ActionResult> {
   }
 }
 
+/** Saves (heart on) or unsaves a listing for the signed-in user. Doing either twice is fine. */
+export async function setListingSaved(listingId: string, saved: boolean): Promise<ActionResult> {
+  try {
+    await apiFetch(`/api/listings/${encodeURIComponent(listingId)}/save`, { method: saved ? "POST" : "DELETE" });
+  } catch (error) {
+    return toActionError(error);
+  }
+  refresh(); // re-render the page: the heart, the save count and the Saved page's list
+  return {};
+}
+
 /** Places a bid on an auction. The API enforces the rules (minimum amount, not your own, not ended). */
 export async function placeBid(listingId: string, amount: number): Promise<ActionResult> {
   try {

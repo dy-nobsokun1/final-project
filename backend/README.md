@@ -46,7 +46,7 @@ backend/
 │   ├── config.js       reads environment variables
 │   ├── db/             schema.sql, connection pool, shared listing query
 │   ├── middleware/     requireAuth (JWT), CORS, error handler
-│   ├── routes/         auth, listings, bids, reviews, users, messages, payments, telegram, uploads
+│   ├── routes/         auth, listings, bids, reviews, saved, users, messages, payments, telegram, uploads
 │   └── utils/          validation, password hashing, tokens, JSON serializers, email
 └── test/               unit tests; test/api/ holds the API tests (see Testing)
 ```
@@ -54,7 +54,8 @@ backend/
 ## Database
 
 Tables follow the ER diagram in the proposal (Figure 2): `users`, `listings`, `messages`,
-`reviews`. See [`src/db/schema.sql`](src/db/schema.sql). Allowed values are enforced twice, in
+`reviews`. `saved_listings` was added for saved listings and is not in the ER diagram (see Saved
+listings below). See [`src/db/schema.sql`](src/db/schema.sql). Allowed values are enforced twice, in
 the API (`utils/validation.js`) and in the database (`CHECK` constraints):
 
 - **category:** textbooks, electronics, furniture, clothing, bikes, other
@@ -173,6 +174,36 @@ other: 1 to 5 whole stars and an optional comment of up to 1000 characters.
 - A profile lists every review the user received, with their average rounded to one decimal place.
 - The `reviews` table was already in the ER diagram, so existing databases need no upgrade.
 
+### Saved listings
+
+The heart on a listing saves it to the student's Saved page (`src/routes/saved.js`).
+
+- One row per student and listing in `saved_listings` (`PRIMARY KEY (user_id, listing_id)`), so
+  saving twice keeps the first save and its time. Unsaving something that is not saved is fine too.
+- Any listing can be saved except your own (400). A saved item stays on the Saved page when it is
+  sold or traded, marked as such, so the student sees what happened to it.
+- Deleting a listing removes its saves (`ON DELETE CASCADE`), so saves never block a delete.
+- Every listing in API responses has `saveCount`: how many students saved it, never who.
+- Pages ask `GET /api/users/me/saved/ids` which of their cards are saved, so the listing queries stay
+  the same for every visitor and need no login.
+- **Price drops:** when the owner lowers the price of an available (`active`) item for sale, everyone
+  who saved it is told (`notifyPriceDrop`). Prices are compared as stored, to the cent, so saving the
+  edit form unchanged, raising the price, or lowering it on other types or on reserved, sold or traded
+  items sends nothing.
+
+**Upgrading a database created before saved listings?** Run this once **before** starting the new API
+(every listing query now counts saves). It keeps your data and is safe to re-run:
+
+```sql
+CREATE TABLE IF NOT EXISTS saved_listings (
+  user_id    UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  listing_id UUID NOT NULL REFERENCES listings(id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  PRIMARY KEY (user_id, listing_id)
+);
+CREATE INDEX IF NOT EXISTS saved_listings_listing_idx ON saved_listings (listing_id);
+```
+
 ### Email notifications
 
 `src/utils/notify.js` emails people when something happens (using the same SMTP settings as the
@@ -184,6 +215,7 @@ verification email):
 | Outbid | The person who just lost the highest bid | The auction |
 | Auction ended with bids | The winner ("You won…") and the seller ("ended at $…") | Their chat with each other |
 | Password changed or reset | The account owner | `/forgot-password`, in case it was not them |
+| Price drop | Everyone who saved the item, when its owner lowers the price of an available item for sale | The listing |
 
 Notifications never block or break the request that caused them: if email is not configured they
 are skipped with a log line, and send failures are logged, not returned to the user. User-written
@@ -274,13 +306,15 @@ A token issued before the account's last password change or reset is refused (40
 | GET | `/api/listings` | Browse and search (ranked, typo tolerant; see Search above). Query: `query`, `category`, `condition`, `type`, `minPrice`, `maxPrice`, `status` (default `active`) |
 | GET | `/api/listings/:id` | One listing, with seller info |
 | POST 🔒 | `/api/listings` | `{ title, category, condition, description?, listingType?, price?, cashTopup?, imageUrls?, auctionEndsAt?, minIncrement? }`. `auctionEndsAt` (ISO date) is required for an auction |
-| PATCH 🔒 | `/api/listings/:id` | Owner only. Any subset of fields, e.g. `{ "status": "sold" }`. `409` for `{ "status": "active" }` on an item someone paid for online (post it as a new listing instead) |
+| PATCH 🔒 | `/api/listings/:id` | Owner only. Any subset of fields, e.g. `{ "status": "sold" }`. `409` for `{ "status": "active" }` on an item someone paid for online (post it as a new listing instead). Lowering the price of an available item for sale alerts everyone who saved it |
 | DELETE 🔒 | `/api/listings/:id` | Owner only. `409` if it is sold or traded, has reviews, someone paid for it, or a payment for it is unconfirmed and less than 24 hours old (it may still be confirmed): deleting would also erase its payments and reviews |
 | GET | `/api/listings/:id/bids` | An auction's bids, highest first, with bidder name |
 | POST 🔒 | `/api/listings/:id/bids` | `{ amount }`. Place a bid (see Auctions above) |
 | GET | `/api/listings/:id/reviews` | Reviews about this listing's deal (at most one per person) |
 | GET 🔒 | `/api/listings/:id/reviews/can-review?revieweeId=` | `{ allowed, reason }`: whether you may review that person for this listing |
 | POST 🔒 | `/api/listings/:id/reviews` | `{ revieweeId, rating, comment? }`. 1-5 stars, once the listing is sold or traded (see Reviews above) |
+| POST 🔒 | `/api/listings/:id/save` | Save a listing (the heart) → `{ saved: true }`. Saving it again changes nothing. `400` for your own listing, `404` if it does not exist |
+| DELETE 🔒 | `/api/listings/:id/save` | Unsave → `204`, also if it was not saved |
 | GET | `/api/users/:id/reviews` | `{ reviews, averageRating, reviewCount }`: reviews the user received, newest first |
 | GET | `/api/payments/config` | `{ enabled, khqr }`: whether card and KHQR payments are switched on |
 | POST 🔒 | `/api/payments/checkout` | `{ listingId }` → `{ url }` of Stripe's payment page |
@@ -291,6 +325,8 @@ A token issued before the account's last password change or reset is refused (40
 | GET 🔒 | `/api/users/me/telegram` | `{ enabled, connected }` |
 | POST 🔒 | `/api/users/me/telegram` | `{ link }`: one-time link that opens the bot |
 | DELETE 🔒 | `/api/users/me/telegram` | Disconnect Telegram |
+| GET 🔒 | `/api/users/me/saved` | `{ listings }`: my saved listings, most recently saved first, in any status (a sold one shows as sold) |
+| GET 🔒 | `/api/users/me/saved/ids` | `{ listingIds }`: which listings I saved, so a page can fill in the hearts on its cards |
 | GET | `/api/users/:id` | Public profile (email hidden) |
 | GET | `/api/users/:id/listings` | All listings by a user |
 | PATCH 🔒 | `/api/users/me` | `{ name?, major?, graduationYear?, bio?, avatarUrl?, bakongAccountId? }`. `bakongAccountId` is `name@bank`; `""` or `null` removes it |
@@ -314,7 +350,7 @@ Errors always look like `{ "error": "message", "details": { "field": "message" }
   and sends it real HTTP requests, so routes, SQL and database rules are tested together: sign-up and
   verification, password reset and change, owner-only changes, messaging, bidding (including five
   bids at the same moment), payments with Stripe switched off, KHQR payments (with Bakong replaced by
-  a fake), and reviews.
+  a fake), reviews, and saved listings (including who gets a price-drop alert).
 
 The API tests need their own database, because `test/api/reset-db.js` wipes it before every run.
 Create it once, then put its URL in `.env` as `TEST_DATABASE_URL` (see `.env.example`):
@@ -328,6 +364,8 @@ The tests refuse to run if `TEST_DATABASE_URL` is the same database as `DATABASE
 off email, Stripe, Bakong, Telegram and Cloudinary, so a test run never sends anything.
 While email is off the API prints verification and reset links in its log; `test/api/helpers.js`
 hides those lines and keeps them (`loggedLinks`), so a test opens a reset link the way a person would.
+It keeps the "email not configured, skipped" lines of notifications too (`skippedEmails`), so a test
+can check who would have been emailed, waiting with `waitFor` because notifications are sent in the background.
 
 ## Security
 

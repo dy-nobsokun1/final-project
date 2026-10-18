@@ -6,6 +6,8 @@ import type { ListingWithSeller } from "@/types";
 
 interface ListingGridProps {
   listings: ListingWithSeller[];
+  /** Ids of the listings you saved. Pass it to show a heart on every card; leave it out to show none. */
+  savedIds?: string[];
   emptyIcon?: LucideIcon;
   emptyTitle?: string;
   emptyDescription?: string;
@@ -15,6 +17,7 @@ interface ListingGridProps {
 /** Responsive grid of listing cards, with a shared empty state. */
 export function ListingGrid({
   listings,
+  savedIds,
   emptyIcon,
   emptyTitle = "No listings found",
   emptyDescription = "Try a different search or filter.",
@@ -55,7 +58,7 @@ export function ListingGrid({
             inViewOnce
             className="h-full"
           >
-            <ListingCard listing={listing} />
+            <ListingCard listing={listing} saved={savedIds?.includes(listing.id)} />
           </Effect>
         </li>
       ))}

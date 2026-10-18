@@ -22,6 +22,9 @@ Putting it online (Supabase, Render, Vercel, Cloudinary, Stripe, Telegram): [`DE
 - **Listings:** sell, ask for something ("wanted"), trade (with a cash top-up for uneven trades),
   give away, or auction. Photos, owner-only editing and deleting, and the statuses active,
   reserved, sold and traded.
+- **Saved listings:** the heart on another student's listing saves it to a Saved page, where sold
+  items stay, marked sold. A listing shows how many students saved it, never who. When the owner
+  lowers the price of an item for sale, everyone who saved it is told.
 - **Search:** best matches first. It finds partial words and typos ("calculas" finds "Calculus"),
   with filters for category, condition, type and price.
 - **Auctions:** a starting price, a minimum raise and an end time. Two bids placed at the same
@@ -31,7 +34,7 @@ Putting it online (Supabase, Render, Vercel, Cloudinary, Stripe, Telegram): [`DE
 - **Reviews and ratings:** once a listing is sold or traded, its owner and the person they chatted
   with can rate each other (1 to 5 stars and a comment). Profiles show the average and every review.
 - **Notifications:** by email, and by Telegram for students who connect it in Settings: new
-  messages, being outbid, auction results, payments and password changes.
+  messages, being outbid, auction results, payments, password changes and price drops on items you saved.
 - **Card payments (Stripe test mode):** pay for an item for sale or an auction you won. Live keys
   are refused, so no real card can ever be charged.
 - **KHQR payments (Bakong):** sellers add their Bakong account in Settings; buyers scan a QR with
@@ -44,10 +47,10 @@ Putting it online (Supabase, Render, Vercel, Cloudinary, Stripe, Telegram): [`DE
 
 - `npm test` (in `backend/`): 24 unit tests for validation, the search query, the Stripe and
   Cloudinary helpers, and the KHQR builder (checked against the National Bank's own library).
-- `npm run test:api` (in `backend/`): 57 tests that send real requests to the running API, covering
+- `npm run test:api` (in `backend/`): 63 tests that send real requests to the running API, covering
   sign-up and verification, password reset and change, owner-only changes, messaging, simultaneous
-  bids, card and KHQR payments, reviews, and refusing to delete a listing whose payments or reviews
-  must stay.
+  bids, card and KHQR payments, reviews, saved listings, and refusing to delete a listing whose
+  payments or reviews must stay.
   They use a separate test database (see [Testing](backend/README.md#testing)).
 
 ### Not done yet

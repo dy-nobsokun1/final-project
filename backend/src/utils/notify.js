@@ -225,3 +225,30 @@ export function notifyPasswordChanged(userId) {
     });
   });
 }
+
+/**
+ * The owner lowered the price of an item for sale: tell everyone who saved it. One message per
+ * person (nobody sees who else saved it), sent one at a time so a popular listing does not open
+ * dozens of mail connections at once.
+ */
+export function notifyPriceDrop({ listingId, title, oldPrice, newPrice }) {
+  inBackground(async () => {
+    const { rows: savers } = await query(
+      `SELECT u.name, u.email, u.telegram_chat_id
+       FROM saved_listings s JOIN users u ON u.id = s.user_id
+       WHERE s.listing_id = $1`,
+      [listingId],
+    );
+    for (const saver of savers) {
+      await deliver({
+        to: saver,
+        subject: `Price drop: "${title}" is now ${money(newPrice)}`,
+        lines: [`Hi ${saver.name},`,
+          `"${title}", which you saved on UniSwap, went down from ${money(oldPrice)} to ${money(newPrice)}.`,
+          "You get this because you saved it. Remove it from your Saved page to stop these alerts."],
+        link: appLink(`/listings/${listingId}`),
+        linkLabel: "View the listing",
+      });
+    }
+  });
+}

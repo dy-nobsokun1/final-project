@@ -139,6 +139,27 @@ export async function getMyListings(): Promise<ListingWithSeller[]> {
   return user ? getListingsBySeller(user.id) : [];
 }
 
+/**
+ * Ids of the listings the signed-in user saved, so pages can fill in the hearts on their cards.
+ * Empty when signed out.
+ */
+export async function getSavedListingIds(): Promise<string[]> {
+  if (!(await cookies()).has(TOKEN_COOKIE)) return [];
+  try {
+    return (await apiFetch<{ listingIds: string[] }>("/api/users/me/saved/ids")).listingIds;
+  } catch (error) {
+    // An expired or invalid token just means "signed out", as in getCurrentUser.
+    if (error instanceof ApiError && error.status === 401) return [];
+    throw error;
+  }
+}
+
+/** The signed-in user's saved listings, most recently saved first, in any status. */
+export async function getSavedListings(): Promise<ListingWithSeller[]> {
+  const { listings } = await apiFetch<{ listings: ListingWithSeller[] }>("/api/users/me/saved");
+  return listings;
+}
+
 export async function getUserById(id: string): Promise<User | null> {
   const result = await orNull(apiFetch<{ user: User }>(`/api/users/${encodeURIComponent(id)}`));
   return result?.user ?? null;

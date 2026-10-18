@@ -3,14 +3,14 @@ import { Package } from "lucide-react";
 import { FilterPanel } from "@/components/listings/FilterPanel";
 import { ListingGrid } from "@/components/listings/ListingGrid";
 import { HeroBand } from "@/components/marketing/HeroBand";
-import { getListings } from "@/lib/api";
+import { getListings, getSavedListingIds } from "@/lib/api";
 import type { ListingCategory, ListingCondition, ListingFilters, ListingType } from "@/types";
 
 /** Browse page. Filters arrive as query params and are applied server-side. */
 export default async function BrowsePage({ searchParams }: PageProps<"/">) {
   const params = await searchParams;
   const filters = parseFilters(params);
-  const listings = await getListings(filters);
+  const [listings, savedIds] = await Promise.all([getListings(filters), getSavedListingIds()]);
 
   return (
     <div className="flex flex-col gap-6">
@@ -32,6 +32,7 @@ export default async function BrowsePage({ searchParams }: PageProps<"/">) {
 
       <ListingGrid
         listings={listings}
+        savedIds={savedIds}
         emptyIcon={Package}
         emptyTitle="No listings match those filters"
         emptyDescription="Try clearing a filter, or check back once other students post more items."

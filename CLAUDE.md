@@ -91,7 +91,8 @@ Its log: `/tmp/uniswap-cloud-setup.log`. Use the `implement_backend` branch.
   `reserved` (highest bid wins; on a tie, the earlier bid). After the first bid, type, price,
   end time and raise are locked (409). Every listing in the API has `auction: null | {...}`.
 - **Notifications:** `utils/notify.js` (fire-and-forget, never throws). New message (first unread
-  per thread only), outbid, auction won/ended, password changed. Add new events there; Telegram can reuse it later.
+  per thread only), outbid, auction won/ended, password changed, price drop on a saved listing
+  (`notifyPriceDrop`, called from PATCH in `routes/listings.js`). Add new events there; Telegram can reuse it later.
 - **Optional services** (`backend/src/services/`, plain `fetch`, no packages), each off until its env
   keys are set: Stripe Checkout **test mode only** (`routes/payments.js`; `markPaid` is idempotent and
   marks the item sold; the webhook needs the raw body, so it is mounted before `express.json` in
@@ -118,6 +119,10 @@ Its log: `/tmp/uniswap-cloud-setup.log`. Use the `implement_backend` branch.
   `PATCH` refuses (409) to make a listing `active` again once it has a `paid` payment: that sale's
   payment and reviews point at its buyer, so selling it again means a new listing. The README's
   "Known limitations" lists the payment rules kept on purpose.
+- **Saved listings:** `saved_listings` (PK `user_id` + `listing_id`, cascades), `routes/saved.js`. Pages get
+  hearts via `GET /api/users/me/saved/ids` and pass `savedIds` to `ListingGrid` (leave it out for grids of
+  your own listings). `save_count` is in `LISTING_SELECT`; test helpers `skippedEmails()` and `waitFor()`
+  read notifications.
 - **Messaging:** there is no conversations table. A thread is all messages between two users about
   one listing (this follows the ER diagram).
 - **Uploads:** `POST /api/uploads` with raw image bytes (max 5 MB), saved to `backend/uploads/`
@@ -129,7 +134,7 @@ Its log: `/tmp/uniswap-cloud-setup.log`. Use the `implement_backend` branch.
 ## Status and roadmap
 
 Done (week 5): auth with email verification, forgot/change password, listings CRUD with five types (incl. auction) and statuses,
-ranked typo-tolerant search and filters, auctions/bidding, email + Telegram notifications, Stripe test payments, KHQR payments via Bakong, Cloudinary photos, profiles, per-listing messaging, photo
+ranked typo-tolerant search and filters, auctions/bidding, saved listings with price-drop alerts, email + Telegram notifications, Stripe test payments, KHQR payments via Bakong, Cloudinary photos, profiles, per-listing messaging, photo
 uploads; frontend fully wired to the API. Reviews and ratings once a listing is sold or traded,
 between the owner and the buyer: whoever paid online, else the auction winner, else (in-person
 deals) someone who chatted with the owner both ways (`reviewBlocker` in `routes/reviews.js`). API tests in `backend/test/api/`.

@@ -48,6 +48,9 @@ await pool.query(
   [listingIds[1], ids[1], ids[0]],
 );
 
+// Chanrithorn saved Sokunth's MacBook, so the Saved page and "Saved by 1 student" have something to show.
+await pool.query("INSERT INTO saved_listings (user_id, listing_id) VALUES ($1, $2)", [ids[1], listingIds[1]]);
+
 // An auction by Chanrithorn that ends in 3 days, with one opening bid from Sokunth.
 const { rows: [auction] } = await pool.query(
   `INSERT INTO listings (user_id, title, description, category, condition, listing_type, price,
@@ -59,5 +62,5 @@ const { rows: [auction] } = await pool.query(
 );
 await pool.query("INSERT INTO bids (listing_id, bidder_id, amount) VALUES ($1, $2, 22)", [auction.id, ids[0]]);
 
-console.log(`Seeded ${ids.length} users, ${listingIds.length + 1} listings (1 auction), 2 messages, 1 bid.`);
+console.log(`Seeded ${ids.length} users, ${listingIds.length + 1} listings (1 auction), 2 messages, 1 bid, 1 saved listing.`);
 await pool.end();
