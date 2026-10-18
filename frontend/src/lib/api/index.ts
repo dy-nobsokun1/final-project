@@ -5,6 +5,7 @@ import { ApiError, apiFetch, TOKEN_COOKIE } from "@/lib/api/http";
 import type {
   Bid,
   Conversation,
+  KhqrStatus,
   ListingFilters,
   ListingWithSeller,
   Message,
@@ -64,9 +65,21 @@ export async function getListings(filters: ListingFilters = {}): Promise<Listing
   return listings;
 }
 
-/** Whether card payments (Stripe test mode) are switched on in the API. */
-export async function getPaymentsEnabled(): Promise<boolean> {
-  return (await apiFetch<{ enabled: boolean }>("/api/payments/config")).enabled;
+/** Which online payments are switched on in the API: card (Stripe test mode) and KHQR (Bakong). */
+export async function getPaymentOptions(): Promise<{ card: boolean; khqr: boolean }> {
+  const { enabled, khqr } = await apiFetch<{ enabled: boolean; khqr: boolean }>("/api/payments/config");
+  return { card: enabled, khqr };
+}
+
+/**
+ * Whether a KHQR has been paid. The API asks Bakong itself each time, so the browser cannot mark
+ * anything paid. Null if the payment is not this user's (or does not exist).
+ */
+export async function getKhqrStatus(paymentId: string): Promise<KhqrStatus | null> {
+  const result = await orNull(
+    apiFetch<{ status: KhqrStatus }>(`/api/payments/khqr/${encodeURIComponent(paymentId)}`),
+  );
+  return result?.status ?? null;
 }
 
 /**

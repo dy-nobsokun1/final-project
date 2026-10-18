@@ -1,7 +1,7 @@
 // Convert database rows (snake_case) into the JSON shapes the frontend expects
 // (camelCase, see frontend/src/types/index.ts). Secrets like password_hash never leave here.
 
-export function toUser(row, { includeEmail = false } = {}) {
+export function toUser(row, { includePrivate = false } = {}) {
   const user = {
     id: row.id,
     name: row.name,
@@ -12,12 +12,15 @@ export function toUser(row, { includeEmail = false } = {}) {
     isVerified: row.is_verified,
     createdAt: row.created_at,
   };
-  // Email is private: only shown to the account owner.
-  if (includeEmail) user.email = row.email;
+  // Private: only shown to the account owner. (Buyers do see the Bakong account inside a KHQR.)
+  if (includePrivate) {
+    user.email = row.email;
+    user.bakongAccountId = row.bakong_account_id;
+  }
   return user;
 }
 
-/** Expects a listing row joined with seller columns (seller_name, seller_avatar_url, seller_is_verified). */
+/** Expects a listing row joined with seller columns (seller_name, seller_avatar_url, ...), see LISTING_SELECT. */
 export function toListing(row) {
   return {
     id: row.id,
@@ -38,6 +41,7 @@ export function toListing(row) {
       name: row.seller_name,
       avatarUrl: row.seller_avatar_url,
       isVerified: row.seller_is_verified,
+      acceptsKhqr: row.seller_accepts_khqr, // has a Bakong account, so buyers can pay by KHQR
     },
   };
 }

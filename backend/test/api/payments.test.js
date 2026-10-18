@@ -10,7 +10,7 @@ const { markPaid } = await import("../../src/db/payments.js");
 test("with Stripe switched off, the pay button is hidden and checkout is refused", async () => {
   const [seller, buyer] = await Promise.all([api.createUser(), api.createUser()]);
   const listing = await api.createListing(seller);
-  assert.deepEqual((await api.request("GET", "/api/payments/config")).body, { enabled: false });
+  assert.deepEqual((await api.request("GET", "/api/payments/config")).body, { enabled: false, khqr: false });
   const checkout = await api.request("POST", "/api/payments/checkout", {
     token: buyer.token,
     body: { listingId: listing.id },
@@ -22,14 +22,14 @@ test("a paid checkout marks the listing sold exactly once, and only its buyer ca
   const [seller, buyer, stranger] = await Promise.all([api.createUser(), api.createUser(), api.createUser()]);
   const listing = await api.createListing(seller);
   // What /checkout saves before sending the buyer to Stripe's page.
-  await api.sql(
-    "INSERT INTO payments (listing_id, buyer_id, amount, stripe_session_id) VALUES ($1, $2, 25, 'cs_test_once')",
+  const [payment] = await api.sql(
+    "INSERT INTO payments (listing_id, buyer_id, amount, stripe_session_id) VALUES ($1, $2, 25, 'cs_test_once') RETURNING id",
     [listing.id, buyer.id],
   );
 
   // The return page and Stripe's webhook may both report the same payment: only the first counts.
-  assert.equal((await markPaid("cs_test_once")).buyer_id, buyer.id);
-  assert.equal(await markPaid("cs_test_once"), null);
+  assert.equal((await markPaid(payment.id)).buyer_id, buyer.id);
+  assert.equal(await markPaid(payment.id), null);
   assert.equal((await api.request("GET", `/api/listings/${listing.id}`)).body.listing.status, "sold");
 
   const confirm = (user) => api.request("POST", "/api/payments/confirm", {

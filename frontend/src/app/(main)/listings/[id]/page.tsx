@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AuctionPanel } from "@/components/listings/AuctionPanel";
 import { ListingImage } from "@/components/listings/ListingImage";
+import { KhqrPayButton } from "@/components/listings/KhqrPayButton";
 import { ListingOwnerActions } from "@/components/listings/ListingOwnerActions";
 import { PayButton } from "@/components/listings/PayButton";
 import { UserAvatar } from "@/components/profile/UserAvatar";
@@ -13,8 +14,9 @@ import {
   conversationId,
   getBids,
   getCurrentUser,
+  getKhqrStatus,
   getListingById,
-  getPaymentsEnabled,
+  getPaymentOptions,
 } from "@/lib/api";
 import { CATEGORIES, conditionLabel, listingTypeLabel, statusLabel } from "@/lib/constants";
 import { formatListingPrice, formatRelativeTime } from "@/lib/utils";
@@ -22,11 +24,15 @@ import { formatListingPrice, formatRelativeTime } from "@/lib/utils";
 /** Detail view for a single listing. */
 export default async function ListingDetailPage({ params, searchParams }: PageProps<"/listings/[id]">) {
   const { id } = await params;
-  const { session_id: sessionId } = await searchParams;
+  const { session_id: sessionId, khqr: khqrPaymentId } = await searchParams;
   const user = await getCurrentUser();
-  // Back from Stripe: confirm first, so the listing below already shows as sold.
-  const payment = user && typeof sessionId === "string" ? await confirmPayment(sessionId) : null;
-  const [listing, paymentsEnabled] = await Promise.all([getListingById(id), getPaymentsEnabled()]);
+  // Back from Stripe (?session_id=) or from a paid KHQR (?khqr=): confirm with the API first, so the
+  // listing below already shows as sold. The API checks with Stripe or Bakong, never trusting the URL.
+  const payment = !user ? null
+    : typeof sessionId === "string" ? await confirmPayment(sessionId)
+    : typeof khqrPaymentId === "string" ? await getKhqrStatus(khqrPaymentId)
+    : null;
+  const [listing, paymentOptions] = await Promise.all([getListingById(id), getPaymentOptions()]);
 
   if (!listing) notFound();
   const bids = listing.auction ? await getBids(listing.id) : [];
@@ -34,10 +40,12 @@ export default async function ListingDetailPage({ params, searchParams }: PagePr
   const category = CATEGORIES.find((item) => item.value === listing.category);
   const isOwner = user?.id === listing.seller.id;
   // Mirrors the API's rule (backend/src/utils/payments.js): an item for sale, or an auction you won.
-  const canPay = paymentsEnabled && user !== null && !isOwner && (
+  const canPay = user !== null && !isOwner && (
     (listing.listingType === "sale" && listing.status === "active" && listing.price > 0)
     || (listing.auction !== null && listing.status === "reserved" && listing.auction.leadingBidderId === user.id)
   );
+  // KHQR also needs the seller to have added a Bakong account, since the money goes straight to them.
+  const canPayByKhqr = canPay && paymentOptions.khqr && listing.seller.acceptsKhqr;
 
   return (
     <div className="flex flex-col gap-6">
@@ -49,7 +57,7 @@ export default async function ListingDetailPage({ params, searchParams }: PagePr
         Back to browse
       </Link>
 
-      {payment ? (
+      {payment === "paid" || payment === "pending" ? (
         <p role="status" className="light-surface rounded-xl border border-border bg-card p-3 text-sm font-medium text-foreground">
           {payment === "paid"
             ? "Payment received. The item is yours: message the seller to arrange the handover."
@@ -86,7 +94,12 @@ export default async function ListingDetailPage({ params, searchParams }: PagePr
             <AuctionPanel listing={{ ...listing, auction: listing.auction }} bids={bids} userId={user?.id ?? null} />
           ) : null}
 
-          {canPay ? <PayButton listingId={listing.id} priceLabel={formatListingPrice(listing)} /> : null}
+          {canPayByKhqr ? (
+            <KhqrPayButton listingId={listing.id} priceLabel={formatListingPrice(listing)} sellerName={listing.seller.name} />
+          ) : null}
+          {canPay && paymentOptions.card ? (
+            <PayButton listingId={listing.id} priceLabel={formatListingPrice(listing)} />
+          ) : null}
 
           {isOwner ? (
             <ListingOwnerActions

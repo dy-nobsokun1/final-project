@@ -144,7 +144,7 @@ export function notifyAuctionClosed({ listing_id: listingId, title, seller_id: s
   });
 }
 
-/** A Stripe payment went through: tell the seller to hand the item over, and give the buyer a receipt. */
+/** An online payment (card or KHQR) went through: tell the seller to hand the item over, and give the buyer a receipt. */
 export function notifyPaid({ listing_id: listingId, buyer_id: buyerId, amount }) {
   inBackground(async () => {
     const { rows } = await query("SELECT title, user_id FROM listings WHERE id = $1", [listingId]);

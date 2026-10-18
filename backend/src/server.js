@@ -1,6 +1,8 @@
 import { app } from "./app.js";
 import { config } from "./config.js";
 import { closeEndedAuctions } from "./db/auctions.js";
+import { findOpenKhqrPayments, markPaid } from "./db/payments.js";
+import { isBakongConfigured, isKhqrPaid } from "./services/bakong.js";
 import { isCloudinaryConfigured } from "./services/cloudinary.js";
 import { isStripeConfigured } from "./services/stripe.js";
 import { isTelegramConfigured, startTelegramPolling } from "./services/telegram.js";
@@ -13,7 +15,8 @@ app.listen(config.port, () => {
   // Which optional services are switched on (each needs its keys in .env).
   const onOff = (enabled) => (enabled ? "on" : "off");
   console.log(`  email ${onOff(isEmailConfigured)} · photos ${isCloudinaryConfigured ? "Cloudinary" : "local disk"}`
-    + ` · payments ${onOff(isStripeConfigured)} · Telegram ${onOff(isTelegramConfigured)}`);
+    + ` · card payments ${onOff(isStripeConfigured)} · KHQR ${onOff(isBakongConfigured)}`
+    + ` · Telegram ${onOff(isTelegramConfigured)}`);
 });
 
 // Telegram: listen for "/start <code>" messages that link accounts. Only one running copy of the
@@ -37,3 +40,21 @@ async function runAuctionCheck() {
 
 void runAuctionCheck();
 setInterval(runAuctionCheck, AUCTION_CHECK_MS);
+
+// Also once a minute, ask Bakong about KHQR payments still waiting. The QR screen already checks
+// every few seconds; this covers a buyer who pays and then closes the page.
+const KHQR_CHECK_MS = 60 * 1000;
+
+async function runKhqrCheck() {
+  for (const payment of await findOpenKhqrPayments()) {
+    try {
+      if (await isKhqrPaid(payment.khqr)) await markPaid(payment.id);
+    } catch (error) {
+      console.error(`[bakong] could not check payment ${payment.id}:`, error.message);
+    }
+  }
+}
+
+if (isBakongConfigured) {
+  setInterval(() => runKhqrCheck().catch((error) => console.error("[bakong]", error.message)), KHQR_CHECK_MS);
+}

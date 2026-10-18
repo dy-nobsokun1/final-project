@@ -40,6 +40,8 @@ export interface User {
   name: string;
   /** Private: the API only includes it on your own account, never on public profiles. */
   email?: string;
+  /** Private, like email: where KHQR payments for your items go (e.g. "name@aclb"). Null until added. */
+  bakongAccountId?: string | null;
   avatarUrl: string | null;
   major: string;
   graduationYear: number | null;
@@ -114,8 +116,19 @@ export interface ReviewSummary {
 
 /** A listing joined with the fields a card needs, so the UI does not re-look-up the seller. */
 export interface ListingWithSeller extends Listing {
-  seller: Pick<User, "id" | "name" | "avatarUrl" | "isVerified">;
+  /** `acceptsKhqr`: the seller has added a Bakong account, so buyers can pay them by KHQR. */
+  seller: Pick<User, "id" | "name" | "avatarUrl" | "isVerified"> & { acceptsKhqr: boolean };
 }
+
+/** A KHQR to pay for one listing, valid until `expiresAt`. `qr` is the text the QR code encodes. */
+export interface KhqrPayment {
+  paymentId: string;
+  qr: string;
+  amount: number;
+  expiresAt: string;
+}
+
+export type KhqrStatus = "paid" | "pending" | "expired";
 
 export interface ListingFilters {
   query?: string;

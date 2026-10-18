@@ -4,10 +4,11 @@ import { query } from "../db/pool.js";
 import { requireAuth } from "../middleware/auth.js";
 import { HttpError } from "../utils/httpError.js";
 import { toListing, toUser } from "../utils/serializers.js";
+import { isBakongAccountId } from "../utils/validation.js";
 
 export const usersRouter = Router();
 
-// PATCH /api/users/me  { name?, major?, graduationYear?, bio?, avatarUrl? }
+// PATCH /api/users/me  { name?, major?, graduationYear?, bio?, avatarUrl?, bakongAccountId? }
 // Declared before "/:id" so "me" is not treated as an id.
 usersRouter.patch("/me", requireAuth, async (req, res) => {
   const b = req.body;
@@ -17,18 +18,26 @@ usersRouter.patch("/me", requireAuth, async (req, res) => {
   if (b.graduationYear !== undefined && b.graduationYear !== null && !Number.isInteger(b.graduationYear)) {
     throw new HttpError(400, "Graduation year must be a whole number.");
   }
-  // COALESCE keeps the current value when a field is not sent.
+  // Bakong account for KHQR payments. "" or null removes it.
+  const bakongAccountId = typeof b.bakongAccountId === "string" ? b.bakongAccountId.trim() || null : b.bakongAccountId;
+  if (bakongAccountId != null && !isBakongAccountId(bakongAccountId)) {
+    throw new HttpError(400, "Enter your Bakong account ID like name@bank (at most 32 characters).");
+  }
+  // COALESCE keeps the current value when a field is not sent. The Bakong account uses CASE
+  // instead, because null is a real value for it (removed): $7 says whether it was sent.
   const { rows } = await query(
     `UPDATE users SET
        name = COALESCE($2, name),
        major = COALESCE($3, major),
        graduation_year = COALESCE($4, graduation_year),
        bio = COALESCE($5, bio),
-       avatar_url = COALESCE($6, avatar_url)
+       avatar_url = COALESCE($6, avatar_url),
+       bakong_account_id = CASE WHEN $7 THEN $8 ELSE bakong_account_id END
      WHERE id = $1 RETURNING *`,
-    [req.userId, b.name?.trim(), b.major, b.graduationYear, b.bio, b.avatarUrl],
+    [req.userId, b.name?.trim(), b.major, b.graduationYear, b.bio, b.avatarUrl,
+      bakongAccountId !== undefined, bakongAccountId ?? null],
   );
-  res.json({ user: toUser(rows[0], { includeEmail: true }) });
+  res.json({ user: toUser(rows[0], { includePrivate: true }) });
 });
 
 // GET /api/users/:id  -> public profile (no email)

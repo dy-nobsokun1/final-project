@@ -32,15 +32,19 @@ Putting it online (Supabase, Render, Vercel, Cloudinary, Stripe, Telegram): [`DE
   messages, being outbid, auction results and payments.
 - **Card payments (Stripe test mode):** pay for an item for sale or an auction you won. Live keys
   are refused, so no real card can ever be charged.
+- **KHQR payments (Bakong):** sellers add their Bakong account in Settings; buyers scan a QR with
+  any Cambodian banking app and the money goes straight to the seller. UniSwap confirms the payment
+  with the National Bank's Bakong API and marks the item sold.
 - **Security:** parameterized SQL everywhere, hashed passwords, verified accounts only, owner-only
   changes, and no secrets in the repository.
 
 ### Tested
 
-- `npm test` (in `backend/`): 17 unit tests for validation, the search query, and the Stripe and
-  Cloudinary helpers.
-- `npm run test:api` (in `backend/`): 28 tests that send real requests to the running API, covering
-  sign-up and verification, owner-only changes, messaging, simultaneous bids, payments and reviews.
+- `npm test` (in `backend/`): 22 unit tests for validation, the search query, the Stripe and
+  Cloudinary helpers, and the KHQR builder (checked against the National Bank's own library).
+- `npm run test:api` (in `backend/`): 32 tests that send real requests to the running API, covering
+  sign-up and verification, owner-only changes, messaging, simultaneous bids, card and KHQR
+  payments, and reviews.
   They use a separate test database (see [Testing](backend/README.md#testing)).
 
 ### Not done yet
@@ -48,8 +52,9 @@ Putting it online (Supabase, Render, Vercel, Cloudinary, Stripe, Telegram): [`DE
 - **Needs our own accounts and keys** (steps in [`DEPLOY.md`](DEPLOY.md)): the Supabase database,
   Render and Vercel hosting, Cloudinary, Stripe test keys and the Telegram bot. Until their keys are
   set, photos are saved on the server's disk, and payments and Telegram stay switched off.
-- **Possible next steps:** real-time chat, safe meetup spots, KHQR/Bakong payments, and
-  notification settings.
+- **KHQR on Render:** Bakong only answers Cambodian IP addresses, so KHQR works when the API runs
+  in Cambodia (e.g. a laptop for the demo), not on Render.
+- **Possible next steps:** real-time chat, safe meetup spots, and notification settings.
 - **Known gap:** deleting a listing also deletes its reviews.
 
 ## Run locally

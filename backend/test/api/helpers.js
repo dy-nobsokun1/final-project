@@ -6,10 +6,10 @@ import assert from "node:assert/strict";
 import { once } from "node:events";
 import { randomUUID } from "node:crypto";
 
-// Switched off in tests, so a test run never sends email or Telegram messages, or calls Stripe.
+// Switched off in tests, so a test run never sends email or Telegram messages, or calls Stripe or Bakong.
 const OUTSIDE_SERVICES = [
   "SMTP_HOST", "SMTP_USER", "SMTP_PASS",
-  "STRIPE_SECRET_KEY", "STRIPE_WEBHOOK_SECRET",
+  "STRIPE_SECRET_KEY", "STRIPE_WEBHOOK_SECRET", "BAKONG_TOKEN",
   "TELEGRAM_BOT_TOKEN", "TELEGRAM_BOT_USERNAME",
   "CLOUDINARY_CLOUD_NAME", "CLOUDINARY_API_KEY", "CLOUDINARY_API_SECRET",
 ];
@@ -52,9 +52,11 @@ function hideSkippedEmailLogs() {
  * Starts the app on a free port and returns what the tests need: request() for HTTP calls,
  * createUser() and createListing() for test data, sql() to set up cases the API does not allow
  * (like an auction that already ended), and close() to stop everything afterwards.
+ * `env` switches a service back on for one test file, e.g. { BAKONG_TOKEN: "test" } with a fake fetch.
  */
-export async function startApi() {
+export async function startApi({ env = {} } = {}) {
   useTestDatabase();
+  Object.assign(process.env, env);
   hideSkippedEmailLogs();
   const { app } = await import("../../src/app.js");
   const { pool } = await import("../../src/db/pool.js");

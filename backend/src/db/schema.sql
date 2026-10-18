@@ -22,6 +22,8 @@ CREATE TABLE users (
   -- Telegram notifications: the chat the bot messages, and a one-time code used to link it.
   telegram_chat_id   TEXT,
   telegram_link_code TEXT UNIQUE,
+  -- KHQR: the seller's Bakong account (e.g. name@aclb) that buyers' payments go straight to.
+  bakong_account_id  TEXT CHECK (length(bakong_account_id) <= 32),
   created_at         TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
@@ -72,17 +74,22 @@ CREATE TABLE bids (
 
 CREATE INDEX bids_listing_idx ON bids (listing_id, amount DESC);
 
--- Card payments made through Stripe Checkout (test mode). A row is created when checkout starts
--- ("pending") and becomes "paid" once Stripe confirms; the listing is then marked sold.
+-- Online payments: by card through Stripe Checkout (test mode), or by KHQR straight to the seller's
+-- Bakong account. A row is created when the buyer starts paying ("pending") and becomes "paid" once
+-- Stripe or Bakong confirms it; the listing is then marked sold.
 CREATE TABLE payments (
   id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   listing_id        UUID NOT NULL REFERENCES listings(id) ON DELETE CASCADE,
   buyer_id          UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   amount            NUMERIC(10, 2) NOT NULL CHECK (amount > 0),
-  stripe_session_id TEXT NOT NULL UNIQUE,
+  method            TEXT NOT NULL DEFAULT 'stripe' CHECK (method IN ('stripe', 'khqr')),
+  stripe_session_id TEXT UNIQUE, -- Stripe only
+  khqr              TEXT,        -- KHQR only: the exact QR text shown; Bakong finds the payment by its MD5
   status            TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'paid')),
   created_at        TIMESTAMPTZ NOT NULL DEFAULT now(),
-  paid_at           TIMESTAMPTZ
+  paid_at           TIMESTAMPTZ,
+  CHECK ((method = 'stripe') = (stripe_session_id IS NOT NULL)),
+  CHECK ((method = 'khqr') = (khqr IS NOT NULL))
 );
 
 CREATE INDEX payments_listing_idx ON payments (listing_id, status);

@@ -35,4 +35,7 @@ export const config = {
     botToken: process.env.TELEGRAM_BOT_TOKEN,
     botUsername: process.env.TELEGRAM_BOT_USERNAME,
   },
+  bakong: {
+    token: process.env.BAKONG_TOKEN,
+  },
 };

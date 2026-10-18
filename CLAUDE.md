@@ -82,6 +82,12 @@ verified. `dara@aupp.edu.kh` is **unverified**, so its login returns 403 (useful
   marks the item sold; the webhook needs the raw body, so it is mounted before `express.json` in
   `app.js`), Cloudinary uploads, and a Telegram bot (long polling, linked through a one-time `/start`
   code). `notify.js` sends to Telegram as well as email. Deploy guide: `DEPLOY.md`; Render blueprint: `render.yaml`.
+- **KHQR (Bakong), real money:** the buyer pays the seller's own Bakong account (`users.bakong_account_id`,
+  set in Settings); UniSwap never holds money. `utils/khqr.js` builds the QR text by hand (no package;
+  matches NBC's `bakong-khqr` library exactly, see `test/khqr.test.js`). `services/bakong.js` checks
+  `check_transaction_by_md5`; `routes/khqr.js` + a once-a-minute check in `server.js` call `markPaid`
+  (now keyed by payment id). `payments.method` is `stripe` or `khqr`. Bakong only accepts Cambodian
+  IPs, so it does not work from Render. Token in `BAKONG_TOKEN`, expires 13 Jan 2027.
 - **Messaging:** there is no conversations table. A thread is all messages between two users about
   one listing (this follows the ER diagram).
 - **Uploads:** `POST /api/uploads` with raw image bytes (max 5 MB), saved to `backend/uploads/`
@@ -93,12 +99,11 @@ verified. `dara@aupp.edu.kh` is **unverified**, so its login returns 403 (useful
 ## Status and roadmap
 
 Done (week 5): auth with email verification, listings CRUD with five types (incl. auction) and statuses,
-ranked typo-tolerant search and filters, auctions/bidding, email + Telegram notifications, Stripe test payments, Cloudinary photos, profiles, per-listing messaging, photo
+ranked typo-tolerant search and filters, auctions/bidding, email + Telegram notifications, Stripe test payments, KHQR payments via Bakong, Cloudinary photos, profiles, per-listing messaging, photo
 uploads; frontend fully wired to the API. Reviews and ratings (rate the person you chatted with once
 a listing is sold or traded). API tests in `backend/test/api/`.
 
 Built but needs the team's own accounts/keys (see `DEPLOY.md`): Supabase database, Render + Vercel
 deployment, Cloudinary photos, Stripe test payments, Telegram bot.
 
-Possible next steps: real-time chat, safe meetup spots, KHQR/Bakong as a local alternative to
-Stripe, and per-user notification preferences.
+Possible next steps: real-time chat, safe meetup spots, and per-user notification preferences.

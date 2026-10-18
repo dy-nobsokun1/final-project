@@ -164,6 +164,15 @@ service's web API with `fetch`.
   webhook (with a verified signature) covers buyers who close the tab. Both call `markPaid`, which
   only acts once, marks the listing sold and notifies both people. While one buyer is checking out
   (30 minutes), others get 409. Live keys are refused.
+- **KHQR through Bakong, real money** (`utils/khqr.js`, `services/bakong.js`, `routes/khqr.js`).
+  Sellers add their Bakong account ID (e.g. `name@aclb`) in Settings. A buyer then gets a one-time
+  KHQR for the exact amount, scans it with any Cambodian banking app, and the money goes straight to
+  the seller: UniSwap never holds it. `utils/khqr.js` writes the QR text itself (EMVCo fields plus a
+  CRC-16 checksum, checked against the National Bank's own library in `test/khqr.test.js`). Bakong
+  finds a payment by the MD5 of that text, so the QR screen asks `GET /api/payments/khqr/:id` every
+  5 seconds, and `server.js` checks open QRs once a minute for buyers who close the page. Both call
+  `markPaid`. A QR expires after 30 minutes, the same lock as Stripe. Bakong only answers requests
+  from Cambodian IP addresses, so this works when the API runs in Cambodia (see `DEPLOY.md`).
 - **Cloudinary** (`services/cloudinary.js`): signed uploads. Without it, photos go to `backend/uploads/`.
 - **Telegram** (`services/telegram.js`, `routes/telegram.js`, `utils/telegramBot.js`). Settings gives
   a one-time `t.me/<bot>?start=<code>` link. The bot (long polling, so no public URL is needed)
@@ -185,6 +194,15 @@ CREATE TABLE IF NOT EXISTS payments (
   paid_at           TIMESTAMPTZ
 );
 CREATE INDEX IF NOT EXISTS payments_listing_idx ON payments (listing_id, status);
+```
+
+**Upgrading a database created before KHQR?** Run this once (after the block above). It keeps your data and is safe to re-run:
+
+```sql
+ALTER TABLE users ADD COLUMN IF NOT EXISTS bakong_account_id TEXT CHECK (length(bakong_account_id) <= 32);
+ALTER TABLE payments ADD COLUMN IF NOT EXISTS method TEXT NOT NULL DEFAULT 'stripe' CHECK (method IN ('stripe', 'khqr'));
+ALTER TABLE payments ADD COLUMN IF NOT EXISTS khqr TEXT;
+ALTER TABLE payments ALTER COLUMN stripe_session_id DROP NOT NULL;
 ```
 
 ## API
@@ -209,16 +227,18 @@ Send JSON. Routes marked 🔒 need the header `Authorization: Bearer <token>` (t
 | GET | `/api/listings/:id/reviews` | Reviews about this listing's deal (at most one per person) |
 | POST 🔒 | `/api/listings/:id/reviews` | `{ revieweeId, rating, comment? }`. 1-5 stars, once the listing is sold or traded (see Reviews above) |
 | GET | `/api/users/:id/reviews` | `{ reviews, averageRating, reviewCount }`: reviews the user received, newest first |
-| GET | `/api/payments/config` | `{ enabled }`: whether card payments are switched on |
+| GET | `/api/payments/config` | `{ enabled, khqr }`: whether card and KHQR payments are switched on |
 | POST 🔒 | `/api/payments/checkout` | `{ listingId }` → `{ url }` of Stripe's payment page |
 | POST 🔒 | `/api/payments/confirm` | `{ sessionId }` → `{ status: "paid" \| "pending" }`, checked with Stripe |
 | POST | `/api/payments/webhook` | Called by Stripe only, with a signature check |
+| POST 🔒 | `/api/payments/khqr` | `{ listingId }` → `{ paymentId, qr, amount, expiresAt }`. Asking again within 30 minutes returns the same QR. `400` if the seller has no Bakong account |
+| GET 🔒 | `/api/payments/khqr/:id` | Buyer only → `{ status: "paid" \| "pending" \| "expired" }`, checked with Bakong |
 | GET 🔒 | `/api/users/me/telegram` | `{ enabled, connected }` |
 | POST 🔒 | `/api/users/me/telegram` | `{ link }`: one-time link that opens the bot |
 | DELETE 🔒 | `/api/users/me/telegram` | Disconnect Telegram |
 | GET | `/api/users/:id` | Public profile (email hidden) |
 | GET | `/api/users/:id/listings` | All listings by a user |
-| PATCH 🔒 | `/api/users/me` | `{ name?, major?, graduationYear?, bio?, avatarUrl? }` |
+| PATCH 🔒 | `/api/users/me` | `{ name?, major?, graduationYear?, bio?, avatarUrl?, bakongAccountId? }`. `bakongAccountId` is `name@bank`; `""` or `null` removes it |
 | GET 🔒 | `/api/messages/conversations` | My chat threads with unread counts |
 | GET 🔒 | `/api/messages?listingId=&withUserId=` | One thread, oldest first |
 | POST 🔒 | `/api/messages` | `{ listingId, receiverId, body }` |
@@ -233,12 +253,12 @@ Errors always look like `{ "error": "message", "details": { "field": "message" }
 
 ## Testing
 
-- `npm test` runs the unit tests in `test/*.test.js`: validation, the search query builder, and the
-  Stripe and Cloudinary helpers. No database needed.
+- `npm test` runs the unit tests in `test/*.test.js`: validation, the search query builder, the
+  Stripe and Cloudinary helpers, and the KHQR builder and Bakong answers. No database or network needed.
 - `npm run test:api` runs the API tests in `test/api/`. Each file starts the real app on a free port
   and sends it real HTTP requests, so routes, SQL and database rules are tested together: sign-up and
   verification, owner-only changes, messaging, bidding (including five bids at the same moment),
-  payments with Stripe switched off, and reviews.
+  payments with Stripe switched off, KHQR payments (with Bakong replaced by a fake), and reviews.
 
 The API tests need their own database, because `test/api/reset-db.js` wipes it before every run.
 Create it once, then put its URL in `.env` as `TEST_DATABASE_URL` (see `.env.example`):
@@ -249,7 +269,7 @@ docker exec <container> createdb -U <user> uniswap_test    # PostgreSQL in Docke
 ```
 
 The tests refuse to run if `TEST_DATABASE_URL` is the same database as `DATABASE_URL`. They switch
-off email, Stripe, Telegram and Cloudinary, so a test run never sends anything.
+off email, Stripe, Bakong, Telegram and Cloudinary, so a test run never sends anything.
 
 ## Security
 
@@ -259,7 +279,8 @@ off email, Stripe, Telegram and Cloudinary, so a test run never sends anything.
   made-up or borrowed email gets nowhere. An unverified sign-up is replaced if the email registers again, so a
   stranger cannot block the real owner. Every protected request re-checks that the account exists and is verified.
 - **Auth:** signed JWTs expire after 7 days; listings can only be changed or deleted by their owner.
-- **Privacy:** emails appear only on your own account, never on public profiles.
+- **Privacy:** emails and Bakong account IDs appear only on your own account, never on public
+  profiles. (A buyer does see the seller's Bakong account inside the KHQR, as with any bank transfer.)
 - **Secrets:** live in `.env` (git-ignored). Nothing secret is committed.
 
 ## Progress

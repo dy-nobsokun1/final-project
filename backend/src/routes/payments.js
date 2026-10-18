@@ -1,9 +1,9 @@
 import { Router } from "express";
 import { config } from "../config.js";
-import { LISTING_SELECT } from "../db/listings.js";
-import { markPaid } from "../db/payments.js";
+import { lockListingForPayment, markPaid } from "../db/payments.js";
 import { query, withTransaction } from "../db/pool.js";
 import { requireAuth } from "../middleware/auth.js";
+import { isBakongConfigured } from "../services/bakong.js";
 import {
   createCheckoutSession,
   isStripeConfigured,
@@ -11,15 +11,14 @@ import {
   retrieveCheckoutSession,
 } from "../services/stripe.js";
 import { HttpError } from "../utils/httpError.js";
-import { amountToPay } from "../utils/payments.js";
 
 // Online card payments with Stripe Checkout (test mode). The buyer is sent to a page hosted by
 // Stripe, so card numbers never touch our servers.
 export const paymentsRouter = Router();
 
-// GET /api/payments/config  -> whether the "Pay with card" button should be shown
+// GET /api/payments/config  -> which pay buttons to show: card (`enabled`) and KHQR (`khqr`, routes/khqr.js)
 paymentsRouter.get("/config", (req, res) => {
-  res.json({ enabled: isStripeConfigured });
+  res.json({ enabled: isStripeConfigured, khqr: isBakongConfigured });
 });
 
 // POST /api/payments/checkout  { listingId }  (logged in) -> { url } of Stripe's payment page
@@ -27,21 +26,8 @@ paymentsRouter.post("/checkout", requireAuth, async (req, res) => {
   if (!isStripeConfigured) throw new HttpError(503, "Online payment is not set up yet.");
 
   const url = await withTransaction(async (client) => {
-    // Lock the listing so two buyers cannot start paying for the same item at the same moment.
-    const locked = await client.query("SELECT id FROM listings WHERE id = $1 FOR UPDATE", [req.body.listingId]);
-    if (!locked.rows[0]) throw new HttpError(404, "Listing not found.");
-    const listing = (await client.query(`${LISTING_SELECT} WHERE l.id = $1`, [req.body.listingId])).rows[0];
-    const amount = amountToPay(listing, req.userId);
-
-    // Someone else already paid, or is on Stripe's page right now (a checkout lasts 30 minutes).
-    const { rows: busy } = await client.query(
-      `SELECT status FROM payments
-       WHERE listing_id = $1 AND (status = 'paid'
-         OR (status = 'pending' AND buyer_id <> $2 AND created_at > now() - interval '30 minutes'))`,
-      [listing.id, req.userId],
-    );
-    if (busy.some((row) => row.status === "paid")) throw new HttpError(409, "This item has already been paid for.");
-    if (busy.length) throw new HttpError(409, "Someone else is paying for this right now. Try again in 30 minutes.");
+    // Refuses if the item is already paid for, or someone else is paying right now.
+    const { listing, amount } = await lockListingForPayment(client, req.body.listingId, req.userId);
 
     const page = `${config.frontendOrigin}/listings/${listing.id}`;
     const session = await createCheckoutSession({
@@ -67,13 +53,13 @@ paymentsRouter.post("/checkout", requireAuth, async (req, res) => {
 // Called when the buyer comes back from Stripe. We ask Stripe directly instead of trusting the URL.
 paymentsRouter.post("/confirm", requireAuth, async (req, res) => {
   const sessionId = String(req.body.sessionId ?? "");
-  const { rows } = await query("SELECT buyer_id, status FROM payments WHERE stripe_session_id = $1", [sessionId]);
+  const { rows } = await query("SELECT id, buyer_id, status FROM payments WHERE stripe_session_id = $1", [sessionId]);
   if (!rows[0] || rows[0].buyer_id !== req.userId) throw new HttpError(404, "Payment not found.");
   if (rows[0].status === "paid") return res.json({ status: "paid" });
 
   const session = await retrieveCheckoutSession(sessionId);
   if (session.payment_status !== "paid") return res.json({ status: "pending" });
-  await markPaid(sessionId);
+  await markPaid(rows[0].id);
   res.json({ status: "paid" });
 });
 
@@ -92,7 +78,8 @@ export async function stripeWebhook(req, res) {
   const event = JSON.parse(rawBody);
   const session = event.data?.object;
   if (event.type === "checkout.session.completed" && session?.payment_status === "paid") {
-    await markPaid(session.id);
+    const { rows } = await query("SELECT id FROM payments WHERE stripe_session_id = $1", [session.id]);
+    if (rows[0]) await markPaid(rows[0].id);
   }
   res.json({ received: true });
 }

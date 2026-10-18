@@ -3,7 +3,8 @@
 import { refresh } from "next/cache";
 import { cookies } from "next/headers";
 import { ApiError, apiFetch, TOKEN_COOKIE } from "@/lib/api/http";
-import type { ListingStatus, ListingWithSeller, User } from "@/types";
+import { getKhqrStatus } from "@/lib/api";
+import type { KhqrPayment, KhqrStatus, ListingStatus, ListingWithSeller, User } from "@/types";
 
 /**
  * Server Actions: the changes the browser asks for. They run on the Next.js server and forward
@@ -93,6 +94,19 @@ export async function updateProfile(values: { name: string; bio: string }): Prom
     const { user } = await apiFetch<{ user: User }>("/api/users/me", {
       method: "PATCH",
       body: JSON.stringify(values),
+    });
+    return { user };
+  } catch (error) {
+    return toActionError(error);
+  }
+}
+
+/** Saves or removes (null) the Bakong account that KHQR payments for your items go to. */
+export async function updateBakongAccount(bakongAccountId: string | null): Promise<ActionResult & { user?: User }> {
+  try {
+    const { user } = await apiFetch<{ user: User }>("/api/users/me", {
+      method: "PATCH",
+      body: JSON.stringify({ bakongAccountId }),
     });
     return { user };
   } catch (error) {
@@ -236,6 +250,29 @@ export async function startCheckout(listingId: string): Promise<ActionResult & {
     return { url };
   } catch (error) {
     return toActionError(error);
+  }
+}
+
+/** Creates (or shows again) the KHQR that pays the seller of a listing. */
+export async function startKhqrPayment(listingId: string): Promise<ActionResult & { payment?: KhqrPayment }> {
+  try {
+    const payment = await apiFetch<KhqrPayment>("/api/payments/khqr", {
+      method: "POST",
+      body: JSON.stringify({ listingId }),
+    });
+    return { payment };
+  } catch (error) {
+    return toActionError(error);
+  }
+}
+
+/** Asked every few seconds by the KHQR screen. Null when the API or Bakong could not answer this time. */
+export async function checkKhqrPayment(paymentId: string): Promise<KhqrStatus | null> {
+  try {
+    return await getKhqrStatus(paymentId);
+  } catch (error) {
+    console.error(error);
+    return null;
   }
 }
 

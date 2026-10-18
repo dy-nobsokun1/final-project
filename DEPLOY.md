@@ -11,12 +11,13 @@ local `backend/.env`, which git ignores).
 | API (`backend/`) | Render | `https://uniswap-api-xxxx.onrender.com` |
 | Website (`frontend/`) | Vercel | `https://your-app.vercel.app` |
 | Card payments (test mode) | Stripe | `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` |
+| KHQR payments (real money) | Bakong (National Bank of Cambodia) | `BAKONG_TOKEN` |
 | Telegram alerts | @BotFather | `TELEGRAM_BOT_TOKEN`, `TELEGRAM_BOT_USERNAME` |
 | Email | Gmail App Password | `SMTP_USER`, `SMTP_PASS` |
 
-Each optional service (Cloudinary, Stripe, Telegram, email) stays switched off until its keys are set.
-When the API starts, its log shows which ones are on, e.g.
-`email on · photos Cloudinary · payments on · Telegram off`.
+Each optional service (Cloudinary, Stripe, Bakong, Telegram, email) stays switched off until its keys
+are set. When the API starts, its log shows which ones are on, e.g.
+`email on · photos Cloudinary · card payments on · KHQR off · Telegram off`.
 
 ## 1. Database: Supabase
 
@@ -80,7 +81,24 @@ soon as it wakes. Bids are always refused after the end time.
 Locally, only `STRIPE_SECRET_KEY` is needed: the listing page confirms the payment when Stripe
 sends the buyer back.
 
-## 6. Telegram alerts
+## 6. KHQR payments: Bakong (real money)
+
+KHQR moves **real money**, straight from the buyer's bank to the seller's Bakong account. UniSwap
+never holds it; it only asks Bakong whether the QR was paid, then marks the item sold.
+
+1. Register at **https://api-bakong.nbc.gov.kh**, verify your email, and copy the token into
+   `BAKONG_TOKEN`. It expires after 90 days, so renew it there before a demo.
+2. **Bakong only answers requests from Cambodian IP addresses.** Render's servers are outside
+   Cambodia, so on Render the payment check fails (the log shows `[bakong] ... Cambodian IP`). For
+   the demo, run the API on a laptop in Cambodia (`npm run dev`), or leave `BAKONG_TOKEN` empty on
+   Render so the KHQR button stays hidden there.
+3. Each seller adds their Bakong account ID (`name@bank`, from their banking app's KHQR profile) in
+   **Settings → Payments**. Only their listings show **Pay with KHQR**.
+4. To try it with little money: list a test item for `$0.01` from one account, then pay it from
+   another account's banking app. Within a few seconds the QR screen turns into "Payment received"
+   and the item shows as sold.
+
+## 7. Telegram alerts
 
 1. In Telegram, message **@BotFather** → `/newbot` → choose a name and a username ending in `bot`.
 2. Put the token in `TELEGRAM_BOT_TOKEN` and the username (without `@`) in `TELEGRAM_BOT_USERNAME`.
@@ -89,7 +107,7 @@ sends the buyer back.
 Only one running copy of the API can listen to a bot. If you test locally with the same token
 while Render is running, one of them will log polling errors, so use a second bot for local testing.
 
-## 7. Email: Gmail
+## 8. Email: Gmail
 
 School Outlook accounts cannot send email from apps. Use a Gmail account:
 
@@ -106,3 +124,4 @@ School Outlook accounts cannot send email from apps. Use a Gmail account:
 - [ ] Register with a `.edu.kh` email, receive the verification email, and log in
 - [ ] Post a listing with a photo: the image URL starts with `https://res.cloudinary.com/`
 - [ ] Pay for an item with the test card: it becomes sold, and the seller and buyer get emails
+- [ ] (API running in Cambodia) Pay a $0.01 item by KHQR: it becomes sold within a few seconds

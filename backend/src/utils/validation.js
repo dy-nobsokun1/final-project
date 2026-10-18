@@ -95,6 +95,14 @@ export function minimumNextBid({ startingPrice, highestBid, minIncrement }) {
   return highestBid === null ? startingPrice : highestBid + minIncrement;
 }
 
+// A Bakong account ID is "name@bank", e.g. sokunth@aclb or 012345678@wing. KHQR allows 32 characters.
+const BAKONG_ACCOUNT_ID = /^[a-z0-9._-]+@[a-z0-9]+$/i;
+
+/** True for something shaped like a Bakong account ID. Only Bakong knows whether it really exists. */
+export function isBakongAccountId(value) {
+  return typeof value === "string" && value.length <= 32 && BAKONG_ACCOUNT_ID.test(value);
+}
+
 /** Longest review comment, in characters. */
 export const MAX_REVIEW_LENGTH = 1000;
 

@@ -81,7 +81,7 @@ authRouter.post("/verify-email", async (req, res) => {
     [String(req.body.token ?? "")],
   );
   if (!rows[0]) throw new HttpError(400, "This verification link is invalid or already used.");
-  res.json({ user: toUser(rows[0], { includeEmail: true }) });
+  res.json({ user: toUser(rows[0], { includePrivate: true }) });
 });
 
 // POST /api/auth/resend-verification  { email, password } -> emails a fresh link; the old one stops working
@@ -107,12 +107,12 @@ authRouter.post("/login", async (req, res) => {
   if (!user.is_verified) {
     throw new HttpError(403, "Verify your email before signing in. We sent you a link when you registered.");
   }
-  res.json({ user: toUser(user, { includeEmail: true }), token: signToken(user.id) });
+  res.json({ user: toUser(user, { includePrivate: true }), token: signToken(user.id) });
 });
 
 // GET /api/auth/me  -> the logged-in user
 authRouter.get("/me", requireAuth, async (req, res) => {
   const { rows } = await query("SELECT * FROM users WHERE id = $1", [req.userId]);
   if (!rows[0]) throw new HttpError(401, "Account no longer exists.");
-  res.json({ user: toUser(rows[0], { includeEmail: true }) });
+  res.json({ user: toUser(rows[0], { includePrivate: true }) });
 });

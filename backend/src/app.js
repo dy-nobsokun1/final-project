@@ -4,6 +4,7 @@ import { cors } from "./middleware/cors.js";
 import { errorHandler, notFound } from "./middleware/errorHandler.js";
 import { authRouter } from "./routes/auth.js";
 import { bidsRouter } from "./routes/bids.js";
+import { khqrRouter } from "./routes/khqr.js";
 import { listingsRouter } from "./routes/listings.js";
 import { messagesRouter } from "./routes/messages.js";
 import { paymentsRouter, stripeWebhook } from "./routes/payments.js";
@@ -35,6 +36,7 @@ app.use("/api/users/:id/reviews", userReviewsRouter);
 app.use("/api/users", usersRouter);
 app.use("/api/messages", messagesRouter);
 app.use("/api/uploads", uploadsRouter);
+app.use("/api/payments/khqr", khqrRouter);
 app.use("/api/payments", paymentsRouter);
 
 // Uploaded listing photos. "nosniff" stops browsers from treating a disguised file as HTML or script.

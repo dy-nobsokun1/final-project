@@ -5,7 +5,7 @@ import { query } from "./pool.js";
 // Auction listings also get their highest bid, its bidder, the bid count and whether bidding has ended.
 export const LISTING_SELECT = `
   SELECT l.*, u.name AS seller_name, u.avatar_url AS seller_avatar_url,
-         u.is_verified AS seller_is_verified,
+         u.is_verified AS seller_is_verified, u.bakong_account_id IS NOT NULL AS seller_accepts_khqr,
          l.auction_ends_at <= now() AS auction_ended,
          top.amount AS highest_bid, top.bidder_id AS leading_bidder_id,
          (SELECT COUNT(*)::int FROM bids b WHERE b.listing_id = l.id) AS bid_count

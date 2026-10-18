@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Field, FieldInput, FieldTextarea } from "@/components/forms/Field";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { BakongSettings } from "@/components/profile/BakongSettings";
 import { TelegramSettings } from "@/components/profile/TelegramSettings";
 import { useAuth } from "@/contexts/AuthContext";
 import { updateProfile } from "@/lib/api/actions";
@@ -13,7 +14,8 @@ import { updateProfile } from "@/lib/api/actions";
  *
  * Name and bio are saved to the API. Email cannot be changed, since it is the campus
  * identity the account was verified with. Notifications: email is always on, and
- * Telegram can be connected (see TelegramSettings).
+ * Telegram can be connected (see TelegramSettings). Payments: a Bakong account lets
+ * buyers pay you by KHQR (see BakongSettings).
  */
 export function SettingsForm() {
   const { user, signOut, setUser } = useAuth();
@@ -83,6 +85,15 @@ export function SettingsForm() {
         </CardContent>
       </Card>
 
+      <Card>
+        <CardHeader>
+          <CardTitle>Payments</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <BakongSettings />
+        </CardContent>
+      </Card>
+
       <div className="flex items-center gap-3">
         <Button onClick={handleSave} disabled={isSaving}>
           {isSaving ? "Saving..." : "Save changes"}
@@ -110,7 +121,7 @@ export default function SettingsPage() {
       <header>
         <h1 className="font-heading text-3xl tracking-tight">Settings</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Manage your profile and notification preferences.
+          Manage your profile, notifications and how buyers pay you.
         </p>
       </header>
       <SettingsForm />
