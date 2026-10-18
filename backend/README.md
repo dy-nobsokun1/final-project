@@ -131,8 +131,12 @@ CREATE INDEX IF NOT EXISTS bids_listing_idx ON bids (listing_id, amount DESC);
 Once a listing is marked `sold` or `traded`, its owner and a person they dealt with can rate each
 other: 1 to 5 whole stars and an optional comment of up to 1000 characters.
 
-- "Dealt with" means both people wrote at least one message about that listing. Someone who asked
-  a question but got no reply cannot review, and neither can a stranger.
+- "Dealt with" means the person who bought it, as far as UniSwap knows: whoever **paid online**
+  (card or KHQR), or else the **winner of an auction**. Only for deals settled in person, where
+  UniSwap cannot know the buyer, it means both people wrote at least one message about that listing.
+  So someone who only asked a question cannot review, and neither can a stranger.
+- `GET /api/listings/:id/reviews/can-review?revieweeId=` gives the same answer, so the chat page only
+  shows the review form when the review would be accepted.
 - One review per person per listing (`UNIQUE (listing_id, reviewer_id)` in `schema.sql`).
 - A profile lists every review the user received, with their average rounded to one decimal place.
 - The `reviews` table was already in the ER diagram, so existing databases need no upgrade.
@@ -205,6 +209,17 @@ ALTER TABLE payments ADD COLUMN IF NOT EXISTS khqr TEXT;
 ALTER TABLE payments ALTER COLUMN stripe_session_id DROP NOT NULL;
 ```
 
+**Late payments.** A payment can be confirmed after the item is already gone: a KHQR paid just before
+it expired but reported late, after someone else bought the item or the seller marked it sold. The
+money really moved, so `markPaid` records it as `refund_due` instead of `paid`, leaves the listing
+alone, and emails both people that the seller must refund it. The buyer's page says so too.
+**Upgrading a database created before `refund_due`?** Run this once; it keeps your data and is safe to re-run:
+
+```sql
+ALTER TABLE payments DROP CONSTRAINT IF EXISTS payments_status_check;
+ALTER TABLE payments ADD CONSTRAINT payments_status_check CHECK (status IN ('pending', 'paid', 'refund_due'));
+```
+
 ## API
 
 Send JSON. Routes marked 🔒 need the header `Authorization: Bearer <token>` (the token comes from register or login).
@@ -225,6 +240,7 @@ Send JSON. Routes marked 🔒 need the header `Authorization: Bearer <token>` (t
 | GET | `/api/listings/:id/bids` | An auction's bids, highest first, with bidder name |
 | POST 🔒 | `/api/listings/:id/bids` | `{ amount }`. Place a bid (see Auctions above) |
 | GET | `/api/listings/:id/reviews` | Reviews about this listing's deal (at most one per person) |
+| GET 🔒 | `/api/listings/:id/reviews/can-review?revieweeId=` | `{ allowed, reason }`: whether you may review that person for this listing |
 | POST 🔒 | `/api/listings/:id/reviews` | `{ revieweeId, rating, comment? }`. 1-5 stars, once the listing is sold or traded (see Reviews above) |
 | GET | `/api/users/:id/reviews` | `{ reviews, averageRating, reviewCount }`: reviews the user received, newest first |
 | GET | `/api/payments/config` | `{ enabled, khqr }`: whether card and KHQR payments are switched on |

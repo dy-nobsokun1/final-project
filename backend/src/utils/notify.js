@@ -172,3 +172,34 @@ export function notifyPaid({ listing_id: listingId, buyer_id: buyerId, amount })
     ]);
   });
 }
+
+/** A payment arrived after the item was already sold (see markPaid): the buyer must be refunded. */
+export function notifyLatePayment({ listing_id: listingId, buyer_id: buyerId, amount }) {
+  inBackground(async () => {
+    const { rows } = await query("SELECT title, user_id FROM listings WHERE id = $1", [listingId]);
+    if (!rows[0]) return;
+    const { title, user_id: sellerId } = rows[0];
+    const [buyer, seller] = await Promise.all([findUser(buyerId), findUser(sellerId)]);
+    if (!buyer || !seller) return;
+    await Promise.all([
+      deliver({
+        to: seller,
+        subject: `Refund needed: ${buyer.name} paid ${money(amount)} for "${title}"`,
+        lines: [`Hi ${seller.name},`,
+          `${buyer.name}'s payment of ${money(amount)} for "${title}" arrived after the item was already sold.`,
+          `Please send the ${money(amount)} back to ${buyer.name}, and message them to confirm.`],
+        link: threadLink(listingId, buyerId),
+        linkLabel: `Message ${buyer.name}`,
+      }),
+      deliver({
+        to: buyer,
+        subject: `Your payment for "${title}" arrived after it was sold`,
+        lines: [`Hi ${buyer.name},`,
+          `Your payment of ${money(amount)} for "${title}" went through, but the item had already been sold.`,
+          `${seller.name} has been asked to refund you. Message them if you have not heard back.`],
+        link: threadLink(listingId, sellerId),
+        linkLabel: `Message ${seller.name}`,
+      }),
+    ]);
+  });
+}

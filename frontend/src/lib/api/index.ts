@@ -86,9 +86,9 @@ export async function getKhqrStatus(paymentId: string): Promise<KhqrStatus | nul
  * Called when a buyer returns from Stripe with ?session_id=. The API asks Stripe itself whether
  * the payment went through, so a hand-typed URL cannot mark anything paid.
  */
-export async function confirmPayment(sessionId: string): Promise<"paid" | "pending" | null> {
+export async function confirmPayment(sessionId: string): Promise<"paid" | "pending" | "refund_due" | null> {
   const result = await orNull(
-    apiFetch<{ status: "paid" | "pending" }>("/api/payments/confirm", {
+    apiFetch<{ status: "paid" | "pending" | "refund_due" }>("/api/payments/confirm", {
       method: "POST",
       body: JSON.stringify({ sessionId }),
     }),
@@ -144,6 +144,18 @@ export async function getListingReviews(listingId: string): Promise<Review[]> {
     apiFetch<{ reviews: Review[] }>(`/api/listings/${encodeURIComponent(listingId)}/reviews`),
   );
   return result?.reviews ?? [];
+}
+
+/**
+ * Whether the signed-in user may review `revieweeId` for this listing. The API decides (it knows
+ * who paid or won), so the chat only shows the review form when the review would be accepted.
+ */
+export async function canReview(listingId: string, revieweeId: string): Promise<boolean> {
+  const params = new URLSearchParams({ revieweeId });
+  const result = await orNull(
+    apiFetch<{ allowed: boolean }>(`/api/listings/${encodeURIComponent(listingId)}/reviews/can-review?${params}`),
+  );
+  return result?.allowed ?? false;
 }
 
 /** A thread's id in the URL: the listing plus the other person. UUIDs never contain "_". */

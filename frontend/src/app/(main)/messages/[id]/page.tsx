@@ -7,6 +7,7 @@ import { ThreadReview } from "@/components/chat/ThreadReview";
 import { UserAvatar } from "@/components/profile/UserAvatar";
 import { VerifiedBadge } from "@/components/profile/VerifiedBadge";
 import {
+  canReview,
   getListingById,
   getListingReviews,
   getMessages,
@@ -40,9 +41,11 @@ export default async function MessageThreadPage({
 
   // Opening the thread counts as reading it, which clears its unread badge in the inbox.
   await markThreadRead(listing.id, partner.id);
-  const [messages, reviews] = await Promise.all([
+  const isFinished = listing.status === "sold" || listing.status === "traded";
+  const [messages, reviews, mayReview] = await Promise.all([
     getMessages(listing.id, partner.id),
     getListingReviews(listing.id),
+    isFinished ? canReview(listing.id, partner.id) : false,
   ]);
 
   return (
@@ -80,7 +83,7 @@ export default async function MessageThreadPage({
         </ul>
       )}
 
-      <ThreadReview listing={listing} partner={partner} meId={me.id} messages={messages} reviews={reviews} />
+      <ThreadReview partner={partner} meId={me.id} listingId={listing.id} mayReview={mayReview} reviews={reviews} />
       <MessageComposer listingId={listing.id} receiverId={partner.id} />
     </div>
   );

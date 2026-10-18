@@ -93,7 +93,9 @@ Its log: `/tmp/uniswap-cloud-setup.log`. Use the `implement_backend` branch.
   set in Settings); UniSwap never holds money. `utils/khqr.js` builds the QR text by hand (no package;
   matches NBC's `bakong-khqr` library exactly, see `test/khqr.test.js`). `services/bakong.js` checks
   `check_transaction_by_md5`; `routes/khqr.js` + a once-a-minute check in `server.js` call `markPaid`
-  (now keyed by payment id). `payments.method` is `stripe` or `khqr`. Bakong only accepts Cambodian
+  (now keyed by payment id). `payments.method` is `stripe` or `khqr`. A payment confirmed after the
+  item was already sold becomes `refund_due` (not `paid`); the listing is untouched and both people
+  are told the seller must refund (`notifyLatePayment`). Bakong only accepts Cambodian
   IPs, so it does not work from Render. Token in `BAKONG_TOKEN`, expires 13 Jan 2027.
 - **Messaging:** there is no conversations table. A thread is all messages between two users about
   one listing (this follows the ER diagram).
@@ -107,8 +109,9 @@ Its log: `/tmp/uniswap-cloud-setup.log`. Use the `implement_backend` branch.
 
 Done (week 5): auth with email verification, listings CRUD with five types (incl. auction) and statuses,
 ranked typo-tolerant search and filters, auctions/bidding, email + Telegram notifications, Stripe test payments, KHQR payments via Bakong, Cloudinary photos, profiles, per-listing messaging, photo
-uploads; frontend fully wired to the API. Reviews and ratings (rate the person you chatted with once
-a listing is sold or traded). API tests in `backend/test/api/`.
+uploads; frontend fully wired to the API. Reviews and ratings once a listing is sold or traded,
+between the owner and the buyer: whoever paid online, else the auction winner, else (in-person
+deals) someone who chatted with the owner both ways (`reviewBlocker` in `routes/reviews.js`). API tests in `backend/test/api/`.
 
 Built but needs the team's own accounts/keys (see `DEPLOY.md`): Supabase database, Render + Vercel
 deployment, Cloudinary photos, Stripe test payments, Telegram bot.

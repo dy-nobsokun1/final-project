@@ -49,18 +49,20 @@ paymentsRouter.post("/checkout", requireAuth, async (req, res) => {
   res.status(201).json({ url });
 });
 
-// POST /api/payments/confirm  { sessionId }  (logged in) -> { status: "paid" | "pending" }
+// POST /api/payments/confirm  { sessionId }  (logged in) -> { status: "paid" | "pending" | "refund_due" }
 // Called when the buyer comes back from Stripe. We ask Stripe directly instead of trusting the URL.
 paymentsRouter.post("/confirm", requireAuth, async (req, res) => {
   const sessionId = String(req.body.sessionId ?? "");
   const { rows } = await query("SELECT id, buyer_id, status FROM payments WHERE stripe_session_id = $1", [sessionId]);
   if (!rows[0] || rows[0].buyer_id !== req.userId) throw new HttpError(404, "Payment not found.");
-  if (rows[0].status === "paid") return res.json({ status: "paid" });
+  if (rows[0].status !== "pending") return res.json({ status: rows[0].status });
 
   const session = await retrieveCheckoutSession(sessionId);
   if (session.payment_status !== "paid") return res.json({ status: "pending" });
-  await markPaid(rows[0].id);
-  res.json({ status: "paid" });
+  // null means another call (e.g. the webhook) recorded it a moment ago: read what it decided.
+  const payment = await markPaid(rows[0].id)
+    ?? (await query("SELECT status FROM payments WHERE id = $1", [rows[0].id])).rows[0];
+  res.json({ status: payment.status });
 });
 
 /**

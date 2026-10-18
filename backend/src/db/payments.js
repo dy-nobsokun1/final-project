@@ -1,5 +1,5 @@
 import { HttpError } from "../utils/httpError.js";
-import { notifyPaid } from "../utils/notify.js";
+import { notifyLatePayment, notifyPaid } from "../utils/notify.js";
 import { amountToPay } from "../utils/payments.js";
 import { LISTING_SELECT } from "./listings.js";
 import { query, withTransaction } from "./pool.js";
@@ -36,21 +36,43 @@ export async function lockListingForPayment(client, listingId, buyerId) {
  * Records that a payment went through and marks the listing sold. Safe to call more than once for
  * the same payment (for Stripe, the return page and the webhook may both report it; for KHQR, the
  * QR page and the background check): only the first call changes anything. Returns the payment
- * row the first time, otherwise null.
+ * row (with its new status) the first time, otherwise null.
+ *
+ * A payment can arrive after the item is already gone: a KHQR paid just before it expired but
+ * reported late, after someone else bought the item or the seller marked it sold. The money has
+ * really moved, so the payment becomes "refund_due" instead of "paid", the listing is left alone,
+ * and both people are told the seller must send the money back.
  */
 export async function markPaid(paymentId) {
   const payment = await withTransaction(async (client) => {
+    const { rows: [pending] } = await client.query(
+      "SELECT listing_id FROM payments WHERE id = $1 AND status = 'pending'", [paymentId]);
+    if (!pending) return null;
+    // Locked, so two payments confirmed at the same moment are handled one after the other:
+    // the second one sees the first one's "sold".
+    const { rows: [listing] } = await client.query(
+      "SELECT status FROM listings WHERE id = $1 FOR UPDATE", [pending.listing_id]);
+    const isLate = listing.status === "sold" || listing.status === "traded";
+
     const { rows } = await client.query(
-      `UPDATE payments SET status = 'paid', paid_at = now()
+      `UPDATE payments SET status = $2, paid_at = now()
        WHERE id = $1 AND status = 'pending'
-       RETURNING listing_id, buyer_id, amount`,
-      [paymentId],
+       RETURNING listing_id, buyer_id, amount, status`,
+      [paymentId, isLate ? "refund_due" : "paid"],
     );
-    if (!rows[0]) return null;
-    await client.query("UPDATE listings SET status = 'sold', updated_at = now() WHERE id = $1", [rows[0].listing_id]);
+    if (!rows[0]) return null; // another call recorded it while this one waited for the lock
+    if (!isLate) {
+      await client.query("UPDATE listings SET status = 'sold', updated_at = now() WHERE id = $1", [rows[0].listing_id]);
+    }
     return rows[0];
   });
-  if (payment) notifyPaid(payment);
+
+  if (payment?.status === "refund_due") {
+    console.error(`[payments] payment ${paymentId} arrived after listing ${payment.listing_id} was sold: refund due`);
+    notifyLatePayment(payment);
+  } else if (payment) {
+    notifyPaid(payment);
+  }
   return payment;
 }
 

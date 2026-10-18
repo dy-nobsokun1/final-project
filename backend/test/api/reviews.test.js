@@ -87,3 +87,49 @@ test("a listing's reviews are public, showing the reviewer's name but never an e
   assert.deepEqual(body.reviews.map((item) => [item.reviewer.name, item.rating]), [["Buyer", 5]]);
   assert.equal(JSON.stringify(body).includes(buyer.email), false);
 });
+
+// Loaded after startApi() has pointed the app at the test database.
+const { markPaid } = await import("../../src/db/payments.js");
+const { closeEndedAuctions } = await import("../../src/db/auctions.js");
+
+function canReview(from, listing, about) {
+  return api.request("GET", `/api/listings/${listing.id}/reviews/can-review?revieweeId=${about.id}`, { token: from.token });
+}
+
+test("when someone paid online, only that buyer and the owner can review each other", async () => {
+  const [owner, payer, asker] = await Promise.all([api.createUser("Owner"), api.createUser("Payer"), api.createUser("Asker")]);
+  const listing = await api.createListing(owner);
+  // The asker chats with the owner both ways, but someone else pays.
+  await send(asker, owner, listing, "Is it still available?");
+  await send(owner, asker, listing, "Yes, for now!");
+  const [payment] = await api.sql(
+    "INSERT INTO payments (listing_id, buyer_id, amount, stripe_session_id) VALUES ($1, $2, 25, $3) RETURNING id",
+    [listing.id, payer.id, `cs_test_${listing.id}`],
+  );
+  await markPaid(payment.id);
+
+  assert.deepEqual((await canReview(payer, listing, owner)).body, { allowed: true, reason: null });
+  assert.equal((await canReview(asker, listing, owner)).body.allowed, false);
+  assert.equal((await review(asker, listing, owner, 1)).status, 403, "chatted, but did not buy");
+  assert.equal((await review(owner, listing, asker, 1)).status, 403, "owner rating someone who did not buy");
+  assert.equal((await review(payer, listing, owner, 5)).status, 201, "paid without chatting first");
+  assert.equal((await review(owner, listing, payer, 5)).status, 201);
+});
+
+test("after an auction, the winner and the owner can review each other, other bidders cannot", async () => {
+  const [owner, winner, loser] = await Promise.all([api.createUser("Owner"), api.createUser("Winner"), api.createUser("Loser")]);
+  const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+  const auction = await api.createListing(owner, { listingType: "auction", price: 10, auctionEndsAt: tomorrow });
+  const bid = (user, amount) => api.request("POST", `/api/listings/${auction.id}/bids`, { token: user.token, body: { amount } });
+  assert.equal((await bid(loser, 10)).status, 201);
+  assert.equal((await bid(winner, 12)).status, 201);
+  await send(loser, owner, auction, "Can I see it before bidding more?");
+  await send(owner, loser, auction, "Sure, come by tomorrow.");
+  await api.sql("UPDATE listings SET auction_ends_at = now() - interval '1 minute' WHERE id = $1", [auction.id]);
+  await closeEndedAuctions();
+  await api.request("PATCH", `/api/listings/${auction.id}`, { token: owner.token, body: { status: "sold" } });
+
+  assert.equal((await review(loser, auction, owner, 1)).status, 403, "outbid, even though they chatted");
+  assert.equal((await review(winner, auction, owner, 5)).status, 201, "won, without chatting first");
+  assert.equal((await review(owner, auction, winner, 5)).status, 201);
+});

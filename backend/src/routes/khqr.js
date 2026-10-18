@@ -66,14 +66,15 @@ khqrRouter.post("/", requireAuth, async (req, res) => {
   res.status(201).json(toKhqrPayment(payment));
 });
 
-// GET /api/payments/khqr/:id  (logged in, the buyer only) -> { status: "paid" | "pending" | "expired" }
+// GET /api/payments/khqr/:id  (logged in, the buyer only)
+//   -> { status: "paid" | "pending" | "expired" | "refund_due" }
 // The QR screen asks every few seconds. Each time, we ask Bakong: the browser is never trusted.
 khqrRouter.get("/:id", requireAuth, async (req, res) => {
   if (!isBakongConfigured) throw new HttpError(503, "KHQR payment is not set up yet.");
   const { rows } = await query("SELECT * FROM payments WHERE id = $1 AND method = 'khqr'", [req.params.id]);
   const payment = rows[0];
   if (!payment || payment.buyer_id !== req.userId) throw new HttpError(404, "Payment not found.");
-  if (payment.status === "paid") return res.json({ status: "paid" });
+  if (payment.status !== "pending") return res.json({ status: payment.status });
 
   let paid;
   try {
@@ -83,8 +84,9 @@ khqrRouter.get("/:id", requireAuth, async (req, res) => {
     throw new HttpError(502, "Could not reach Bakong to check the payment. Trying again shortly.");
   }
   if (paid) {
-    await markPaid(payment.id);
-    return res.json({ status: "paid" });
+    const marked = await markPaid(payment.id)
+      ?? (await query("SELECT status FROM payments WHERE id = $1", [payment.id])).rows[0];
+    return res.json({ status: marked.status });
   }
   res.json({ status: expiresAt(payment) <= new Date() ? "expired" : "pending" });
 });

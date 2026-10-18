@@ -85,7 +85,8 @@ CREATE TABLE payments (
   method            TEXT NOT NULL DEFAULT 'stripe' CHECK (method IN ('stripe', 'khqr')),
   stripe_session_id TEXT UNIQUE, -- Stripe only
   khqr              TEXT,        -- KHQR only: the exact QR text shown; Bakong finds the payment by its MD5
-  status            TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'paid')),
+  -- refund_due: the money moved, but only after the item was already sold, so the seller must refund it.
+  status            TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'paid', 'refund_due')),
   created_at        TIMESTAMPTZ NOT NULL DEFAULT now(),
   paid_at           TIMESTAMPTZ,
   CHECK ((method = 'stripe') = (stripe_session_id IS NOT NULL)),

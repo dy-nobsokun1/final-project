@@ -34,7 +34,8 @@ export function KhqrPayButton({ listingId, priceLabel, sellerName }: KhqrPayButt
     const timer = setInterval(async () => {
       const status = await checkKhqrPayment(payment.paymentId);
       // The listing page confirms the payment again with the API and shows the success message.
-      if (status === "paid") router.replace(`/listings/${listingId}?khqr=${payment.paymentId}`);
+      // A late payment ("refund_due") goes there too: that page explains the refund.
+      if (status === "paid" || status === "refund_due") router.replace(`/listings/${listingId}?khqr=${payment.paymentId}`);
       if (status === "expired") setIsExpired(true);
     }, CHECK_EVERY_MS);
     return () => clearInterval(timer);

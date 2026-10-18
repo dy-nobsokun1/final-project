@@ -21,6 +21,14 @@ import {
 import { CATEGORIES, conditionLabel, listingTypeLabel, statusLabel } from "@/lib/constants";
 import { formatListingPrice, formatRelativeTime } from "@/lib/utils";
 
+/** What a buyer sees after returning from a payment, by its status. */
+const PAYMENT_BANNERS = {
+  paid: "Payment received. The item is yours: message the seller to arrange the handover.",
+  pending: "Your payment is still processing. Refresh this page in a moment.",
+  refund_due:
+    "Your payment went through, but the item had already been sold. The seller has been asked to refund you: message them if you have not heard back.",
+} as const;
+
 /** Detail view for a single listing. */
 export default async function ListingDetailPage({ params, searchParams }: PageProps<"/listings/[id]">) {
   const { id } = await params;
@@ -57,11 +65,9 @@ export default async function ListingDetailPage({ params, searchParams }: PagePr
         Back to browse
       </Link>
 
-      {payment === "paid" || payment === "pending" ? (
+      {payment && payment in PAYMENT_BANNERS ? (
         <p role="status" className="light-surface rounded-xl border border-border bg-card p-3 text-sm font-medium text-foreground">
-          {payment === "paid"
-            ? "Payment received. The item is yours: message the seller to arrange the handover."
-            : "Your payment is still processing. Refresh this page in a moment."}
+          {PAYMENT_BANNERS[payment as keyof typeof PAYMENT_BANNERS]}
         </p>
       ) : null}
 

@@ -128,7 +128,8 @@ export interface KhqrPayment {
   expiresAt: string;
 }
 
-export type KhqrStatus = "paid" | "pending" | "expired";
+/** "refund_due": the payment went through after the item was already sold, so the seller must refund it. */
+export type KhqrStatus = "paid" | "pending" | "expired" | "refund_due";
 
 export interface ListingFilters {
   query?: string;
