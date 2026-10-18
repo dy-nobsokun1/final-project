@@ -102,9 +102,9 @@ Its log: `/tmp/uniswap-cloud-setup.log`. Use the `implement_backend` branch.
   IPs, so it does not work from Render. Token in `BAKONG_TOKEN`, expires 13 Jan 2027.
 - **Deleting listings:** payments and reviews are `ON DELETE CASCADE`, so `DELETE /api/listings/:id`
   refuses (409) when the listing is sold/traded, has reviews, has a paid or `refund_due` payment,
-  or has a payment started within `CONFIRM_MINUTES` (35, `db/payments.js`) + 1 minute of slack. It
-  locks the listing row like `lockListingForPayment`, so no payment can start between the check and
-  the delete. The owner's Delete button is hidden on sold and traded listings.
+  or has an unconfirmed payment that may still be confirmed (`RECHECK_HOURS`, 24, in `db/payments.js`,
+  + 1 minute of slack). It locks the listing row like `lockListingForPayment`, so no payment can start
+  between the check and the delete. The owner's Delete button is hidden on sold and traded listings.
 - **Messaging:** there is no conversations table. A thread is all messages between two users about
   one listing (this follows the ER diagram).
 - **Uploads:** `POST /api/uploads` with raw image bytes (max 5 MB), saved to `backend/uploads/`

@@ -117,19 +117,21 @@ test("an unconfirmed QR keeps being re-checked for 24 hours, then is left alone"
   assert.equal(await isChecked({ includeOlder: true }), false);
 });
 
-test("a listing cannot be deleted while someone may be paying for it, or once it was paid", async () => {
+test("a listing cannot be deleted while a payment for it may still be confirmed, or once it was paid", async () => {
   const [seller, buyer] = await Promise.all([api.createUser(), api.createUser()]);
   await api.request("PATCH", "/api/users/me", { token: seller.token, body: { bakongAccountId: "seller@aclb" } });
   const deleteListing = (listing) => api.request("DELETE", `/api/listings/${listing.id}`, { token: seller.token });
 
-  // An open QR can still be paid, and deleting the listing would also delete its payment record.
+  // Deleting the listing would also delete its payment record, and an unconfirmed payment can still
+  // be confirmed for 24 hours (the background re-check), so until then the delete is refused.
   const open = await api.createListing(seller);
   const { paymentId } = (await startKhqr(buyer, open)).body;
-  assert.equal((await deleteListing(open)).status, 409);
-  // The refusal says how long to wait. After that (35 minutes + 1 minute of slack) an abandoned QR
-  // no longer blocks deleting.
-  assert.match((await deleteListing(open)).body.error, /Try again in 36 minutes/);
-  await api.sql("UPDATE payments SET created_at = now() - interval '37 minutes' WHERE id = $1", [paymentId]);
+  const age = (interval) => api.sql("UPDATE payments SET created_at = now() - $2::interval WHERE id = $1", [paymentId, interval]);
+  await age("31 minutes"); // the QR itself has expired, but a held-up confirmation can still arrive
+  assert.match((await deleteListing(open)).body.error, /for another 24 hours/);
+  await age("23 hours 50 minutes");
+  assert.match((await deleteListing(open)).body.error, /for another 11 minutes/);
+  await age("24 hours 2 minutes"); // nothing can confirm it any more: an abandoned QR
   assert.equal((await deleteListing(open)).status, 204);
 
   // Paid, then made available again by the seller: the payment record must still stay.
@@ -137,7 +139,11 @@ test("a listing cannot be deleted while someone may be paying for it, or once it
   const started = (await startKhqr(buyer, paid)).body;
   paidMd5s.add(khqrMd5(started.qr));
   assert.deepEqual((await khqrStatus(buyer, started.paymentId)).body, { status: "paid" });
-  await api.request("PATCH", `/api/listings/${paid.id}`, { token: seller.token, body: { status: "active" } });
+  const relisted = await api.request("PATCH", `/api/listings/${paid.id}`, { token: seller.token, body: { status: "active" } });
+  assert.equal(relisted.body.listing.status, "active");
   assert.equal((await deleteListing(paid)).status, 409);
   assert.deepEqual(await api.sql("SELECT status FROM payments WHERE id = $1", [started.paymentId]), [{ status: "paid" }]);
+  // A late payment the seller must refund is kept as well.
+  await api.sql("UPDATE payments SET status = 'refund_due' WHERE id = $1", [started.paymentId]);
+  assert.equal((await deleteListing(paid)).status, 409);
 });

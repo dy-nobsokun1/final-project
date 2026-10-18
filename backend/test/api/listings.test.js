@@ -56,7 +56,8 @@ test("a listing with reviews cannot be deleted, even after it is made available 
   // The review rules themselves are tested in reviews.test.js; here we only need one to exist.
   await api.sql("INSERT INTO reviews (listing_id, reviewer_id, reviewee_id, rating) VALUES ($1, $2, $3, 5)",
     [listing.id, buyer.id, owner.id]);
-  await api.request("PATCH", path, { token: owner.token, body: { status: "active" } });
+  const relisted = await api.request("PATCH", path, { token: owner.token, body: { status: "active" } });
+  assert.equal(relisted.body.listing.status, "active");
 
   assert.equal((await api.request("DELETE", path, { token: owner.token })).status, 409);
   assert.equal((await api.sql("SELECT count(*)::int AS n FROM reviews WHERE listing_id = $1", [listing.id]))[0].n, 1);

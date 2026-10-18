@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { buildBrowseQuery, findListingById } from "../db/listings.js";
-import { CONFIRM_MINUTES } from "../db/payments.js";
+import { RECHECK_HOURS } from "../db/payments.js";
 import { query, withTransaction } from "../db/pool.js";
 import { requireAuth } from "../middleware/auth.js";
 import { HttpError } from "../utils/httpError.js";
@@ -108,7 +108,7 @@ listingsRouter.patch("/:id", requireAuth, async (req, res) => {
 // DELETE /api/listings/:id  (owner only)
 // Deleting a listing also deletes its payments and reviews (ON DELETE CASCADE in schema.sql), so it
 // is refused (409) once that history matters: the item was sold or traded, it has reviews, money was
-// paid for it, or someone may still be paying for it. An open payment could be paid with no record.
+// paid for it, or a payment for it may still be confirmed. That payment would be lost with no record.
 listingsRouter.delete("/:id", requireAuth, async (req, res) => {
   await findOwnedListing(req.params.id, req.userId);
 
@@ -124,20 +124,22 @@ listingsRouter.delete("/:id", requireAuth, async (req, res) => {
     const { rows: reviews } = await client.query("SELECT 1 FROM reviews WHERE listing_id = $1 LIMIT 1", [req.params.id]);
     if (reviews.length) throw new HttpError(409, "People have reviewed this deal, so the listing cannot be deleted.");
 
-    // One minute more than the background check's window, so a check that is still asking Bakong
-    // about a payment cannot lose it to a delete.
+    // An unconfirmed payment may still be confirmed for RECHECK_HOURS (see server.js), plus a minute
+    // so a check that is still waiting for Bakong cannot lose its payment to a delete.
     const { rows: payments } = await client.query(
       `SELECT status, ceil(extract(epoch FROM created_at + make_interval(mins => $2) - now()) / 60)::int AS minutes_left
        FROM payments
        WHERE listing_id = $1 AND (status <> 'pending' OR created_at > now() - make_interval(mins => $2))`,
-      [req.params.id, CONFIRM_MINUTES + 1],
+      [req.params.id, RECHECK_HOURS * 60 + 1],
     );
     if (payments.some((payment) => payment.status !== "pending")) {
       throw new HttpError(409, "Someone has paid for this listing, so it cannot be deleted. Mark it reserved or sold to take it off the browse page.");
     }
     if (payments.length) {
       const minutes = Math.max(...payments.map((payment) => payment.minutes_left));
-      throw new HttpError(409, `Someone is paying for this right now, so it cannot be deleted. Try again in ${minutes} minute${minutes === 1 ? "" : "s"}.`);
+      const plural = (count, unit) => `${count} ${unit}${count === 1 ? "" : "s"}`;
+      const wait = minutes > 60 ? plural(Math.ceil(minutes / 60), "hour") : plural(minutes, "minute");
+      throw new HttpError(409, `A payment for this listing has not been confirmed yet, so it cannot be deleted for another ${wait}. Mark it reserved to take it off the browse page meanwhile.`);
     }
 
     await client.query("DELETE FROM listings WHERE id = $1", [req.params.id]);
