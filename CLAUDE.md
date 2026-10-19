@@ -16,7 +16,7 @@ is public); state a plan before multi-file changes; explain every change so the 
 
 ## Repos and branches
 
-- `origin` / upstream: `dy-nobsokun1/final-project`. Its `main` is still the old frontend-only layout.
+- Upstream: `dy-nobsokun1/final-project`. Its `main` is still the old frontend-only layout.
 - Fork: `vnak-1/final-project-backend`. Work happens on branch **`implement_backend`**, which still
   needs a PR into upstream `main`.
 - Write descriptive commit messages (not "update"). Never commit `.env`, `node_modules/` or `.DS_Store`.
@@ -30,9 +30,12 @@ is public); state a plan before multi-file changes; explain every change so the 
     defaults to `http://localhost:4000`. The login JWT lives in the httpOnly cookie `uniswap_token`.
   - Shared types: `src/types/index.ts`. Labels and options: `src/lib/constants.ts`.
 - `backend/`: Node.js 20.6+, Express 5, PostgreSQL, ES modules, plain JavaScript.
-  - `src/app.js` mounts routes in `src/routes/`: auth, listings, users, messages, uploads.
+  - `src/app.js` mounts routes in `src/routes/`: auth, listings, bids, reviews, saved, offers, users,
+    telegram, messages, uploads, payments (Stripe) and khqr.
   - `src/db/schema.sql`: tables `users`, `listings`, `messages`, `reviews` (from the proposal's ER
-    diagram). `src/db/listings.js`: `buildBrowseQuery()` for browse/search.
+    diagram), plus `bids`, `offers`, `payments` and `saved_listings`. Query helpers sit beside it:
+    `listings.js` (`LISTING_SELECT`, `buildBrowseQuery()` for browse/search), `auctions.js`,
+    `matches.js`, `offers.js`, `payments.js`.
   - `src/utils/`: validation, scrypt password hashing, JWT, email (nodemailer), serializers
     (database snake_case → API camelCase, matching the frontend types).
   - The full API table is in `backend/README.md`. Keep it updated when routes change.
@@ -173,4 +176,30 @@ offer was accepted, else (in-person deals) someone who chatted with the owner bo
 Built but needs the team's own accounts/keys (see `DEPLOY.md`): Supabase database, Render + Vercel
 deployment, Cloudinary photos, Stripe test payments, Telegram bot.
 
-Possible next steps: real-time chat, safe meetup spots, and per-user notification preferences.
+### Picking up on another machine
+
+Everything above is pushed to `implement_backend`. Last full check: `npm test` (32) and
+`npm run test:api` (96) pass, and the frontend's lint, `tsc --noEmit` and `next build` are clean.
+After `git pull origin implement_backend`:
+
+- No packages were added, but run `npm install` in `backend/` and `frontend/` if they are stale.
+- Upgrade your local `uniswap` database: run the blocks under "Upgrading an existing database to this
+  version" in `backend/README.md`, or `npm run db:setup && npm run db:seed` if it only holds demo
+  data. The test database needs nothing: `npm run test:api` rebuilds it from `schema.sql`.
+
+### Next steps
+
+1. **Try KHQR with real money, in Cambodia.** Put the team's `BAKONG_TOKEN` in `backend/.env` only
+   (never in a committed file or a cloud environment). Add a Bakong account in Settings, pay a small
+   amount from a second account, and check the item becomes sold.
+2. **Open the PR** from `implement_backend` into `dy-nobsokun1/final-project` `main` (only when asked).
+3. **Deploy** by following `DEPLOY.md`. Set up Cloudinary before Render, because Render wipes uploaded
+   photos. A new Supabase database is built from `schema.sql`, so it needs no upgrade blocks.
+4. **Frontend follow-ups for Dy** (found in browser testing, not fixed yet):
+   - the navbar is too wide at about 768 px;
+   - a heart tapped while signed out should return to the listing after login;
+   - `PhotoPicker` does not clear its error, and focus is lost after "Make cover";
+   - `forms/NewListingForm.tsx` is 161 lines, over the ~100-line rule;
+   - the offer panels still show the agreed amount after the seller cuts the price below it. The
+     buyer pays the lower price, so only the text is wrong.
+5. Later ideas: real-time chat, safe meetup spots, and per-user notification preferences.
