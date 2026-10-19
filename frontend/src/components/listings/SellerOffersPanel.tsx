@@ -27,7 +27,7 @@ export async function SellerOffersPanel({ listing }: { listing: ListingWithSelle
         <p className="text-sm">
           You accepted {accepted.buyer.name}&apos;s offer of {formatPrice(accepted.amount)}
           {listing.status === "reserved"
-            ? ", so the item is reserved for them. If the deal falls through, make it available again."
+            ? ", so the item is reserved for them. Mark it sold once you have handed it over, or make it available again if the deal falls through."
             : "."}
         </p>
       ) : null}

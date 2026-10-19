@@ -115,6 +115,24 @@ test("a paid QR whose confirmation was held up is recorded before anyone else ca
   assert.equal(await paymentStatus(c.paymentId), "paid");
 });
 
+test("an open QR is withdrawn once the item stops being for sale or its price becomes 0, but not on a manual reserve", async () => {
+  const [seller, buyer] = await Promise.all([api.createUser(), api.createUser()]);
+  await api.request("PATCH", "/api/users/me", { token: seller.token, body: { bakongAccountId: "seller@aclb" } });
+  const openQrAfter = async (change) => {
+    const listing = await api.createListing(seller);
+    const { paymentId } = (await startKhqr(buyer, listing)).body;
+    const patched = await api.request("PATCH", `/api/listings/${listing.id}`, { token: seller.token, body: change });
+    assert.equal(patched.status, 200, JSON.stringify(patched.body));
+    return (await khqrStatus(buyer, paymentId)).body.status;
+  };
+
+  assert.equal(await openQrAfter({ listingType: "giveaway" }), "unavailable");
+  assert.equal(await openQrAfter({ listingType: "trade" }), "unavailable");
+  assert.equal(await openQrAfter({ price: 0 }), "unavailable");
+  // Documented on purpose (README "Known limitations"): reserving by hand does not cancel it.
+  assert.equal(await openQrAfter({ status: "reserved" }), "pending");
+});
+
 test("an open QR is withdrawn once the seller changes the Bakong account it pays", async () => {
   const [seller, buyer] = await Promise.all([api.createUser(), api.createUser()]);
   await api.request("PATCH", "/api/users/me", { token: seller.token, body: { bakongAccountId: "typo@aclb" } });

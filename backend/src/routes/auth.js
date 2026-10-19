@@ -129,7 +129,7 @@ authRouter.post("/resend-verification", async (req, res) => {
 });
 
 // POST /api/auth/forgot-password  { email } -> always { requested: true }
-// The same answer for every campus address, so nobody can use this to find out who has an account.
+// The same answer for every campus address, so this route itself does not tell who has an account.
 // Unverified accounts get a link too (see reset-password).
 authRouter.post("/forgot-password", async (req, res) => {
   const { email } = req.body ?? {};

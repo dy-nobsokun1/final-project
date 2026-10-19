@@ -26,9 +26,7 @@ const toKhqrPayment = (payment) => ({
 
 /**
  * What `buyerId` would be asked to pay for `listing` (a LISTING_SELECT row) if they started paying
- * now, or null if they cannot pay for it online now. A null leaves an open QR as it is: e.g. the
- * owner marked a sale item reserved by hand, which does not cancel a payment already in progress
- * (README "Known limitations").
+ * now, or null if they cannot pay for it online now (see the GET route for what a null means).
  */
 function amountOwedNow(listing, buyerId) {
   try {
@@ -153,8 +151,12 @@ khqrRouter.get("/:id", requireAuth, async (req, res) => {
   const isGone = latest.status === "sold" || latest.status === "traded"
     || (latest.reserved_for !== null && latest.reserved_for !== payment.buyer_id);
   const paysCurrentAccount = Boolean(latest.bakong_account_id) && khqrPaysAccount(payment.khqr, latest.bakong_account_id);
+  // When this buyer cannot pay online now (owed is null), only a sale item the owner reserved by hand
+  // keeps the QR (README "Known limitations"). Otherwise, e.g. the item is no longer for sale or its
+  // price became 0, paying the old QR would sell it for an amount nobody now asks for.
+  const isManualReserve = latest.listing_type === "sale" && latest.status === "reserved" && !latest.reserved_for;
   const owed = amountOwedNow(latest, payment.buyer_id);
-  const isRepriced = owed !== null && owed !== Number(payment.amount);
+  const isRepriced = owed === null ? !isManualReserve : owed !== Number(payment.amount);
   if (isGone || !paysCurrentAccount || isRepriced) return res.json({ status: "unavailable" });
   res.json({ status: payment.is_expired ? "expired" : "pending" });
 });
