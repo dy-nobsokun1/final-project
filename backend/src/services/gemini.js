@@ -30,8 +30,11 @@ export async function generateContent(request) {
   );
   const result = await response.json().catch(() => ({}));
   if (!response.ok) {
-    const error = new Error(`Gemini failed: ${result.error?.message ?? response.status}`);
+    const message = result.error?.message ?? String(response.status);
+    const error = new Error(`Gemini failed: ${message}`);
     error.status = response.status;
+    // A 429 says which free-tier limit was hit: requests per minute, or per day (reset at midnight Pacific time).
+    error.dailyLimit = response.status === 429 && /per day/i.test(message);
     throw error;
   }
   // No candidate means Gemini refused to answer (for example, a question its safety filter blocked).

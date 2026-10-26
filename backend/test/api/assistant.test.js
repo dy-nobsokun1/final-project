@@ -4,14 +4,17 @@ import { after, test } from "node:test";
 import { startApi } from "./helpers.js";
 
 // The assistant is switched on for this file, but Gemini itself is replaced. The fake searches for
-// the student's last message, then replies showing the first listing it found. It answers 429 (quota
-// used up) while `gemini.isBusy` is true. Every request body is kept in `gemini.requests`.
+// the student's last message, then replies showing the first listing it found. While `gemini.limit`
+// is "minute" or "day", it answers 429 for that free-tier limit. Every request body is kept in `gemini.requests`.
 // All other requests (the tests calling our API) go through as normal.
 const realFetch = globalThis.fetch;
-const gemini = { isBusy: false, requests: [] };
+const gemini = { limit: null, requests: [] };
 globalThis.fetch = async (url, options) => {
   if (!String(url).startsWith("https://generativelanguage.googleapis.com/")) return realFetch(url, options);
-  if (gemini.isBusy) return Response.json({ error: { code: 429, message: "Quota exceeded" } }, { status: 429 });
+  if (gemini.limit) {
+    const message = `Quota exceeded: Generate content requests per ${gemini.limit} limit exceeded on Free Tier.`;
+    return Response.json({ error: { code: 429, message } }, { status: 429 });
+  }
   const body = JSON.parse(options.body);
   gemini.requests.push(body);
   const last = body.contents.at(-1).parts[0];
@@ -60,14 +63,19 @@ test("finds a real listing, leaves wanted posts out, and sends Gemini no seller 
   assert.ok(!sentToGemini.includes(seller.email));
 });
 
-test("when Gemini's quota is used up, students are asked to try again", async () => {
+test("when Gemini's free quota is used up, students are told when to try again", async () => {
   const student = await api.createUser();
-  gemini.isBusy = true;
   try {
-    const response = await ask(student, "a bike");
-    assert.equal(response.status, 429);
-    assert.match(response.body.error, /try again/);
+    gemini.limit = "minute";
+    const busy = await ask(student, "a bike");
+    assert.equal(busy.status, 429);
+    assert.match(busy.body.error, /in a minute/);
+
+    gemini.limit = "day";
+    const done = await ask(student, "a bike");
+    assert.equal(done.status, 429);
+    assert.match(done.body.error, /tomorrow/);
   } finally {
-    gemini.isBusy = false;
+    gemini.limit = null;
   }
 });

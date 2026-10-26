@@ -424,18 +424,26 @@ service's web API with `fetch`.
   a one-time `t.me/<bot>?start=<code>` link. The bot (long polling, so no public URL is needed)
   links the chat. After that, every notification goes to Telegram as well as email.
 - **Ask UniSwap, the shopping assistant** (`services/gemini.js`, `utils/assistant.js`, `routes/assistant.js`).
-  A student asks in their own words ("a cheap calculator for my exam"). Gemini (`gemini-3.8-flash`,
+  A student asks in their own words ("a cheap calculator for my exam"). Gemini (`gemini-3.5-flash-lite`,
   free tier) answers by calling two tools: `search_listings`, our normal browse search (active items
   only, no wanted posts, 5 results), and `reply`, its answer plus the ids of up to 4 listings to show
-  as cards. It must always call one of them (`mode: "ANY"`), and gets at most 5 calls per question.
+  as cards. It must always call one of them (`mode: "ANY"`). A question gets at most 3 calls, and the
+  last may only be `reply`, so there is always an answer: a typical question uses 2, a follow-up like
+  "yes, draft it" uses 1.
   Cards can only be listings its searches returned in that question, so it cannot show a made-up
   item. When nothing fits, `reply` can carry a wanted-post draft, which the student checks and posts
   themselves: the assistant never writes to the database. Nothing is stored either: the frontend
   sends the conversation with each question. Gemini 3 signs its tool calls ("thought signatures"),
   so `askAssistant` sends its turns back exactly as they came. Gemini only sees the question and
   each listing's title, type, price, category, condition and the start of its description, never
-  seller names or emails, because Google may read free-tier requests. A 429 from Gemini (free
-  quota used up) becomes our 429 "try again in a minute".
+  seller names or emails, because Google may read free-tier requests.
+  **Free-tier limits** are per Google project, shared by every student, and shown at
+  [aistudio.google.com/rate-limit](https://aistudio.google.com/rate-limit). Measured on 26 Oct 2026:
+  `gemini-3.5-flash-lite` allows 15 requests a minute (about 7 questions); `gemini-3.6-flash`
+  (and `gemini-3.5-flash`, which counts as it) only 5 a minute and 20 a day; `gemini-3.8-flash` did
+  not answer at all. Change the model with `GEMINI_MODEL`. A 429 from Gemini becomes our 429 with
+  "try again in a minute", or "try again tomorrow" when the daily limit is used up (it resets at
+  midnight Pacific time).
 
 **Upgrading a database created before payments and Telegram?** Run this once. It keeps your data and is safe to re-run:
 
@@ -532,7 +540,7 @@ A token issued before the account's last password change or reset is refused (40
 | PATCH 🔒 | `/api/messages/read` | `{ listingId, withUserId }` → mark a thread read |
 | POST 🔒 | `/api/uploads` | One photo per request: raw image bytes with `Content-Type: image/jpeg`, `png`, `webp` or `gif` (max 5 MB) → `{ url }` |
 | GET | `/api/assistant/config` | `{ enabled }`: whether the shopping assistant is switched on (`GEMINI_API_KEY` set) |
-| POST 🔒 | `/api/assistant` | `{ messages: [{ role: "user" \| "assistant", text }] }`, oldest first, at most 20, each 1 to 1000 characters, the last one the student's → `{ reply, listings, wantedDraft }`. `listings`: up to 4 full listings to show as cards. `wantedDraft`: `null` or `{ title, description, category, budget }` to fill in the new-listing form. `503` while switched off, `429` while Gemini's free quota is used up, `502` if Gemini fails (see Ask UniSwap above) |
+| POST 🔒 | `/api/assistant` | `{ messages: [{ role: "user" \| "assistant", text }] }`, oldest first, at most 20, each 1 to 1000 characters, the last one the student's → `{ reply, listings, wantedDraft }`. `listings`: up to 4 full listings to show as cards. `wantedDraft`: `null` or `{ title, description, category, budget }` to fill in the new-listing form. `503` while switched off, `429` while Gemini's free quota for the minute or the day is used up, `502` if Gemini fails (see Ask UniSwap above) |
 
 Uploaded photos are saved in `backend/uploads/` (git-ignored) and served at `/uploads/<file>`.
 Put the returned `url` in a listing's `imageUrls` (at most 6; only URLs from this route are accepted).

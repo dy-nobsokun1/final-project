@@ -92,6 +92,9 @@ test("plain text, unknown tools and a model that never replies are all handled",
   const stuck = fakeModel(call("search_listings", { query: "lamp" }));
   const gaveUp = await askAssistant(ask("lamp"), { generate: stuck.generate, searchListings: async () => [listing("a")] });
   assert.equal(stuck.requests.length, MAX_ROUNDS);
+  // Only the last call is limited to reply (this fake ignores that, a real Gemini would answer).
+  const allowed = stuck.requests.map((r) => r.toolConfig.functionCallingConfig.allowedFunctionNames);
+  assert.deepEqual(allowed, [...Array(MAX_ROUNDS - 1).fill(undefined), ["reply"]]);
   assert.match(gaveUp.reply, /Sorry/);
   assert.deepEqual(gaveUp.listings, []);
 });

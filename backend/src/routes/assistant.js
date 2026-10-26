@@ -33,7 +33,11 @@ assistantRouter.post("/", requireAuth, async (req, res) => {
     res.json(await askAssistant(req.body.messages, { generate: generateContent, searchListings }));
   } catch (error) {
     // 429: the free tier's requests per minute or per day are used up.
-    if (error.status === 429) throw new HttpError(429, "The assistant is busy right now. Please try again in a minute.");
+    if (error.status === 429) {
+      throw new HttpError(429, error.dailyLimit
+        ? "The assistant has answered all the questions it can for today. Please try again tomorrow."
+        : "The assistant is busy right now. Please try again in a minute.");
+    }
     console.error("[assistant]", error.message);
     throw new HttpError(502, "The assistant is not available right now. Please try again later.");
   }

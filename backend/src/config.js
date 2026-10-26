@@ -40,6 +40,8 @@ export const config = {
   },
   gemini: {
     apiKey: process.env.GEMINI_API_KEY,
-    model: process.env.GEMINI_MODEL ?? "gemini-3.8-flash",
+    // Free tier, checked 26 Oct 2026: 15 requests a minute. gemini-3.6-flash allows only 20 a day,
+    // and gemini-3.8-flash did not answer at all.
+    model: process.env.GEMINI_MODEL ?? "gemini-3.5-flash-lite",
   },
 };

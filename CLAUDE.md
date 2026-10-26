@@ -156,7 +156,9 @@ when `uniswap` has none, so an older `uniswap` database needs the upgrade SQL (b
   (`generateContent`, plain `fetch`). Off (503) until `GEMINI_API_KEY` is set. Stateless: the frontend
   sends the conversation with every question. Gemini must call a tool (`mode: "ANY"`): `search_listings`
   (browse search, active, no wanted posts, 5 results), then `reply { text, listingIds, wantedDraft }`;
-  cards only for ids found in that question; at most 5 calls. Its turns go back unchanged (Gemini 3
+  cards only for ids found in that question; at most 3 calls, the last reply-only. Default model
+  `gemini-3.5-flash-lite` (free: 15/minute; `gemini-3.6-flash` is 20/day, `gemini-3.8-flash` hung).
+  A 429 says "in a minute" or "tomorrow" (daily limit). Its turns go back unchanged (Gemini 3
   thought signatures). Never send it seller names or emails (free tier: Google may read requests).
   The frontend chat page is not built yet.
 - **Messaging:** there is no conversations table. A thread is all messages between two users about
@@ -188,7 +190,7 @@ deployment, Cloudinary photos, Stripe test payments, Telegram bot.
 ### Picking up on another machine
 
 Everything above is pushed to `implement_backend`. Last full check: `npm test` (38) and
-`npm run test:api` (99) pass, and the frontend's lint, `tsc --noEmit` and `next build` are clean.
+`npm run test:api` (100) pass, and the frontend's lint, `tsc --noEmit` and `next build` are clean.
 After `git pull origin implement_backend`:
 
 - No packages were added, but run `npm install` in `backend/` and `frontend/` if they are stale.

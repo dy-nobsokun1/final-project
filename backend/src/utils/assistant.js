@@ -6,8 +6,11 @@ import { CATEGORIES, CONDITIONS, parseListingFilters } from "./validation.js";
 // post is only handed to the student, who checks it and posts it themselves.
 // The model is passed in (`generate`), so the tests can use a fake one without network or API key.
 
-/** Most model calls for one question: a few searches, then the reply. Stops a model stuck in a loop. */
-export const MAX_ROUNDS = 5;
+/**
+ * Most model calls for one question: up to two rounds of searches, then the reply. Every call counts
+ * against Gemini's free-tier requests per minute (shared by the whole app), so a question uses as few as it can.
+ */
+export const MAX_ROUNDS = 3;
 /** Listings Gemini sees per search, and cards shown under one answer. */
 const RESULTS_PER_SEARCH = 5;
 const MAX_CARDS = 4;
@@ -23,7 +26,7 @@ const FALLBACK_REPLY = "Sorry, I couldn't answer that. Try asking in a different
 
 export const SYSTEM_INSTRUCTION = `You are Ask UniSwap, the shopping assistant of UniSwap: a marketplace where verified university students in Cambodia sell, trade, auction and give away second-hand items, and post wanted requests. Prices are in US dollars.
 
-- Find items with search_listings. Search with one or two keywords ("calculator", "desk lamp"), not whole sentences. If nothing comes back, try another word or drop a filter.
+- Find items with search_listings. Search with one or two keywords ("calculator", "desk lamp"), not whole sentences. To try several keywords, call search_listings for each of them at once, in the same turn. If nothing comes back, you may search once more with other words or fewer filters.
 - End every turn by calling reply exactly once. In listingIds, put the ids of the best items you found (at most ${MAX_CARDS}, best first); they appear as cards under your text.
 - Only talk about items that search_listings returned, and name each item you show by its title. Never invent items, prices or details.
 - If nothing fits, say so and offer to draft a wanted post, so sellers can find the student. Fill in wantedDraft only after the student says yes or asks for one; they check it and post it themselves.
@@ -155,12 +158,14 @@ export async function askAssistant(messages, { generate, searchListings }) {
   const found = new Map(); // id -> listing, every listing search_listings returned in this turn
 
   for (let round = 0; round < MAX_ROUNDS; round++) {
+    const lastRound = round === MAX_ROUNDS - 1;
     const content = await generate({
       systemInstruction: { parts: [{ text: SYSTEM_INSTRUCTION }] },
       contents,
       tools: [{ functionDeclarations: TOOLS }],
-      // ANY: Gemini must always call a tool, so every answer arrives through reply.
-      toolConfig: { functionCallingConfig: { mode: "ANY" } },
+      // ANY: Gemini must always call a tool, so every answer arrives through reply. On the last round
+      // reply is the only tool allowed, so the student always gets an answer.
+      toolConfig: { functionCallingConfig: lastRound ? { mode: "ANY", allowedFunctionNames: ["reply"] } : { mode: "ANY" } },
       // Choosing listings needs little reasoning, and low thinking answers faster.
       generationConfig: { thinkingConfig: { thinkingLevel: "low" } },
     });
