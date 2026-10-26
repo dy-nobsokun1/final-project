@@ -17,7 +17,7 @@ export function Navbar() {
       <div className="mx-auto flex h-16 max-w-6xl items-center gap-4 px-4">
         <Link
           href="/"
-          className="font-heading text-2xl leading-none tracking-wide text-brand-ink"
+          className="font-heading text-2xl leading-none tracking-wide text-brand-50"
         >
           {APP_NAME}
         </Link>

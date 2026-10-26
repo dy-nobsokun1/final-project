@@ -10,7 +10,7 @@ export default function AuthLayout({ children }: LayoutProps<"/">) {
     <div className="flex flex-1 items-center justify-center bg-background px-4 py-12">
       <div className="w-full max-w-md">
         <div className="mb-6 text-center">
-          <Link href="/" className="font-heading text-2xl tracking-wide text-brand-ink">
+          <Link href="/" className="font-heading text-2xl tracking-wide text-brand-50">
             UniSwap
           </Link>
           <p className="mt-1 text-sm text-muted-foreground">

@@ -172,6 +172,11 @@
     --accent-foreground: var(--brand-ink);
     --destructive-foreground: var(--brand-ink);
     --ring: var(--brand-ink);
+    /* Re-pointing --foreground is not enough on its own: `body` already turned it
+       into a light colour, and children inherit that colour, not the token. So
+       text with no colour class of its own (card prices, seller names) came out
+       #E6F2DD on #B1D3B9, 1.41:1. Colour classes still win (utilities layer). */
+    color: var(--foreground);
   }
 }
 
