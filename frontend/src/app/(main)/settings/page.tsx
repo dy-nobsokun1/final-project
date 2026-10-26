@@ -88,7 +88,9 @@ export function SettingsForm() {
         </CardContent>
       </Card>
 
-      <Card>
+      {/* The home page's Telegram strip links here (/settings#telegram). scroll-mt-20 keeps the
+          sticky navbar from covering the card's top. */}
+      <Card id="telegram" className="scroll-mt-20">
         <CardHeader>
           <CardTitle>Notifications</CardTitle>
         </CardHeader>

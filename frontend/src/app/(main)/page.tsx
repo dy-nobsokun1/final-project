@@ -5,6 +5,7 @@ import { FilterPanel } from "@/components/listings/FilterPanel";
 import { ListingCount } from "@/components/listings/ListingCount";
 import { ListingGridSkeleton } from "@/components/listings/ListingGridSkeleton";
 import { HeroBand } from "@/components/marketing/HeroBand";
+import { TelegramPromo } from "@/components/marketing/TelegramPromo";
 import type { ListingCategory, ListingCondition, ListingFilters, ListingType } from "@/types";
 
 /**
@@ -32,6 +33,11 @@ export default async function BrowsePage({ searchParams }: PageProps<"/">) {
       <HeroBand />
 
       <CategoryShortcuts params={params} active={filters.category ?? "all"} />
+
+      {/* No fallback: the strip just appears once its check is done, and never holds up the page. */}
+      <Suspense fallback={null}>
+        <TelegramPromo />
+      </Suspense>
 
       <section id="listings" className="flex flex-col gap-4">
         <header className="flex flex-wrap items-end justify-between gap-2">
