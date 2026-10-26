@@ -155,7 +155,7 @@ when `uniswap` has none, so an older `uniswap` database needs the upgrade SQL (b
   the model is passed in, so `test/assistant.test.js` scripts a fake), `services/gemini.js`
   (`generateContent`, plain `fetch`). Off (503) until `GEMINI_API_KEY` is set. Stateless: the frontend
   sends the conversation with every question. Gemini must call a tool (`mode: "ANY"`): `search_listings`
-  (browse search, active, no wanted posts, 5 results), then `reply { text, listingIds, wantedDraft }`;
+  (browse search, active, no wanted posts or ended auctions, 5 results), then `reply { text, listingIds, wantedDraft }`;
   cards only for ids found in that question; at most 3 calls, the last reply-only. Default model
   `gemini-3.5-flash-lite` (free: 15/minute; `gemini-3.6-flash` is 20/day, `gemini-3.8-flash` hung).
   A 429 says "in a minute" or "tomorrow" (daily limit). Its turns go back unchanged (Gemini 3

@@ -426,7 +426,7 @@ service's web API with `fetch`.
 - **Ask UniSwap, the shopping assistant** (`services/gemini.js`, `utils/assistant.js`, `routes/assistant.js`).
   A student asks in their own words ("a cheap calculator for my exam"). Gemini (`gemini-3.5-flash-lite`,
   free tier) answers by calling two tools: `search_listings`, our normal browse search (active items
-  only, no wanted posts, 5 results), and `reply`, its answer plus the ids of up to 4 listings to show
+  only, no wanted posts or ended auctions, 5 results), and `reply`, its answer plus the ids of up to 4 listings to show
   as cards. It must always call one of them (`mode: "ANY"`). A question gets at most 3 calls, and the
   last may only be `reply`, so there is always an answer: a typical question uses 2, a follow-up like
   "yes, draft it" uses 1.

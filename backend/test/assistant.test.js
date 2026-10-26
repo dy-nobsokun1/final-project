@@ -30,7 +30,10 @@ test("searches, then shows only the found listings that the reply names", async 
   const searches = [];
   const searchListings = async (filters) => {
     searches.push(filters);
-    return [listing("a"), listing("b"), listing("w", { listingType: "buy_request" })];
+    return [
+      listing("a"), listing("b"), listing("w", { listingType: "buy_request" }),
+      listing("e", { listingType: "auction", auction: { ended: true, highestBid: null } }),
+    ];
   };
   const model = fakeModel(
     call("search_listings", { query: "calculator", maxPrice: 20, listingType: "buy_request" }, { thoughtSignature: "sig-1" }),
@@ -53,7 +56,7 @@ test("searches, then shows only the found listings that the reply names", async 
   assert.deepEqual(second.contents[1].parts[0], { functionCall: { id: "call-search_listings", name: "search_listings", args: { query: "calculator", maxPrice: 20, listingType: "buy_request" } }, thoughtSignature: "sig-1" });
   const { functionResponse } = second.contents[2].parts[0];
   assert.equal(functionResponse.id, "call-search_listings");
-  assert.deepEqual(functionResponse.response.listings.map((l) => l.id), ["a", "b"]); // wanted post left out
+  assert.deepEqual(functionResponse.response.listings.map((l) => l.id), ["a", "b"]); // no wanted post or ended auction
   assert.ok(!JSON.stringify(second).includes("Sokunth"));
 });
 

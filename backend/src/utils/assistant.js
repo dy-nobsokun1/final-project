@@ -181,8 +181,9 @@ export async function askAssistant(messages, { generate, searchListings }) {
       if (call.name === "reply") return finish(args, found);
       let response = { error: `There is no tool called ${call.name}.` };
       if (call.name === "search_listings") {
+        // An auction that ended without bids stays active, but can no longer be bid on.
         const items = (await searchListings(searchFilters(args)))
-          .filter((listing) => listing.listingType !== "buy_request")
+          .filter((listing) => listing.listingType !== "buy_request" && !listing.auction?.ended)
           .slice(0, RESULTS_PER_SEARCH);
         for (const item of items) found.set(item.id, item);
         response = { listings: items.map(forModel) };

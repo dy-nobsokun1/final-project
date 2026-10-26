@@ -1,17 +1,15 @@
 "use client";
 
-import { Send, Sparkles } from "lucide-react";
+import { Sparkles } from "lucide-react";
 import { useState } from "react";
+import { AssistantQuestionBox } from "@/components/marketplace/AssistantQuestionBox";
 import { AssistantReply } from "@/components/marketplace/AssistantReply";
 import { AssistantStarters } from "@/components/marketplace/AssistantStarters";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { askAssistant } from "@/lib/api/actions";
 import type { AssistantMessage } from "@/types";
 
-/** The API takes at most 20 messages of 1000 characters each (backend/src/utils/assistant.js). */
+/** The API takes at most 20 messages (backend/src/utils/assistant.js), so only the newest are sent. */
 const MAX_HISTORY = 20;
-const MAX_LENGTH = 1000;
 
 /**
  * Ask UniSwap: a chat with the shopping assistant. The conversation lives only in this page's state
@@ -81,38 +79,13 @@ export function AssistantChat() {
         {isAsking ? "Looking through the listings" : messages.at(-1)?.answer?.reply}
       </p>
 
-      <form
-        onSubmit={(event) => {
-          event.preventDefault();
-          void ask(question);
-        }}
-        className="flex items-center gap-2"
-      >
-        <label htmlFor="assistant-question" className="sr-only">
-          Your question
-        </label>
-        <Input
-          id="assistant-question"
-          value={question}
-          onChange={(event) => setQuestion(event.target.value)}
-          maxLength={MAX_LENGTH}
-          placeholder="e.g. a desk lamp under $10"
-          autoComplete="off"
-          className="h-10"
-        />
-        <Button type="submit" size="icon-lg" disabled={!question.trim() || isAsking} aria-label="Ask">
-          <Send aria-hidden="true" />
-        </Button>
-      </form>
-      {error ? (
-        <p role="alert" className="text-sm text-foreground">
-          {error}
-        </p>
-      ) : null}
-      <p className="text-xs text-muted-foreground">
-        Answers come from Google Gemini, which can make mistakes: check the listing before you buy.
-        Your questions are sent to Google, so leave out personal details.
-      </p>
+      <AssistantQuestionBox
+        value={question}
+        onChange={setQuestion}
+        onAsk={() => void ask(question)}
+        isAsking={isAsking}
+        error={error}
+      />
     </div>
   );
 }
