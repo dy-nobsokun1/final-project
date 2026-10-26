@@ -192,8 +192,13 @@ when `uniswap` has none, so an older `uniswap` database needs the upgrade SQL (b
   tokens a question that is roughly 3 questions a minute and 80 a day for the whole app. Gemini default `gemini-3.5-flash-lite` (the free tier gave
   about 20 requests a day by Oct 2026). A 429 says "in a minute" or "tomorrow". Never send either
   provider seller names or emails. API tests fake Groq and never call a real provider.
-  Frontend: `/assistant` (`components/marketplace/Assistant*.tsx`); the conversation lives in page
-  state only. A draft opens `/listings/new?type=buy_request&title=…`, which fills in `NewListingForm`.
+  Frontend: `/assistant` (`components/marketplace/Assistant*.tsx`).
+  - The conversation is saved per tab in sessionStorage (`hooks/use-assistant-history.ts`, key
+    `uniswap-assistant:<userId>`, newest 20). "New chat" and signing out clear it.
+  - Each question sends only the newest 5 messages (`MESSAGES_SENT`, an odd number so the window starts
+    with a question). That keeps Groq's per-minute token limit for new questions.
+
+  A draft opens `/listings/new?type=buy_request&title=…`, which fills in `NewListingForm`.
 - **Messaging:** there is no conversations table. A thread is all messages between two users about
   one listing (this follows the ER diagram).
 - **Uploads:** `POST /api/uploads` with raw image bytes (max 5 MB; the form takes 4 MB, `MAX_PHOTO_MB`,
@@ -221,6 +226,7 @@ Done (week 6, 26–27 Oct):
 - **Ask UniSwap**, the shopping assistant (Groq, with Gemini as the backup), with its `/assistant` chat page, a pill in the navbar and a link in the hero.
   - It waits and retries when Groq is busy, and retries once on a broken answer.
   - It drafts a wanted post only after the student says yes, using only what they said.
+  - It keeps the chat until the tab closes, and has a "New chat" button.
 - **Search suggestions:** typing in the navbar search box lists up to 5 matching items, with photos and prices.
 - **Home page polish:**
   - The hero says who UniSwap is for and how paying works ("Made for AUPP students", plus three points in `HeroPoints`).
