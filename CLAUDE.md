@@ -90,6 +90,10 @@ when `uniswap` has none, so an older `uniswap` database needs the upgrade SQL (b
   fails, the verification link is printed in the API log.
 - **Search:** full-text (`search_vector` generated column + GIN index), partial words (ILIKE with
   `%`/`_` escaped), and title typos (`pg_trgm`, `word_similarity >= 0.5`). Ranked best match first.
+  `GET /api/listings` also takes `limit` (1–100, default 100). The navbar's suggestions (`components/layout/SearchBox.tsx`,
+  `SearchSuggestions.tsx`, `hooks/use-search-suggestions.ts`) call the Next Route Handler
+  `app/api/search-suggestions`: 5 results, asked 250 ms after typing pauses, older requests aborted, and
+  never any seller data. It is a Route Handler because Server Actions run one at a time and can't be cancelled.
 - **Auctions:** `listing_type = 'auction'` + `auction_ends_at` + `min_increment`; `price` is the
   starting bid. Bids go through `POST /api/listings/:id/bids` (`routes/bids.js`), which locks the
   listing row (`SELECT … FOR UPDATE` in `withTransaction`) so simultaneous bids cannot both win.
@@ -164,7 +168,22 @@ when `uniswap` has none, so an older `uniswap` database needs the upgrade SQL (b
   question. The model must call a tool (Groq `tool_choice: "required"`, Gemini `mode: "ANY"`):
   `search_listings` (browse search, active, no wanted posts or ended auctions, 5 results), then
   `reply { text, listingIds, wantedDraft }`; cards only for ids found in that question; at most 3 calls,
-  the last reply-only. Groq default `qwen/qwen3.8-27b` (`openai/gpt-oss-120b` often answered in plain
+  the last reply-only.
+  - **Retries** (`callModel` in `utils/assistant.js`):
+    - A per-minute 429 waits as long as Groq says, plus 0.5 s, and retries that call once. A question
+      waits at most 20 s in all (`MAX_WAIT_MS`).
+    - A broken tool call is retried once straight away: a 400 `tool_use_failed`, arguments that aren't
+      JSON, an unknown tool, or no reply on the last round.
+    - A question gets at most 2 retries (`MAX_RETRIES`), so at most 5 calls and about 25 s.
+    - Daily 429s and Gemini's 429s are never retried.
+    - When several students wait at once, one can still be told it is busy.
+  - **Wanted drafts:**
+    - When nothing fits, the reply only *offers* a draft.
+    - `wantedDraft` is filled only after the student says yes or asks for one, and all four of its fields are required.
+    - `toWantedDraft` keeps a budget only if the student typed that number, and empties a description
+      that holds a number they never typed.
+
+  Groq default `qwen/qwen3.8-27b` (`openai/gpt-oss-120b` often answered in plain
   text instead of calling `reply`, which Groq refuses with a 400 `tool_use_failed`). Free: 30 requests a
   minute, 1,000 a day, 200K tokens a day, and its 429s name 7,000 input tokens a minute. At about 2.5K
   tokens a question that is roughly 3 questions a minute and 80 a day for the whole app. Gemini default `gemini-3.5-flash-lite` (the free tier gave
@@ -195,8 +214,11 @@ uploads; frontend fully wired to the API. Reviews and ratings once a listing is 
 between the owner and the buyer: whoever paid online, else the auction winner, else the buyer whose
 offer was accepted, else (in-person deals) someone who chatted with the owner both ways (`reviewBlocker` in `routes/reviews.js`). API tests in `backend/test/api/`.
 
-Done (week 6, 26 Oct):
+Done (week 6, 26–27 Oct):
 - **Ask UniSwap**, the shopping assistant (Groq, with Gemini as the backup), with its `/assistant` chat page, a pill in the navbar and a link in the hero.
+  - It waits and retries when Groq is busy, and retries once on a broken answer.
+  - It drafts a wanted post only after the student says yes, using only what they said.
+- **Search suggestions:** typing in the navbar search box lists up to 5 matching items, with photos and prices.
 - **Home page polish:**
   - The hero says who UniSwap is for and how paying works ("Made for AUPP students", plus three points in `HeroPoints`).
   - The Telegram strip shows for everyone.
@@ -212,8 +234,8 @@ deployment, Cloudinary photos, Stripe test payments, Telegram bot.
 
 ### Picking up on another machine
 
-Everything above is pushed to `implement_backend`. Last full check (26 Oct):
-- `npm test` (40) and `npm run test:api` (101) pass.
+Everything above is pushed to `implement_backend`. Last full check (27 Oct):
+- `npm test` (47) and `npm run test:api` (102) pass.
 - The frontend's lint and `tsc --noEmit` are clean.
 - `next build` was last run before the 26 Oct UI work.
 After `git pull origin implement_backend`:
@@ -233,6 +255,8 @@ After `git pull origin implement_backend`:
 2. **Open the PR** from `implement_backend` into `dy-nobsokun1/final-project` `main` (only when asked).
 3. **Deploy** by following `DEPLOY.md`. Set up Cloudinary before Render, because Render wipes uploaded
    photos. A new Supabase database is built from `schema.sql`, so it needs no upgrade blocks.
+   An Ask UniSwap question can take about 25 s when Groq makes it wait, so check that Vercel's function
+   time limit allows that (Fluid compute allows far more; Hobby without it stops at 10 s).
 4. **Demo: desktop first.** The demo is shown from a laptop on a projector whose size is unknown.
    - Check pages at 1280×800 and 1024×768 (older projectors, or 1280 zoomed to 125%).
    - Phone-only work is paused until after the demo.
