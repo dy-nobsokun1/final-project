@@ -1,6 +1,8 @@
 import Link from "next/link";
+import { Suspense } from "react";
 import { ArrowRight, Recycle } from "lucide-react";
 import { HeroHeading } from "@/components/marketing/HeroHeading";
+import { HeroPhotos } from "@/components/marketing/HeroPhotos";
 import { HeroSubheading } from "@/components/marketing/HeroSubheading";
 
 /** Brand banner that sits above the browse filters on the home page. */
@@ -41,6 +43,14 @@ export function HeroBand() {
             Browse listings
           </a>
         </div>
+      </div>
+
+      {/* The newest items, on the empty right half from `lg` up. Its own Suspense, so the
+          heading and buttons never wait for it. */}
+      <div className="absolute inset-y-0 right-10 hidden items-center lg:flex">
+        <Suspense fallback={null}>
+          <HeroPhotos />
+        </Suspense>
       </div>
     </section>
   );
