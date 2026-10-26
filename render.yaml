@@ -44,3 +44,5 @@ services:
         sync: false
       - key: TELEGRAM_BOT_USERNAME
         sync: false
+      - key: GEMINI_API_KEY # free key from aistudio.google.com/apikey
+        sync: false

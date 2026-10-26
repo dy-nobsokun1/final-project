@@ -2,6 +2,7 @@ import express from "express";
 import { query } from "./db/pool.js";
 import { cors } from "./middleware/cors.js";
 import { errorHandler, notFound } from "./middleware/errorHandler.js";
+import { assistantRouter } from "./routes/assistant.js";
 import { authRouter } from "./routes/auth.js";
 import { bidsRouter } from "./routes/bids.js";
 import { khqrRouter } from "./routes/khqr.js";
@@ -29,6 +30,7 @@ app.get("/api/health", async (req, res) => {
   res.json({ status: "ok" });
 });
 
+app.use("/api/assistant", assistantRouter);
 app.use("/api/auth", authRouter);
 app.use("/api/listings/:id/bids", bidsRouter);
 app.use("/api/listings/:id/reviews", listingReviewsRouter);

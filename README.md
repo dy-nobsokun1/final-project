@@ -53,14 +53,14 @@ Putting it online (Supabase, Render, Vercel, Cloudinary, Stripe, Telegram): [`DE
 
 ### Tested
 
-- `npm test` (in `backend/`): 32 unit tests for validation (including the photo rules), the search
-  query and wanted-post matching, the payment amount rules, the Stripe and Cloudinary helpers, and
-  the KHQR builder (checked against the National Bank's own library).
-- `npm run test:api` (in `backend/`): 96 tests that send real requests to the running API, covering
+- `npm test` (in `backend/`): 38 unit tests for validation (including the photo rules), the search
+  query and wanted-post matching, the payment amount rules, the Stripe and Cloudinary helpers, the
+  KHQR builder (checked against the National Bank's own library), and the shopping assistant's tool loop.
+- `npm run test:api` (in `backend/`): 99 tests that send real requests to the running API, covering
   sign-up and verification, password reset and change, owner-only changes, messaging, simultaneous
   bids, card and KHQR payments, reviews, saved listings, listing photos, wanted-post matching and
   alerts, offers (including two accepted at the same moment), and refusing to delete a listing whose
-  payments or reviews must stay.
+  payments or reviews must stay, and the shopping assistant (with a fake Gemini).
   They use a separate test database (see [Testing](backend/README.md#testing)).
 
 ### Not done yet
@@ -70,6 +70,8 @@ Putting it online (Supabase, Render, Vercel, Cloudinary, Stripe, Telegram): [`DE
   set, photos are saved on the server's disk, and payments and Telegram stay switched off.
 - **KHQR on Render:** Bakong only answers Cambodian IP addresses, so KHQR works when the API runs
   in Cambodia (e.g. a laptop for the demo), not on Render.
+- **Ask UniSwap (shopping assistant):** the API is built and tested with a fake Gemini
+  (`POST /api/assistant`); the chat page is not built yet, and it needs a free key in `GEMINI_API_KEY`.
 - **Possible next steps:** real-time chat, safe meetup spots, and notification settings.
 
 ### Known limitations (by design)

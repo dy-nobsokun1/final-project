@@ -62,7 +62,7 @@ backend/
 │   ├── config.js       reads environment variables
 │   ├── db/             schema.sql, connection pool, shared listing query, wanted-post matching, offer helpers
 │   ├── middleware/     requireAuth (JWT), CORS, error handler
-│   ├── routes/         auth, listings, bids, offers, reviews, saved, users, messages, payments, telegram, uploads
+│   ├── routes/         auth, listings, bids, offers, reviews, saved, users, messages, payments, telegram, uploads, assistant
 │   └── utils/          validation, password hashing, tokens, JSON serializers, email
 └── test/               unit tests; test/api/ holds the API tests (see Testing)
 ```
@@ -390,7 +390,7 @@ Notifications never block or break the request that caused them: if email is not
 are skipped with a log line, and send failures are logged, not returned to the user. User-written
 text (messages, names, titles) is HTML-escaped in the email.
 
-### Payments, photos and Telegram (optional services)
+### Payments, photos, Telegram and the assistant (optional services)
 
 Each one is switched off until its keys are in `.env` (see `.env.example`). Setup steps are in
 [`../DEPLOY.md`](../DEPLOY.md). None of them needs an npm package: `src/services/` calls each
@@ -423,6 +423,19 @@ service's web API with `fetch`.
 - **Telegram** (`services/telegram.js`, `routes/telegram.js`, `utils/telegramBot.js`). Settings gives
   a one-time `t.me/<bot>?start=<code>` link. The bot (long polling, so no public URL is needed)
   links the chat. After that, every notification goes to Telegram as well as email.
+- **Ask UniSwap, the shopping assistant** (`services/gemini.js`, `utils/assistant.js`, `routes/assistant.js`).
+  A student asks in their own words ("a cheap calculator for my exam"). Gemini (`gemini-3.8-flash`,
+  free tier) answers by calling two tools: `search_listings`, our normal browse search (active items
+  only, no wanted posts, 5 results), and `reply`, its answer plus the ids of up to 4 listings to show
+  as cards. It must always call one of them (`mode: "ANY"`), and gets at most 5 calls per question.
+  Cards can only be listings its searches returned in that question, so it cannot show a made-up
+  item. When nothing fits, `reply` can carry a wanted-post draft, which the student checks and posts
+  themselves: the assistant never writes to the database. Nothing is stored either: the frontend
+  sends the conversation with each question. Gemini 3 signs its tool calls ("thought signatures"),
+  so `askAssistant` sends its turns back exactly as they came. Gemini only sees the question and
+  each listing's title, type, price, category, condition and the start of its description, never
+  seller names or emails, because Google may read free-tier requests. A 429 from Gemini (free
+  quota used up) becomes our 429 "try again in a minute".
 
 **Upgrading a database created before payments and Telegram?** Run this once. It keeps your data and is safe to re-run:
 
@@ -518,6 +531,8 @@ A token issued before the account's last password change or reset is refused (40
 | POST 🔒 | `/api/messages` | `{ listingId, receiverId, body }` |
 | PATCH 🔒 | `/api/messages/read` | `{ listingId, withUserId }` → mark a thread read |
 | POST 🔒 | `/api/uploads` | One photo per request: raw image bytes with `Content-Type: image/jpeg`, `png`, `webp` or `gif` (max 5 MB) → `{ url }` |
+| GET | `/api/assistant/config` | `{ enabled }`: whether the shopping assistant is switched on (`GEMINI_API_KEY` set) |
+| POST 🔒 | `/api/assistant` | `{ messages: [{ role: "user" \| "assistant", text }] }`, oldest first, at most 20, each 1 to 1000 characters, the last one the student's → `{ reply, listings, wantedDraft }`. `listings`: up to 4 full listings to show as cards. `wantedDraft`: `null` or `{ title, description, category, budget }` to fill in the new-listing form. `503` while switched off, `429` while Gemini's free quota is used up, `502` if Gemini fails (see Ask UniSwap above) |
 
 Uploaded photos are saved in `backend/uploads/` (git-ignored) and served at `/uploads/<file>`.
 Put the returned `url` in a listing's `imageUrls` (at most 6; only URLs from this route are accepted).
@@ -528,14 +543,15 @@ Errors always look like `{ "error": "message", "details": { "field": "message" }
 ## Testing
 
 - `npm test` runs the unit tests in `test/*.test.js`: validation, the search query builder, the
-  payment amount rules, the Stripe and Cloudinary helpers, and the KHQR builder and Bakong answers.
-  No database or network needed.
+  payment amount rules, the Stripe and Cloudinary helpers, the KHQR builder and Bakong answers, and
+  the shopping assistant's tool loop (with a scripted fake Gemini). No database or network needed.
 - `npm run test:api` runs the API tests in `test/api/`. Each file starts the real app on a free port
   and sends it real HTTP requests, so routes, SQL and database rules are tested together: sign-up and
   verification, password reset and change, owner-only changes, messaging, bidding (including five
   bids at the same moment), payments with Stripe switched off, KHQR payments (with Bakong replaced by
   a fake), reviews, saved listings (including who gets a price-drop alert), listing photo rules,
-  wanted-post matching and alerts, and offers (including two accepted at the same moment).
+  wanted-post matching and alerts, offers (including two accepted at the same moment), and the
+  shopping assistant (with Gemini replaced by a fake that also checks no seller details are sent).
 
 The API tests need their own database, because `test/api/reset-db.js` wipes it before every run.
 Create it once, then put its URL in `.env` as `TEST_DATABASE_URL` (see `.env.example`):
@@ -546,7 +562,7 @@ docker exec <container> createdb -U <user> uniswap_test    # PostgreSQL in Docke
 ```
 
 The tests refuse to run if `TEST_DATABASE_URL` is the same database as `DATABASE_URL`. They switch
-off email, Stripe, Bakong, Telegram and Cloudinary, so a test run never sends anything.
+off email, Stripe, Bakong, Telegram, Cloudinary and Gemini, so a test run never sends anything.
 While email is off the API prints verification and reset links in its log; `test/api/helpers.js`
 hides those lines and keeps them (`loggedLinks`), so a test opens a reset link the way a person would.
 It keeps the "email not configured, skipped" lines of notifications too (`skippedEmails`), so a test
@@ -566,6 +582,10 @@ can check who would have been emailed, waiting with `waitFor` because notificati
   it is never printed in the log in production or once email is set up.
 - **Privacy:** emails and Bakong account IDs appear only on your own account, never on public
   profiles. (A buyer does see the seller's Bakong account inside the KHQR, as with any bank transfer.)
+- **Shopping assistant:** it can only search; it never writes to the database, and a wanted-post draft
+  is only filled into the form for the student to check. Its instructions say listing text is data,
+  never instructions, and its cards can only be listings its own searches returned. Gemini never
+  gets seller names or emails.
 - **Secrets:** live in `.env` (git-ignored). Nothing secret is committed.
 
 ## Progress

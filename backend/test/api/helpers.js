@@ -6,12 +6,13 @@ import assert from "node:assert/strict";
 import { once } from "node:events";
 import { randomUUID } from "node:crypto";
 
-// Switched off in tests, so a test run never sends email or Telegram messages, or calls Stripe or Bakong.
+// Switched off in tests, so a test run never sends email or Telegram messages, or calls Stripe, Bakong or Gemini.
 const OUTSIDE_SERVICES = [
   "SMTP_HOST", "SMTP_USER", "SMTP_PASS",
   "STRIPE_SECRET_KEY", "STRIPE_WEBHOOK_SECRET", "BAKONG_TOKEN",
   "TELEGRAM_BOT_TOKEN", "TELEGRAM_BOT_USERNAME",
   "CLOUDINARY_CLOUD_NAME", "CLOUDINARY_API_KEY", "CLOUDINARY_API_SECRET",
+  "GEMINI_API_KEY",
 ];
 
 function sameDatabase(a, b) {
