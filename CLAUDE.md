@@ -247,4 +247,11 @@ After `git pull origin implement_backend`:
      - the navbar is too wide at about 768 px;
      - the hero fills the first screen, so no items show without scrolling;
      - the Wanted card's "Have one? Message them →" wraps at 375 px.
-6. Later ideas: real-time chat, safe meetup spots, and per-user notification preferences.
+6. Later ideas (after the demo):
+   - real-time chat;
+   - safe meetup spots;
+   - per-user notification preferences;
+   - **dark mode.** The page is already the dark green field, so this means dark cards, forms and chat
+     bubbles. `globals.css` has a `.dark` block that nothing turns on yet. A switch needs every
+     light surface re-checked for contrast. Not before the demo: projectors show dark colours
+     poorly, and the pale cards keep it readable.
