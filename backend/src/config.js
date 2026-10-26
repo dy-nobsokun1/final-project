@@ -45,8 +45,10 @@ export const config = {
   groq: {
     apiKey: process.env.GROQ_API_KEY,
     // Free plan, from console.groq.com/docs/rate-limits on 26 Oct 2026: 30 requests a minute and
-    // 1,000 a day, 8,000 tokens a minute and 200,000 a day.
-    model: process.env.GROQ_MODEL ?? "openai/gpt-oss-120b",
+    // 1,000 a day, 200,000 tokens a day, and (its 429 says) 7,000 input tokens a minute, about 3 questions.
+    // openai/gpt-oss-120b has the same limits, but after a search it often wrote its answer as plain
+    // text instead of calling reply, which Groq refuses (400 tool_use_failed). Qwen calls the tools.
+    model: process.env.GROQ_MODEL ?? "qwen/qwen3.8-27b",
   },
   gemini: {
     apiKey: process.env.GEMINI_API_KEY,

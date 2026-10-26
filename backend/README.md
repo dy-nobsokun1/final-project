@@ -450,10 +450,13 @@ service's web API with `fetch`.
   for example to fall back to Gemini on a day Groq has trouble; restart the API after changing it.
   `askAssistant` works with a neutral list of turns, and each adapter turns it into its own API's
   format (Groq's OpenAI-style `tool_calls`; Gemini 3's signed tool calls, sent back exactly as they came).
-  **Groq** (default model `openai/gpt-oss-120b`, change it with `GROQ_MODEL`): free key, no card, at
+  **Groq** (default model `qwen/qwen3.8-27b`, change it with `GROQ_MODEL`): free key, no card, at
   [console.groq.com](https://console.groq.com). Free limits from
   [its docs](https://console.groq.com/docs/rate-limits) on 26 Oct 2026: 30 requests a minute and 1,000
-  a day, 8,000 tokens a minute and 200,000 a day, for the whole key.
+  a day, 200,000 tokens a day, for the whole key; its 429s name a limit of 7,000 input tokens a minute.
+  A question uses about 2,500 tokens (two calls of about 1.2K), so that is about 3 questions a minute.
+  `openai/gpt-oss-120b` has the same limits but often wrote its answer as plain text instead of
+  calling `reply`, which Groq refuses (400 `tool_use_failed`), so it is not the default.
   **Gemini** (default `gemini-3.5-flash-lite`, change it with `GEMINI_MODEL`): free-tier limits are
   per Google project, shown at [aistudio.google.com/rate-limit](https://aistudio.google.com/rate-limit).
   Measured on 26 Oct 2026: `gemini-3.5-flash-lite` allows 15 requests a minute; `gemini-3.6-flash`

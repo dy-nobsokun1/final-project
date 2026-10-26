@@ -170,7 +170,6 @@ test("Groq: OpenAI-style tool calls, a forced tool every round, and no seller de
   assert.deepEqual(first.tools.map((t) => [t.type, t.function.name]), [["function", "search_listings"], ["function", "reply"]]);
   assert.equal(first.tool_choice, "required");
   assert.deepEqual(last.tool_choice, { type: "function", function: { name: "reply" } });
-  assert.equal(first.reasoning_effort, "low");
   // The call goes back with its id, then the result as a "tool" message linked to it.
   const [asked, answered] = last.messages.slice(4, 6);
   assert.deepEqual(asked.tool_calls[0], { id: "t1", type: "function", function: { name: "search_listings", arguments: '{"query":"lamp","maxPrice":10}' } });
@@ -183,9 +182,9 @@ test("Groq: OpenAI-style tool calls, a forced tool every round, and no seller de
 
 test("Groq: a 429 says whether the minute's or the day's limit is used up", async () => {
   const limit = (message) => ({ status: 429, body: { error: { message, type: "requests", code: "rate_limit_exceeded" } } });
-  fakeFetch(limit("Rate limit reached for model `openai/gpt-oss-120b` on requests per minute (RPM): Limit 30, Used 30. Please try again in 2s."));
+  fakeFetch(limit("Rate limit reached for model `qwen/qwen3.8-27b` on input tokens per minute (ITPM): Limit 7000, Used 6850, Requested 1225. Please try again in 9.2s."));
   await assert.rejects(askAssistant(ask("lamp"), { ask: askGroq, searchListings: noSearch }), { status: 429, dailyLimit: false });
-  fakeFetch(limit("Rate limit reached for model `openai/gpt-oss-120b` on tokens per day (TPD): Limit 200000, Used 199500. Please try again in 7m12s."));
+  fakeFetch(limit("Rate limit reached for model `qwen/qwen3.8-27b` on tokens per day (TPD): Limit 200000, Used 199500. Please try again in 7m12s."));
   await assert.rejects(askAssistant(ask("lamp"), { ask: askGroq, searchListings: noSearch }), { status: 429, dailyLimit: true });
 });
 

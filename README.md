@@ -77,7 +77,7 @@ Putting it online (Supabase, Render, Vercel, Cloudinary, Stripe, Telegram): [`DE
 - **KHQR on Render:** Bakong only answers Cambodian IP addresses, so KHQR works when the API runs
   in Cambodia (e.g. a laptop for the demo), not on Render.
 - **Ask UniSwap's free tier:** the model's free limits are shared by every student (Groq's
-  `openai/gpt-oss-120b`: 30 requests a minute, 1,000 requests and 200,000 tokens a day), so it suits a
+  `qwen/qwen3.8-27b`: about 3 questions a minute, 1,000 requests and 200,000 tokens a day), so it suits a
   demo, not heavy use. Gemini is the backup (`ASSISTANT_PROVIDER=gemini`), with much lower limits.
 - **Possible next steps:** real-time chat, safe meetup spots, and notification settings.
 

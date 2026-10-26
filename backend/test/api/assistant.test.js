@@ -14,7 +14,7 @@ globalThis.fetch = async (url, options) => {
   if (String(url).startsWith("https://generativelanguage.googleapis.com/")) throw new Error("Gemini was called instead of Groq");
   if (!String(url).startsWith("https://api.groq.com/")) return realFetch(url, options);
   if (groq.limit) {
-    const message = `Rate limit reached for model \`openai/gpt-oss-120b\` on requests per ${groq.limit} (RP${groq.limit[0].toUpperCase()}): Limit 30, Used 30, Requested 1. Please try again in 2s.`;
+    const message = `Rate limit reached for model \`qwen/qwen3.8-27b\` on requests per ${groq.limit} (RP${groq.limit[0].toUpperCase()}): Limit 30, Used 30, Requested 1. Please try again in 2s.`;
     return Response.json({ error: { message, type: "requests", code: "rate_limit_exceeded" } }, { status: 429 });
   }
   const body = JSON.parse(options.body);

@@ -56,9 +56,6 @@ export async function askGroq({ system, tools, turns, onlyReply }) {
       // "required": the model must always call a tool, so every answer arrives through reply. On the
       // last round it must call reply itself, so the student always gets an answer.
       tool_choice: onlyReply ? { type: "function", function: { name: "reply" } } : "required",
-      // gpt-oss thinks before answering. Choosing listings needs little of it, and less is faster
-      // and uses fewer of the free tokens. (Other models may not accept this setting.)
-      ...(model.startsWith("openai/gpt-oss") && { reasoning_effort: "low" }),
       max_completion_tokens: 1024,
     }),
     signal: AbortSignal.timeout(TIMEOUT_MS),
