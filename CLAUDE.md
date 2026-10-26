@@ -90,6 +90,9 @@ when `uniswap` has none, so an older `uniswap` database needs the upgrade SQL (b
   fails, the verification link is printed in the API log.
 - **Search:** full-text (`search_vector` generated column + GIN index), partial words (ILIKE with
   `%`/`_` escaped), and title typos (`pg_trgm`, `word_similarity >= 0.5`). Ranked best match first.
+  The typo test applies only to terms of 4+ characters (`TYPO_MIN_LENGTH`), so "ram" no longer finds
+  "racket". Wanted matches share the rule. The two GPU samples' titles end in "graphics card" and their
+  descriptions say "GPU", so "gpu" and "grafics card" find them.
   `GET /api/listings` also takes `limit` (1–100, default 100). The navbar's suggestions (`components/layout/SearchBox.tsx`,
   `SearchSuggestions.tsx`, `hooks/use-search-suggestions.ts`) call the Next Route Handler
   `app/api/search-suggestions`: 5 results, asked 250 ms after typing pauses, older requests aborted, and
@@ -235,7 +238,7 @@ deployment, Cloudinary photos, Stripe test payments, Telegram bot.
 ### Picking up on another machine
 
 Everything above is pushed to `implement_backend`. Last full check (27 Oct):
-- `npm test` (47) and `npm run test:api` (102) pass.
+- `npm test` (48) and `npm run test:api` (103) pass.
 - The frontend's lint and `tsc --noEmit` are clean.
 - `next build` was last run before the 26 Oct UI work.
 After `git pull origin implement_backend`:
