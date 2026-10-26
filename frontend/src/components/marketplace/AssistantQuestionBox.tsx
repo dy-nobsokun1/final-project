@@ -13,7 +13,7 @@ interface AssistantQuestionBoxProps {
   error: string | null;
 }
 
-/** Ask UniSwap's question box, with the last error and a note on where questions go. */
+/** Ask UniSwap's question box, with the last error under it. */
 export function AssistantQuestionBox({ value, onChange, onAsk, isAsking, error }: AssistantQuestionBoxProps) {
   return (
     <div className="flex flex-col gap-3">
@@ -57,10 +57,6 @@ export function AssistantQuestionBox({ value, onChange, onAsk, isAsking, error }
           {error}
         </p>
       ) : null}
-      <p className="text-xs text-muted-foreground">
-        Answers come from Google Gemini, which can make mistakes: check the listing before you buy.
-        Your questions are sent to Google, so leave out personal details.
-      </p>
     </div>
   );
 }
