@@ -49,7 +49,7 @@ npm test             # unit tests (node --test)
 npm run test:api     # API tests: real HTTP against TEST_DATABASE_URL (a separate DB they wipe)
 npm run db:setup     # recreate tables: WIPES ALL DATA
 npm run db:seed      # demo data
-npm run db:samples   # +81 sample items from DummyJSON/Open Library (-- --remove to undo)
+npm run db:samples   # +55 sample items: hand-written with Commons/Flickr photos (credits in the JSON), plus Open Library textbooks (-- --remove to undo)
 npm run email:test -- someone@aupp.edu.kh
 
 # frontend/
@@ -105,7 +105,10 @@ when `uniswap` has none, so an older `uniswap` database needs the upgrade SQL (b
   keys are set: Stripe Checkout **test mode only** (`routes/payments.js`; `markPaid` is idempotent and
   marks the item sold; the webhook needs the raw body, so it is mounted before `express.json` in
   `app.js`), Cloudinary uploads, and a Telegram bot (long polling, linked through a one-time `/start`
-  code). `notify.js` sends to Telegram as well as email. Deploy guide: `DEPLOY.md`; Render blueprint: `render.yaml`.
+  code). `notify.js` sends to Telegram as well as email. The public `GET /api/telegram` answers
+  `{ enabled, botUrl }` for the home page's strip (`TelegramPromo`): "Sign in to connect" when signed
+  out, "Connect Telegram" when not linked, "Open Telegram" (the bot chat) when linked. It is in the first
+  HTML, and its X hides it only until the next page load. Deploy guide: `DEPLOY.md`; Render blueprint: `render.yaml`.
 - **KHQR (Bakong), real money:** the buyer pays the seller's own Bakong account (`users.bakong_account_id`,
   set in Settings); UniSwap never holds money. `utils/khqr.js` builds the QR text by hand (no package;
   matches NBC's `bakong-khqr` library exactly, see `test/khqr.test.js`). `services/bakong.js` checks
@@ -185,19 +188,35 @@ uploads; frontend fully wired to the API. Reviews and ratings once a listing is 
 between the owner and the buyer: whoever paid online, else the auction winner, else the buyer whose
 offer was accepted, else (in-person deals) someone who chatted with the owner both ways (`reviewBlocker` in `routes/reviews.js`). API tests in `backend/test/api/`.
 
+Done (week 6, 26 Oct):
+- **Ask UniSwap**, the Gemini shopping assistant, with its `/assistant` chat page, a pill in the navbar and a link in the hero.
+- **Home page polish:**
+  - The hero says who UniSwap is for and how paying works ("Made for AUPP students", plus three points in `HeroPoints`).
+  - The Telegram strip shows for everyone.
+  - Wanted posts get their own dark, dashed card (`WantedCard`), and `HeroPhotos` skips them.
+- **Realistic sample data:** PC parts and everyday student items, with real photos.
+- **Inbox and listing pages:**
+  - Chat rows show the listing's photo and the last message.
+  - The listing page has a phone buy bar.
+  - The sell form picks the type with tiles.
+
 Built but needs the team's own accounts/keys (see `DEPLOY.md`): Supabase database, Render + Vercel
 deployment, Cloudinary photos, Stripe test payments, Telegram bot.
 
 ### Picking up on another machine
 
-Everything above is pushed to `implement_backend`. Last full check: `npm test` (38) and
-`npm run test:api` (100) pass, and the frontend's lint, `tsc --noEmit` and `next build` are clean.
+Everything above is pushed to `implement_backend`. Last full check (26 Oct):
+- `npm test` (38) and `npm run test:api` (101) pass.
+- The frontend's lint and `tsc --noEmit` are clean.
+- `next build` was last run before the 26 Oct UI work.
 After `git pull origin implement_backend`:
 
 - No packages were added, but run `npm install` in `backend/` and `frontend/` if they are stale.
 - Upgrade your local `uniswap` database: run the blocks under "Upgrading an existing database to this
   version" in `backend/README.md`, or `npm run db:setup && npm run db:seed` if it only holds demo
   data. The test database needs nothing: `npm run test:api` rebuilds it from `schema.sql`.
+- To swap in the new sample items, run `npm run db:samples -- --remove && npm run db:samples`. It only
+  touches the `@demo.edu.kh` sellers.
 
 ### Next steps
 
@@ -207,11 +226,18 @@ After `git pull origin implement_backend`:
 2. **Open the PR** from `implement_backend` into `dy-nobsokun1/final-project` `main` (only when asked).
 3. **Deploy** by following `DEPLOY.md`. Set up Cloudinary before Render, because Render wipes uploaded
    photos. A new Supabase database is built from `schema.sql`, so it needs no upgrade blocks.
-4. **Frontend follow-ups for Dy** (found in browser testing, not fixed yet):
-   - the navbar is too wide at about 768 px;
+4. **Demo: desktop first.** The demo is shown from a laptop on a projector whose size is unknown.
+   - Check pages at 1280×800 and 1024×768 (older projectors, or 1280 zoomed to 125%).
+   - Phone-only work is paused until after the demo.
+   - Before the demo, try the room: the screen size macOS picks, the HDMI adapter, and how the pale greens look on the projector.
+5. **Frontend follow-ups for Dy** (found in browser testing, not fixed yet):
    - a heart tapped while signed out should return to the listing after login;
    - `PhotoPicker` does not clear its error, and focus is lost after "Make cover";
-   - `forms/NewListingForm.tsx` is 161 lines, over the ~100-line rule;
+   - `forms/NewListingForm.tsx` is 155 lines, over the ~100-line rule;
    - the offer panels still show the agreed amount after the seller cuts the price below it. The
      buyer pays the lower price, so only the text is wrong.
-5. Later ideas: real-time chat, safe meetup spots, and per-user notification preferences.
+   - Phone sizes, paused until after the demo:
+     - the navbar is too wide at about 768 px;
+     - the hero fills the first screen, so no items show without scrolling;
+     - the Wanted card's "Have one? Message them →" wraps at 375 px.
+6. Later ideas: real-time chat, safe meetup spots, and per-user notification preferences.
