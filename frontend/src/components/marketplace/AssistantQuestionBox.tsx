@@ -55,13 +55,14 @@ export function AssistantQuestionBox({ value, onChange, onAsk, isAsking, error }
           placeholder={`e.g. ${EXAMPLE}`}
           autoComplete="off"
           aria-describedby={isEmpty ? HINT_ID : undefined}
-          className="h-full border-0 bg-transparent px-0 focus-visible:ring-0 dark:bg-transparent"
+          className="peer h-full border-0 bg-transparent px-0 focus-visible:ring-0 dark:bg-transparent"
         />
-        {/* The Tab key hint, only while the box is empty. Screen readers hear the sentence instead
+        {/* The Tab key hint, only while the box is empty and focused, which is when Tab fills it in
+            (peer-focus: the input is the peer). Screen readers hear the sentence instead
             (black on #B1D3B9 is 12.9:1). */}
         {isEmpty ? (
           <>
-            <kbd aria-hidden="true" className="shrink-0 rounded-md border border-brand-ink/40 bg-brand-200 px-1.5 py-0.5 font-sans text-xs font-medium text-brand-ink">
+            <kbd aria-hidden="true" className="hidden shrink-0 rounded-md border border-brand-ink/40 bg-brand-200 px-1.5 py-0.5 font-sans text-xs font-medium text-brand-ink peer-focus:block">
               Tab
             </kbd>
             <span id={HINT_ID} className="sr-only">Press Tab to use the example</span>
