@@ -1,8 +1,9 @@
 import Link from "next/link";
 import { Suspense } from "react";
-import { ArrowRight, Recycle, Sparkles } from "lucide-react";
+import { ArrowRight, GraduationCap, Sparkles } from "lucide-react";
 import { HeroHeading } from "@/components/marketing/HeroHeading";
 import { HeroPhotos } from "@/components/marketing/HeroPhotos";
+import { HeroPoints } from "@/components/marketing/HeroPoints";
 import { HeroSubheading } from "@/components/marketing/HeroSubheading";
 
 /** Brand banner that sits above the browse filters on the home page. */
@@ -14,8 +15,8 @@ export function HeroBand() {
 
       <div className="relative flex flex-col gap-6 px-6 py-10 sm:px-10 sm:py-14">
         <span className="inline-flex w-fit items-center gap-2 rounded-full border border-border bg-brand-50 px-3 py-1 text-xs font-semibold text-brand-ink">
-          <Recycle aria-hidden="true" className="size-3.5" />
-          Campus-only marketplace
+          <GraduationCap aria-hidden="true" className="size-3.5" />
+          Made for AUPP students
         </span>
 
         {/* Bebas Neue: the big condensed display line, animated per word. */}
@@ -23,6 +24,9 @@ export function HeroBand() {
 
         {/* Subheading, typed out on load. */}
         <HeroSubheading />
+
+        {/* Who can join, how to pay, where to meet. */}
+        <HeroPoints />
 
         <div className="flex flex-col gap-3">
           <div className="flex flex-wrap items-center gap-3">

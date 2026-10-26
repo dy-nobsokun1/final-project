@@ -7,29 +7,38 @@ import {
 } from '@/components/animate-ui/primitives/texts/typing';
 
 const COPY =
-  'Textbooks, bikes, furniture and more from students you share a campus with. List an item in under a minute.';
+  'Buy, sell, trade or give away textbooks, PC parts, bikes and more with other students. Pay online, or in cash when you meet on campus.';
 
 /**
  * Hero subheading, typed out on load.
  *
- * `duration` is milliseconds per character, so 18ms over the 107-character copy
- * lands at roughly 1.9s. `delay` starts it just after the heading's entrance so
+ * `duration` is milliseconds per character, so 15ms over the 134-character copy
+ * lands at about 2s. `delay` starts it just after the heading's entrance so
  * the two animations do not compete. It does not loop -- the copy is meant to be
  * read once, not cycled.
  *
  * The cursor blinks while idle and holds solid while typing, which is the
  * primitive's own behaviour via the shared context.
  *
- * `min-h` reserves the height of the two rendered lines: the span starts empty,
- * so without it the paragraph would collapse and shove the CTA row downward as
- * the text filled in.
+ * Three copies of the text share one grid cell:
+ * - an invisible full copy holds the paragraph at its final height at any width,
+ *   so the points and buttons below never move while the text fills in. With
+ *   reduced motion it is the one shown, and the typing is hidden;
+ * - the typed copy, which screen readers skip, since it changes letter by letter;
+ * - a screen-reader-only full copy, read once.
  */
 export function HeroSubheading() {
   return (
-    <p className="min-h-[3rem] max-w-md text-base text-brand-ink">
-      <TypingText duration={18} delay={400} text={COPY}>
-        <TypingTextCursor className="ml-1 !h-4 !w-[2px] rounded-full" />
-      </TypingText>
+    <p className="grid max-w-md text-base text-brand-ink">
+      <span aria-hidden="true" className="invisible col-start-1 row-start-1 motion-reduce:visible">
+        {COPY}
+      </span>
+      <span aria-hidden="true" className="col-start-1 row-start-1 motion-reduce:hidden">
+        <TypingText duration={15} delay={400} text={COPY}>
+          <TypingTextCursor className="ml-1 !h-4 !w-[2px] rounded-full" />
+        </TypingText>
+      </span>
+      <span className="sr-only">{COPY}</span>
     </p>
   );
 }
