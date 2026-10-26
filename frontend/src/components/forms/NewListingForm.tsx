@@ -5,11 +5,12 @@ import { useState } from "react";
 import { AuctionFields } from "@/components/forms/AuctionFields";
 import { Field, FieldInput, FieldTextarea } from "@/components/forms/Field";
 import { FieldSelect } from "@/components/forms/FieldSelect";
+import { ListingTypeTiles } from "@/components/forms/ListingTypeTiles";
 import { PhotoPicker } from "@/components/forms/PhotoPicker";
 import { Button } from "@/components/ui/button";
 import { useListingPhotos } from "@/hooks/use-listing-photos";
 import { createListing, updateListing } from "@/lib/api/actions";
-import { CATEGORIES, CONDITIONS, LISTING_TYPES, priceFieldLabel } from "@/lib/constants";
+import { CATEGORIES, CONDITIONS, priceFieldLabel } from "@/lib/constants";
 import type { Listing } from "@/types";
 
 /** Matches the API's longest auction (MAX_AUCTION_DAYS in backend/src/utils/validation.js). */
@@ -71,6 +72,9 @@ export function NewListingForm({ listing }: { listing?: Listing }) {
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+      {!lockedByBids ? (
+        <ListingTypeTiles value={listingType} onChange={setListingType} error={errors.listingType} />
+      ) : null}
       {/* Field box is brand-50 at 40%, which resolves to roughly #C6DFC7 over
           the #B1D3B9 card, and the placeholder sits at 50% for a see-through
           hint. #2E2E2E at 50% measures 2.65:1 against that box -- under the
@@ -96,16 +100,6 @@ export function NewListingForm({ listing }: { listing?: Listing }) {
       </Field>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        {!lockedByBids ? (
-          <Field label="Listing type" error={errors.listingType}>
-            <FieldSelect
-              name="listingType"
-              defaultValue={listing?.listingType ?? "sale"}
-              options={LISTING_TYPES}
-              onValueChange={setListingType}
-            />
-          </Field>
-        ) : null}
         {/* A giveaway has no price, so the field is hidden and the price is sent as 0.
             A disabled input is left out of the form data, so a locked price is not sent. */}
         {listingType !== "giveaway" ? (

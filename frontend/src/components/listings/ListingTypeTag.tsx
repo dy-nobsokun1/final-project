@@ -6,8 +6,9 @@ import type { ListingType } from "@/types";
 /**
  * One look per type, all from the brand ramp. Sale has none: it is the default, and a tag on
  * every card would only be noise. Text contrast: 11.7, 9.9, 13.3 and 18.1 to 1.
+ * Exported so the listing form's type tiles (ListingTypeTiles) look the same.
  */
-const TAGS: Record<Exclude<ListingType, "sale">, { label: string; icon: LucideIcon; colours: string }> = {
+export const LISTING_TYPE_TAGS: Record<Exclude<ListingType, "sale">, { label: string; icon: LucideIcon; colours: string }> = {
   // The light ring keeps the dark pill visible on the dark listing page.
   auction: { label: "Auction", icon: Gavel, colours: "bg-brand-deep text-brand-50 ring-brand-50/30" },
   trade: { label: "Trade", icon: ArrowLeftRight, colours: "bg-brand-400 text-brand-ink" },
@@ -28,7 +29,7 @@ interface ListingTypeTagProps {
  */
 export function ListingTypeTag({ type, className }: ListingTypeTagProps) {
   if (type === "sale") return null;
-  const { label, icon: Icon, colours } = TAGS[type];
+  const { label, icon: Icon, colours } = LISTING_TYPE_TAGS[type];
 
   return (
     <Badge className={cn("font-semibold shadow-sm ring-1 ring-black/10 [&>svg]:size-3.5!", colours, className)}>

@@ -1,9 +1,10 @@
 "use client";
 
-import { Field, FieldInput } from "@/components/forms/Field";
+import { Field } from "@/components/forms/Field";
+import { PhotoAddBox } from "@/components/forms/PhotoAddBox";
 import { PhotoThumb } from "@/components/forms/PhotoThumb";
 import type { ListingPhotos } from "@/hooks/use-listing-photos";
-import { MAX_LISTING_PHOTOS, MAX_PHOTO_MB } from "@/lib/constants";
+import { MAX_LISTING_PHOTOS } from "@/lib/constants";
 
 /**
  * Picks, orders and removes a listing's photos (from useListingPhotos). Each file is uploaded as
@@ -12,25 +13,14 @@ import { MAX_LISTING_PHOTOS, MAX_PHOTO_MB } from "@/lib/constants";
  * and the Server Action sends those URLs to the API.
  */
 export function PhotoPicker({ photos, error }: { photos: ListingPhotos; error?: string }) {
-  function handleChange(event: React.ChangeEvent<HTMLInputElement>) {
-    const files = Array.from(event.target.files ?? []);
-    // Cleared so that picking the same file again (e.g. after removing it) still counts as a change.
-    event.target.value = "";
-    void photos.addFiles(files);
-  }
-
   return (
     <Field
-      label={`Photos (optional, up to ${MAX_LISTING_PHOTOS}, at most ${MAX_PHOTO_MB} MB each; the first is the cover)`}
+      label="Photos (optional)"
       error={[...photos.errors, error].filter(Boolean).join(" ") || undefined}
     >
-      <FieldInput
-        type="file"
-        multiple
-        accept="image/jpeg,image/png,image/webp,image/gif"
+      <PhotoAddBox
         disabled={photos.items.length >= MAX_LISTING_PHOTOS}
-        onChange={handleChange}
-        className="bg-brand-50/40"
+        onFiles={(files) => void photos.addFiles(files)}
       />
       {photos.items.length > 0 ? (
         <ul aria-label="Chosen photos" className="grid grid-cols-3 gap-2 sm:grid-cols-4">
