@@ -526,7 +526,7 @@ A token issued before the account's last password change or reset is refused (40
 | GET | `/api/users/:id` | Public profile (email hidden) |
 | GET | `/api/users/:id/listings` | All listings by a user |
 | PATCH 🔒 | `/api/users/me` | `{ name?, major?, graduationYear?, bio?, avatarUrl?, bakongAccountId? }`. `bakongAccountId` is `name@bank`; `""` or `null` removes it |
-| GET 🔒 | `/api/messages/conversations` | My chat threads with unread counts |
+| GET 🔒 | `/api/messages/conversations` | My chat threads, newest first: `{ listingId, partnerId, lastMessageAt, unreadCount, listingTitle, listingCategory, listingImageUrl, lastMessageBody, lastMessageIsMine }`. `listingImageUrl` is the cover photo, or `null` |
 | GET 🔒 | `/api/messages?listingId=&withUserId=` | One thread, oldest first |
 | POST 🔒 | `/api/messages` | `{ listingId, receiverId, body }` |
 | PATCH 🔒 | `/api/messages/read` | `{ listingId, withUserId }` → mark a thread read |

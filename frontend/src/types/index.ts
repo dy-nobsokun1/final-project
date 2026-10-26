@@ -92,6 +92,13 @@ export interface Conversation {
   participantIds: string[];
   lastMessageAt: string;
   unreadCount: number;
+  /** The listing the thread is about. The image is its cover photo, or null when it has none. */
+  listingTitle: string;
+  listingCategory: ListingCategory;
+  listingImageUrl: string | null;
+  /** The newest message's text, and whether the signed-in user sent it. */
+  lastMessageBody: string;
+  lastMessageIsMine: boolean;
 }
 
 /**

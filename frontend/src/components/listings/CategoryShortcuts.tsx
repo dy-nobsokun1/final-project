@@ -5,7 +5,8 @@ import { CATEGORIES } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import type { ListingCategory } from "@/types";
 
-const ICONS: Record<ListingCategory, LucideIcon> = {
+/** Exported so an inbox row can show a listing's category when it has no photo (ConversationRow). */
+export const CATEGORY_ICONS: Record<ListingCategory, LucideIcon> = {
   textbooks: BookOpen,
   electronics: Laptop,
   furniture: Sofa,
@@ -28,7 +29,7 @@ export function CategoryShortcuts({ params, active }: CategoryShortcutsProps) {
           `scroll-px-4` makes the snap points respect the 16px gutter instead of the screen edge. */}
       <ul className="-mx-4 flex snap-x scroll-px-4 gap-3 overflow-x-auto px-4 pb-1 [scrollbar-width:none] sm:mx-0 sm:grid sm:grid-cols-6 sm:overflow-visible sm:px-0 sm:pb-0">
         {CATEGORIES.map(({ value, label, accent }) => {
-          const Icon = ICONS[value];
+          const Icon = CATEGORY_ICONS[value];
           const isActive = value === active;
           return (
             <li key={value} className="shrink-0 snap-start">

@@ -11,20 +11,35 @@ import { toMessage } from "../utils/serializers.js";
 export const messagesRouter = Router();
 messagesRouter.use(requireAuth);
 
-// GET /api/messages/conversations  -> my chat threads, newest first
+// GET /api/messages/conversations  -> my chat threads, newest first, each with its listing's title,
+// category and cover photo and the newest message, all in one query (the inbox shows them per row)
 messagesRouter.get("/conversations", async (req, res) => {
   const { rows } = await query(
     `WITH mine AS (
        SELECT m.*, CASE WHEN m.sender_id = $1 THEN m.receiver_id ELSE m.sender_id END AS partner_id
        FROM messages m
        WHERE m.sender_id = $1 OR m.receiver_id = $1
+     ),
+     threads AS (
+       SELECT listing_id, partner_id,
+              MAX(created_at) AS last_message_at,
+              COUNT(*) FILTER (WHERE receiver_id = $1 AND read_at IS NULL)::int AS unread_count
+       FROM mine
+       GROUP BY listing_id, partner_id
      )
-     SELECT listing_id, partner_id,
-            MAX(created_at) AS last_message_at,
-            COUNT(*) FILTER (WHERE receiver_id = $1 AND read_at IS NULL)::int AS unread_count
-     FROM mine
-     GROUP BY listing_id, partner_id
-     ORDER BY last_message_at DESC`,
+     SELECT t.*, l.title AS listing_title, l.category AS listing_category,
+            l.image_urls[1] AS listing_image_url, -- SQL arrays start at 1: this is the cover photo
+            last.content AS last_message_body, last.sender_id = $1 AS last_message_is_mine
+     FROM threads t
+     JOIN listings l ON l.id = t.listing_id
+     -- The newest message of each thread (LATERAL runs this once per thread row).
+     CROSS JOIN LATERAL (
+       SELECT content, sender_id FROM mine
+       WHERE mine.listing_id = t.listing_id AND mine.partner_id = t.partner_id
+       ORDER BY created_at DESC, id DESC
+       LIMIT 1
+     ) last
+     ORDER BY t.last_message_at DESC`,
     [req.userId],
   );
   res.json({
@@ -34,6 +49,11 @@ messagesRouter.get("/conversations", async (req, res) => {
       participantIds: [req.userId, row.partner_id],
       lastMessageAt: row.last_message_at,
       unreadCount: row.unread_count,
+      listingTitle: row.listing_title,
+      listingCategory: row.listing_category,
+      listingImageUrl: row.listing_image_url,
+      lastMessageBody: row.last_message_body,
+      lastMessageIsMine: row.last_message_is_mine,
     })),
   });
 });

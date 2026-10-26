@@ -32,6 +32,34 @@ test("a buyer messages the owner, who sees one unread thread until opening it", 
   assert.equal(afterReading.body.conversations[0].unreadCount, 0);
 });
 
+test("each inbox row has its listing's title, category and cover photo and the newest message", async () => {
+  const [owner, buyer] = await Promise.all([api.createUser(), api.createUser()]);
+  const lamp = await api.createListing(owner, { title: "Desk lamp", category: "furniture" });
+  const bike = await api.createListing(owner, { title: "Old bike", category: "bikes" });
+  const photos = ["https://example.com/cover.jpg", "https://example.com/side.jpg"];
+  await api.sql("UPDATE listings SET image_urls = $1 WHERE id = $2", [photos, lamp.id]);
+  await send(buyer, owner, lamp, "Is it still available?");
+  await send(owner, buyer, lamp, "Yes, come by at 5.");
+  await send(buyer, owner, bike, "Does it have gears?");
+
+  const inbox = async (user) =>
+    (await api.request("GET", "/api/messages/conversations", { token: user.token })).body.conversations;
+  const [ownerRows, buyerRows] = await Promise.all([inbox(owner), inbox(buyer)]);
+  // Newest thread first; the bike has no photo.
+  assert.deepEqual(
+    ownerRows.map(({ listingId, listingTitle, listingCategory, listingImageUrl, lastMessageBody, lastMessageIsMine }) =>
+      ({ listingId, listingTitle, listingCategory, listingImageUrl, lastMessageBody, lastMessageIsMine })),
+    [
+      { listingId: bike.id, listingTitle: "Old bike", listingCategory: "bikes", listingImageUrl: null, lastMessageBody: "Does it have gears?", lastMessageIsMine: false },
+      { listingId: lamp.id, listingTitle: "Desk lamp", listingCategory: "furniture", listingImageUrl: photos[0], lastMessageBody: "Yes, come by at 5.", lastMessageIsMine: true },
+    ],
+  );
+  // The same last message, seen from the other side.
+  const buyerLamp = buyerRows.find((row) => row.listingId === lamp.id);
+  assert.equal(buyerLamp.lastMessageBody, "Yes, come by at 5.");
+  assert.equal(buyerLamp.lastMessageIsMine, false);
+});
+
 test("a thread is private to its two people", async () => {
   const [owner, buyer, stranger] = await Promise.all([api.createUser(), api.createUser(), api.createUser()]);
   const listing = await api.createListing(owner);
