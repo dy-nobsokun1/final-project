@@ -2,9 +2,9 @@ import { app } from "./app.js";
 import { config } from "./config.js";
 import { closeEndedAuctions } from "./db/auctions.js";
 import { findOpenKhqrPayments, markPaid } from "./db/payments.js";
+import { assistantModel } from "./services/assistantModel.js";
 import { isBakongConfigured, isKhqrPaid } from "./services/bakong.js";
 import { isCloudinaryConfigured } from "./services/cloudinary.js";
-import { isGeminiConfigured } from "./services/gemini.js";
 import { isStripeConfigured } from "./services/stripe.js";
 import { isTelegramConfigured, startTelegramPolling } from "./services/telegram.js";
 import { isEmailConfigured } from "./utils/email.js";
@@ -17,7 +17,7 @@ app.listen(config.port, () => {
   const onOff = (enabled) => (enabled ? "on" : "off");
   console.log(`  email ${onOff(isEmailConfigured)} · photos ${isCloudinaryConfigured ? "Cloudinary" : "local disk"}`
     + ` · card payments ${onOff(isStripeConfigured)} · KHQR ${onOff(isBakongConfigured)}`
-    + ` · Telegram ${onOff(isTelegramConfigured)} · assistant ${onOff(isGeminiConfigured)}`);
+    + ` · Telegram ${onOff(isTelegramConfigured)} · assistant ${assistantModel?.name ?? "off"}`);
 });
 
 // Telegram: listen for "/start <code>" messages that link accounts. Only one running copy of the

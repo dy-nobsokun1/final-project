@@ -13,12 +13,12 @@ local `backend/.env`, which git ignores).
 | Card payments (test mode) | Stripe | `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` |
 | KHQR payments (real money) | Bakong (National Bank of Cambodia) | `BAKONG_TOKEN` |
 | Telegram alerts | @BotFather | `TELEGRAM_BOT_TOKEN`, `TELEGRAM_BOT_USERNAME` |
-| Shopping assistant | Google AI Studio (Gemini, free tier) | `GEMINI_API_KEY` |
+| Shopping assistant | Groq (free, no card), or Google AI Studio (Gemini) as a backup | `GROQ_API_KEY`, `GEMINI_API_KEY` |
 | Email | Gmail App Password | `SMTP_USER`, `SMTP_PASS` |
 
-Each optional service (Cloudinary, Stripe, Bakong, Telegram, Gemini, email) stays switched off until its keys
+Each optional service (Cloudinary, Stripe, Bakong, Telegram, Groq or Gemini, email) stays switched off until its keys
 are set. When the API starts, its log shows which ones are on, e.g.
-`email on · photos Cloudinary · card payments on · KHQR off · Telegram off · assistant on`.
+`email on · photos Cloudinary · card payments on · KHQR off · Telegram off · assistant Groq`.
 
 ## 1. Database: Supabase
 

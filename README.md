@@ -49,22 +49,24 @@ Putting it online (Supabase, Render, Vercel, Cloudinary, Stripe, Telegram): [`DE
   any Cambodian banking app and the money goes straight to the seller. UniSwap confirms the payment
   with the National Bank's Bakong API and marks the item sold.
 - **Ask UniSwap (shopping assistant):** the Ask page lets a student describe what they need in their own
-  words ("a bike under $50"). Gemini searches the listings and answers with the best matches as
-  cards; when nothing fits, it drafts a wanted post that opens the sell form filled in, to check and
-  post. It only reads listings, and it is switched off until `GEMINI_API_KEY` is set (free tier).
+  words ("a bike under $50"). An AI model (Groq, with Gemini as a backup) searches the listings and
+  answers with the best matches as cards; when nothing fits, it drafts a wanted post that opens the
+  sell form filled in, to check and post. It only reads listings, and it is switched off until
+  `GROQ_API_KEY` or `GEMINI_API_KEY` is set (both free).
 - **Security:** parameterized SQL everywhere, hashed passwords, verified accounts only, owner-only
   changes, a password change signs out stolen sessions, and no secrets in the repository.
 
 ### Tested
 
-- `npm test` (in `backend/`): 38 unit tests for validation (including the photo rules), the search
+- `npm test` (in `backend/`): 40 unit tests for validation (including the photo rules), the search
   query and wanted-post matching, the payment amount rules, the Stripe and Cloudinary helpers, the
-  KHQR builder (checked against the National Bank's own library), and the shopping assistant's tool loop.
-- `npm run test:api` (in `backend/`): 100 tests that send real requests to the running API, covering
+  KHQR builder (checked against the National Bank's own library), and the shopping assistant's tool loop
+  and its Groq and Gemini adapters.
+- `npm run test:api` (in `backend/`): 101 tests that send real requests to the running API, covering
   sign-up and verification, password reset and change, owner-only changes, messaging, simultaneous
   bids, card and KHQR payments, reviews, saved listings, listing photos, wanted-post matching and
   alerts, offers (including two accepted at the same moment), and refusing to delete a listing whose
-  payments or reviews must stay, and the shopping assistant (with a fake Gemini).
+  payments or reviews must stay, and the shopping assistant (with a fake Groq).
   They use a separate test database (see [Testing](backend/README.md#testing)).
 
 ### Not done yet
@@ -74,8 +76,9 @@ Putting it online (Supabase, Render, Vercel, Cloudinary, Stripe, Telegram): [`DE
   set, photos are saved on the server's disk, and payments and Telegram stay switched off.
 - **KHQR on Render:** Bakong only answers Cambodian IP addresses, so KHQR works when the API runs
   in Cambodia (e.g. a laptop for the demo), not on Render.
-- **Ask UniSwap's free tier:** Gemini's free limits are shared by every student (on
-  `gemini-3.5-flash-lite`, 15 requests a minute, about 7 questions), so it suits a demo, not heavy use.
+- **Ask UniSwap's free tier:** the model's free limits are shared by every student (Groq's
+  `openai/gpt-oss-120b`: 30 requests a minute, 1,000 requests and 200,000 tokens a day), so it suits a
+  demo, not heavy use. Gemini is the backup (`ASSISTANT_PROVIDER=gemini`), with much lower limits.
 - **Possible next steps:** real-time chat, safe meetup spots, and notification settings.
 
 ### Known limitations (by design)

@@ -72,7 +72,7 @@ export async function getPaymentOptions(): Promise<{ card: boolean; khqr: boolea
   return { card: enabled, khqr };
 }
 
-/** Whether the shopping assistant is switched on in the API (it needs GEMINI_API_KEY). */
+/** Whether the shopping assistant is switched on in the API (it needs GROQ_API_KEY or GEMINI_API_KEY). */
 export async function isAssistantEnabled(): Promise<boolean> {
   const { enabled } = await apiFetch<{ enabled: boolean }>("/api/assistant/config");
   return enabled;

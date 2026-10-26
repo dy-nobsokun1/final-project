@@ -44,5 +44,7 @@ services:
         sync: false
       - key: TELEGRAM_BOT_USERNAME
         sync: false
-      - key: GEMINI_API_KEY # free key from aistudio.google.com/apikey
+      - key: GROQ_API_KEY # free key from console.groq.com; the assistant uses Groq first
+        sync: false
+      - key: GEMINI_API_KEY # free key from aistudio.google.com/apikey; the backup
         sync: false

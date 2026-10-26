@@ -2,7 +2,7 @@ import { Router } from "express";
 import { buildBrowseQuery } from "../db/listings.js";
 import { query } from "../db/pool.js";
 import { requireAuth } from "../middleware/auth.js";
-import { generateContent, isGeminiConfigured } from "../services/gemini.js";
+import { assistantModel } from "../services/assistantModel.js";
 import { askAssistant, validateAssistantMessages } from "../utils/assistant.js";
 import { HttpError } from "../utils/httpError.js";
 import { toListing } from "../utils/serializers.js";
@@ -16,21 +16,21 @@ async function searchListings(filters) {
   return rows.map(toListing);
 }
 
-// GET /api/assistant/config -> { enabled }: whether the assistant is switched on (GEMINI_API_KEY set)
+// GET /api/assistant/config -> { enabled }: whether the assistant is switched on (GROQ_API_KEY or GEMINI_API_KEY set)
 assistantRouter.get("/config", (req, res) => {
-  res.json({ enabled: isGeminiConfigured });
+  res.json({ enabled: Boolean(assistantModel) });
 });
 
 // POST /api/assistant  (logged in)  { messages: [{ role: "user" | "assistant", text }] }
 // -> { reply, listings, wantedDraft }. The frontend keeps the conversation and sends it with every
 // question, so nothing about it is stored here.
 assistantRouter.post("/", requireAuth, async (req, res) => {
-  if (!isGeminiConfigured) throw new HttpError(503, "The shopping assistant is switched off.");
+  if (!assistantModel) throw new HttpError(503, "The shopping assistant is switched off.");
   const problem = validateAssistantMessages(req.body?.messages);
   if (problem) throw new HttpError(400, problem);
 
   try {
-    res.json(await askAssistant(req.body.messages, { generate: generateContent, searchListings }));
+    res.json(await askAssistant(req.body.messages, { ask: assistantModel.ask, searchListings }));
   } catch (error) {
     // 429: the free tier's requests per minute or per day are used up.
     if (error.status === 429) {

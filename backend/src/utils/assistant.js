@@ -1,17 +1,18 @@
 import { CATEGORIES, CONDITIONS, parseListingFilters } from "./validation.js";
 
-// "Ask UniSwap", the shopping assistant. Gemini reads the student's question and uses two tools:
+// "Ask UniSwap", the shopping assistant. A model (Groq or Gemini, see services/assistantModel.js) reads
+// the student's question and uses two tools:
 // search_listings (we run our normal browse search) and reply (its final answer, naming the listings
 // to show as cards). It can only read: nothing here writes to the database, and a drafted wanted
 // post is only handed to the student, who checks it and posts it themselves.
-// The model is passed in (`generate`), so the tests can use a fake one without network or API key.
+// The model is passed in (`ask`), so the tests can use a fake one without network or API key.
 
 /**
  * Most model calls for one question: up to two rounds of searches, then the reply. Every call counts
- * against Gemini's free-tier requests per minute (shared by the whole app), so a question uses as few as it can.
+ * against the free tier's requests per minute (shared by the whole app), so a question uses as few as it can.
  */
 export const MAX_ROUNDS = 3;
-/** Listings Gemini sees per search, and cards shown under one answer. */
+/** Listings the model sees per search, and cards shown under one answer. */
 const RESULTS_PER_SEARCH = 5;
 const MAX_CARDS = 4;
 
@@ -36,7 +37,7 @@ export const SYSTEM_INSTRUCTION = `You are Ask UniSwap, the shopping assistant o
 - Only help with finding things on UniSwap. Politely decline anything else.
 - Keep your text short and friendly, in plain text without Markdown, in the language the student writes in.`;
 
-// Gemini function declarations: what each tool does and which arguments it takes.
+// The tools: what each one does and which arguments it takes (JSON Schema, which both providers read).
 const TOOLS = [
   {
     name: "search_listings",
@@ -94,7 +95,7 @@ export function validateAssistantMessages(messages) {
   return null;
 }
 
-/** What Gemini sees of a listing: enough to choose and describe it. No seller details are sent. */
+/** What the model sees of a listing: enough to choose and describe it. No seller details are sent. */
 export function forModel(listing) {
   const item = {
     id: listing.id,
@@ -113,7 +114,7 @@ export function forModel(listing) {
   return item;
 }
 
-/** Search arguments from Gemini -> the same filters as GET /api/listings. Unknown values are dropped. */
+/** Search arguments from the model -> the same filters as GET /api/listings. Unknown values are dropped. */
 export function searchFilters(args) {
   return parseListingFilters({
     query: args.query,
@@ -125,7 +126,7 @@ export function searchFilters(args) {
   });
 }
 
-/** Cleans Gemini's wanted-post draft into what the new-listing form needs, or null when it has no title. */
+/** Cleans the model's wanted-post draft into what the new-listing form needs, or null when it has no title. */
 export function toWantedDraft(draft) {
   const title = typeof draft?.title === "string" ? draft.title.trim().slice(0, 120) : "";
   if (!title) return null;
@@ -150,48 +151,37 @@ function finish({ text, listingIds, wantedDraft }, found) {
 
 /**
  * Answers the last question in `messages` ([{ role: "user" | "assistant", text }], oldest first).
- * - `generate(request)`: one Gemini call (services/gemini.js), returns { role: "model", parts }
+ * - `ask({ system, tools, turns, onlyReply })`: one model call (services/groq.js or services/gemini.js),
+ *   returns { text, calls: [{ id, name, args }], raw }. Each provider turns `turns` into its own format.
  * - `searchListings(filters)`: active listings for browse filters, best first, as toListing objects
  * Returns { reply, listings, wantedDraft }.
  */
-export async function askAssistant(messages, { generate, searchListings }) {
-  const contents = messages.map((m) => ({ role: m.role === "assistant" ? "model" : "user", parts: [{ text: m.text }] }));
+export async function askAssistant(messages, { ask, searchListings }) {
+  // The conversation so far: the student's messages and earlier answers ({ role, text }), then this
+  // question's tool calls ({ role: "assistant", calls, raw }) and their results ({ role: "tool", results }).
+  const turns = messages.map((m) => ({ role: m.role, text: m.text }));
   const found = new Map(); // id -> listing, every listing search_listings returned in this turn
 
   for (let round = 0; round < MAX_ROUNDS; round++) {
-    const lastRound = round === MAX_ROUNDS - 1;
-    const content = await generate({
-      systemInstruction: { parts: [{ text: SYSTEM_INSTRUCTION }] },
-      contents,
-      tools: [{ functionDeclarations: TOOLS }],
-      // ANY: Gemini must always call a tool, so every answer arrives through reply. On the last round
-      // reply is the only tool allowed, so the student always gets an answer.
-      toolConfig: { functionCallingConfig: lastRound ? { mode: "ANY", allowedFunctionNames: ["reply"] } : { mode: "ANY" } },
-      // Choosing listings needs little reasoning, and low thinking answers faster.
-      generationConfig: { thinkingConfig: { thinkingLevel: "low" } },
-    });
-    const parts = content.parts ?? [];
-    const calls = parts.filter((part) => part.functionCall).map((part) => part.functionCall);
+    const answer = await ask({ system: SYSTEM_INSTRUCTION, tools: TOOLS, turns, onlyReply: round === MAX_ROUNDS - 1 });
     // A plain-text answer (no tool call) still counts, just without cards.
-    if (calls.length === 0) return finish({ text: parts.filter((p) => !p.thought).map((p) => p.text ?? "").join("") }, found);
+    if (answer.calls.length === 0) return finish({ text: answer.text }, found);
 
     const results = [];
-    for (const call of calls) {
-      const args = call.args ?? {};
-      if (call.name === "reply") return finish(args, found);
+    for (const call of answer.calls) {
+      if (call.name === "reply") return finish(call.args, found);
       let response = { error: `There is no tool called ${call.name}.` };
       if (call.name === "search_listings") {
         // An auction that ended without bids stays active, but can no longer be bid on.
-        const items = (await searchListings(searchFilters(args)))
+        const items = (await searchListings(searchFilters(call.args)))
           .filter((listing) => listing.listingType !== "buy_request" && !listing.auction?.ended)
           .slice(0, RESULTS_PER_SEARCH);
         for (const item of items) found.set(item.id, item);
         response = { listings: items.map(forModel) };
       }
-      results.push({ functionResponse: { id: call.id, name: call.name, response } });
+      results.push({ id: call.id, name: call.name, response });
     }
-    // Gemini 3 signs its tool calls (thoughtSignature), so its turn goes back exactly as it came.
-    contents.push(content, { role: "user", parts: results });
+    turns.push({ role: "assistant", calls: answer.calls, raw: answer.raw }, { role: "tool", results });
   }
   return finish({}, found);
 }

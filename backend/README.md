@@ -431,27 +431,36 @@ service's web API with `fetch`.
 - **Telegram** (`services/telegram.js`, `routes/telegram.js`, `utils/telegramBot.js`). Settings gives
   a one-time `t.me/<bot>?start=<code>` link. The bot (long polling, so no public URL is needed)
   links the chat. After that, every notification goes to Telegram as well as email.
-- **Ask UniSwap, the shopping assistant** (`services/gemini.js`, `utils/assistant.js`, `routes/assistant.js`).
-  A student asks in their own words ("a cheap calculator for my exam"). Gemini (`gemini-3.5-flash-lite`,
-  free tier) answers by calling two tools: `search_listings`, our normal browse search (active items
-  only, no wanted posts or ended auctions, 5 results), and `reply`, its answer plus the ids of up to 4 listings to show
-  as cards. It must always call one of them (`mode: "ANY"`). A question gets at most 3 calls, and the
-  last may only be `reply`, so there is always an answer: a typical question uses 2, a follow-up like
-  "yes, draft it" uses 1.
+- **Ask UniSwap, the shopping assistant** (`utils/assistant.js`, `routes/assistant.js`, and one
+  adapter per model in `services/`: `groq.js`, `gemini.js`, chosen by `assistantModel.js`).
+  A student asks in their own words ("a cheap calculator for my exam"). The model answers by calling
+  two tools: `search_listings`, our normal browse search (active items only, no wanted posts or ended
+  auctions, 5 results), and `reply`, its answer plus the ids of up to 4 listings to show as cards. It
+  must always call one of them (Groq `tool_choice: "required"`, Gemini `mode: "ANY"`). A question gets
+  at most 3 calls, and the last may only be `reply`, so there is always an answer: a typical question
+  uses 2, a follow-up like "yes, draft it" uses 1.
   Cards can only be listings its searches returned in that question, so it cannot show a made-up
   item. When nothing fits, `reply` can carry a wanted-post draft, which the student checks and posts
   themselves: the assistant never writes to the database. Nothing is stored either: the frontend
-  sends the conversation with each question. Gemini 3 signs its tool calls ("thought signatures"),
-  so `askAssistant` sends its turns back exactly as they came. Gemini only sees the question and
-  each listing's title, type, price, category, condition and the start of its description, never
-  seller names or emails, because Google may read free-tier requests.
-  **Free-tier limits** are per Google project, shared by every student, and shown at
-  [aistudio.google.com/rate-limit](https://aistudio.google.com/rate-limit). Measured on 26 Oct 2026:
-  `gemini-3.5-flash-lite` allows 15 requests a minute (about 7 questions); `gemini-3.6-flash`
+  sends the conversation (plain text only) with each question, so switching models never breaks an
+  open chat. The model only sees the question and each listing's title, type, price, category,
+  condition and the start of its description, never seller names or emails.
+  **Which model:** Groq when `GROQ_API_KEY` is set, otherwise Gemini when `GEMINI_API_KEY` is set,
+  otherwise the assistant is off (503). `ASSISTANT_PROVIDER=gemini` (or `groq`) picks one by name,
+  for example to fall back to Gemini on a day Groq has trouble; restart the API after changing it.
+  `askAssistant` works with a neutral list of turns, and each adapter turns it into its own API's
+  format (Groq's OpenAI-style `tool_calls`; Gemini 3's signed tool calls, sent back exactly as they came).
+  **Groq** (default model `openai/gpt-oss-120b`, change it with `GROQ_MODEL`): free key, no card, at
+  [console.groq.com](https://console.groq.com). Free limits from
+  [its docs](https://console.groq.com/docs/rate-limits) on 26 Oct 2026: 30 requests a minute and 1,000
+  a day, 8,000 tokens a minute and 200,000 a day, for the whole key.
+  **Gemini** (default `gemini-3.5-flash-lite`, change it with `GEMINI_MODEL`): free-tier limits are
+  per Google project, shown at [aistudio.google.com/rate-limit](https://aistudio.google.com/rate-limit).
+  Measured on 26 Oct 2026: `gemini-3.5-flash-lite` allows 15 requests a minute; `gemini-3.6-flash`
   (and `gemini-3.5-flash`, which counts as it) only 5 a minute and 20 a day; `gemini-3.8-flash` did
-  not answer at all. Change the model with `GEMINI_MODEL`. A 429 from Gemini becomes our 429 with
-  "try again in a minute", or "try again tomorrow" when the daily limit is used up (it resets at
-  midnight Pacific time).
+  not answer at all. Google may read free-tier requests.
+  A 429 from either becomes our 429 with "try again in a minute", or "try again tomorrow" when its
+  message says a daily limit is used up.
 
 **Upgrading a database created before payments and Telegram?** Run this once. It keeps your data and is safe to re-run:
 
@@ -548,8 +557,8 @@ A token issued before the account's last password change or reset is refused (40
 | POST 🔒 | `/api/messages` | `{ listingId, receiverId, body }` |
 | PATCH 🔒 | `/api/messages/read` | `{ listingId, withUserId }` → mark a thread read |
 | POST 🔒 | `/api/uploads` | One photo per request: raw image bytes with `Content-Type: image/jpeg`, `png`, `webp` or `gif` (max 5 MB) → `{ url }` |
-| GET | `/api/assistant/config` | `{ enabled }`: whether the shopping assistant is switched on (`GEMINI_API_KEY` set) |
-| POST 🔒 | `/api/assistant` | `{ messages: [{ role: "user" \| "assistant", text }] }`, oldest first, at most 20, each 1 to 1000 characters, the last one the student's → `{ reply, listings, wantedDraft }`. `listings`: up to 4 full listings to show as cards. `wantedDraft`: `null` or `{ title, description, category, budget }` to fill in the new-listing form. `503` while switched off, `429` while Gemini's free quota for the minute or the day is used up, `502` if Gemini fails (see Ask UniSwap above) |
+| GET | `/api/assistant/config` | `{ enabled }`: whether the shopping assistant is switched on (`GROQ_API_KEY` or `GEMINI_API_KEY` set) |
+| POST 🔒 | `/api/assistant` | `{ messages: [{ role: "user" \| "assistant", text }] }`, oldest first, at most 20, each 1 to 1000 characters, the last one the student's → `{ reply, listings, wantedDraft }`. `listings`: up to 4 full listings to show as cards. `wantedDraft`: `null` or `{ title, description, category, budget }` to fill in the new-listing form. `503` while switched off, `429` while the model's free limit for the minute or the day is used up, `502` if the model fails (see Ask UniSwap above) |
 
 Uploaded photos are saved in `backend/uploads/` (git-ignored) and served at `/uploads/<file>`.
 Put the returned `url` in a listing's `imageUrls` (at most 6; only URLs from this route are accepted).
@@ -561,14 +570,15 @@ Errors always look like `{ "error": "message", "details": { "field": "message" }
 
 - `npm test` runs the unit tests in `test/*.test.js`: validation, the search query builder, the
   payment amount rules, the Stripe and Cloudinary helpers, the KHQR builder and Bakong answers, and
-  the shopping assistant's tool loop (with a scripted fake Gemini). No database or network needed.
+  the shopping assistant's tool loop (with a scripted fake model) and its Groq and Gemini adapters
+  (with `fetch` replaced). No database or network needed.
 - `npm run test:api` runs the API tests in `test/api/`. Each file starts the real app on a free port
   and sends it real HTTP requests, so routes, SQL and database rules are tested together: sign-up and
   verification, password reset and change, owner-only changes, messaging, bidding (including five
   bids at the same moment), payments with Stripe switched off, KHQR payments (with Bakong replaced by
   a fake), reviews, saved listings (including who gets a price-drop alert), listing photo rules,
   wanted-post matching and alerts, offers (including two accepted at the same moment), and the
-  shopping assistant (with Gemini replaced by a fake that also checks no seller details are sent).
+  shopping assistant (with Groq replaced by a fake that also checks no seller details are sent).
 
 The API tests need their own database, because `test/api/reset-db.js` wipes it before every run.
 Create it once, then put its URL in `.env` as `TEST_DATABASE_URL` (see `.env.example`):
@@ -579,7 +589,7 @@ docker exec <container> createdb -U <user> uniswap_test    # PostgreSQL in Docke
 ```
 
 The tests refuse to run if `TEST_DATABASE_URL` is the same database as `DATABASE_URL`. They switch
-off email, Stripe, Bakong, Telegram, Cloudinary and Gemini, so a test run never sends anything.
+off email, Stripe, Bakong, Telegram, Cloudinary, Groq and Gemini, so a test run never sends anything.
 While email is off the API prints verification and reset links in its log; `test/api/helpers.js`
 hides those lines and keeps them (`loggedLinks`), so a test opens a reset link the way a person would.
 It keeps the "email not configured, skipped" lines of notifications too (`skippedEmails`), so a test
@@ -601,8 +611,8 @@ can check who would have been emailed, waiting with `waitFor` because notificati
   profiles. (A buyer does see the seller's Bakong account inside the KHQR, as with any bank transfer.)
 - **Shopping assistant:** it can only search; it never writes to the database, and a wanted-post draft
   is only filled into the form for the student to check. Its instructions say listing text is data,
-  never instructions, and its cards can only be listings its own searches returned. Gemini never
-  gets seller names or emails.
+  never instructions, and its cards can only be listings its own searches returned. Neither Groq
+  nor Gemini ever gets seller names or emails.
 - **Secrets:** live in `.env` (git-ignored). Nothing secret is committed.
 
 ## Progress

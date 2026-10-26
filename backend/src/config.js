@@ -38,6 +38,16 @@ export const config = {
   bakong: {
     token: process.env.BAKONG_TOKEN,
   },
+  // The shopping assistant uses Groq or Gemini (see services/assistantModel.js).
+  assistant: {
+    provider: process.env.ASSISTANT_PROVIDER?.trim().toLowerCase() || undefined,
+  },
+  groq: {
+    apiKey: process.env.GROQ_API_KEY,
+    // Free plan, from console.groq.com/docs/rate-limits on 26 Oct 2026: 30 requests a minute and
+    // 1,000 a day, 8,000 tokens a minute and 200,000 a day.
+    model: process.env.GROQ_MODEL ?? "openai/gpt-oss-120b",
+  },
   gemini: {
     apiKey: process.env.GEMINI_API_KEY,
     // Free tier, checked 26 Oct 2026: 15 requests a minute. gemini-3.6-flash allows only 20 a day,
