@@ -21,7 +21,9 @@ export function AuctionPanel({ listing, bids, userId }: AuctionPanelProps) {
   const statusLine = standing(isClosed, isLeader, auction.bidCount > 0);
 
   return (
-    <section aria-label="Auction" className="light-surface flex flex-col gap-3 rounded-xl border border-border bg-card p-4 text-foreground">
+    // id="bid" is where the phone buy bar's "Place bid" scrolls to; scroll-mt-20 keeps the
+    // panel's top clear of the sticky navbar.
+    <section id="bid" aria-label="Auction" className="light-surface scroll-mt-20 flex flex-col gap-3 rounded-xl border border-border bg-card p-4 text-foreground">
       <header className="flex items-center justify-between gap-2">
         <h2 className="flex items-center gap-1.5 font-semibold">
           <Gavel aria-hidden="true" className="size-4" />

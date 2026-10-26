@@ -21,7 +21,7 @@ export async function ListingHeading({ listing, myOffer }: ListingHeadingProps) 
   return (
     <>
       <div className="flex items-start justify-between gap-3">
-        <h1 className="text-2xl font-semibold tracking-tight">{listing.title}</h1>
+        <h1 className="font-heading text-3xl tracking-tight">{listing.title}</h1>
         <SaveButton
           listingId={listing.id}
           listingTitle={listing.title}

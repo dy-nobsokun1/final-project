@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { AuctionPanel } from "@/components/listings/AuctionPanel";
 import { BuyerOfferPanel } from "@/components/listings/BuyerOfferPanel";
+import { ListingBuyBar } from "@/components/listings/ListingBuyBar";
 import { ListingGallery } from "@/components/listings/ListingGallery";
 import { ListingHeading } from "@/components/listings/ListingHeading";
 import { ListingMatches } from "@/components/listings/ListingMatches";
@@ -26,7 +27,7 @@ import {
   paymentBannerStatus,
 } from "@/lib/api";
 import { CATEGORIES, conditionLabel, listingTypeLabel, statusLabel } from "@/lib/constants";
-import { formatRelativeTime, payableAmount } from "@/lib/utils";
+import { formatListingPrice, formatRelativeTime, payableAmount } from "@/lib/utils";
 
 /** What a buyer sees after returning from a payment, by its status. */
 const PAYMENT_BANNERS = {
@@ -62,6 +63,11 @@ export default async function ListingDetailPage({ params, searchParams }: PagePr
   const payAmount = payableAmount(listing, user?.id ?? null, myOffer);
   // A wanted post's owner is looking to buy, so the contact button names them instead of "seller".
   const contactName = listing.listingType === "buy_request" ? listing.seller.name : null;
+  // Signed-out visitors are sent to sign in first; the thread page needs a session.
+  const contactHref = user ? `/messages/${conversationId(listing.id, listing.seller.id)}` : "/login";
+  const contactLabel = user ? `Message ${contactName ?? "seller"}` : `Sign in to message ${contactName ?? "the seller"}`;
+  // The phone bar only offers what can still be done: bidding or a chat about an active listing.
+  const showBuyBar = !isOwner && listing.status === "active" && !listing.auction?.ended;
 
   return (
     <div className="flex flex-col gap-6">
@@ -121,12 +127,11 @@ export default async function ListingDetailPage({ params, searchParams }: PagePr
               status={listing.status}
             />
           ) : (
-            // Signed-out visitors are sent to sign in first; the thread page needs a session.
             <Link
-              href={user ? `/messages/${conversationId(listing.id, listing.seller.id)}` : "/login"}
+              href={contactHref}
               className="rounded-lg bg-primary px-4 py-2.5 text-center text-sm font-medium text-primary-foreground hover:bg-primary/85"
             >
-              {user ? `Message ${contactName ?? "seller"}` : `Sign in to message ${contactName ?? "the seller"}`}
+              {contactLabel}
             </Link>
           )}
 
@@ -152,6 +157,13 @@ export default async function ListingDetailPage({ params, searchParams }: PagePr
         </div>
       </div>
       {isOwner ? <Suspense fallback={null}><ListingMatches listing={listing} /></Suspense> : null}
+      {showBuyBar ? (
+        <ListingBuyBar
+          price={formatListingPrice(listing)}
+          href={listing.auction ? "#bid" : contactHref}
+          label={listing.auction ? "Place bid" : contactLabel}
+        />
+      ) : null}
     </div>
   );
 }
