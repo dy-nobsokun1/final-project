@@ -176,3 +176,30 @@ export interface ListingFilters {
   condition?: ListingCondition | "all";
 }
 
+/** Starting values for a new listing, e.g. a wanted post drafted by Ask UniSwap (see NewListingForm). */
+export type ListingDraft = Pick<Listing, "listingType" | "title" | "description" | "category" | "price">;
+
+/** A wanted post drafted by Ask UniSwap. The student checks it in the sell form and posts it themselves. */
+export interface WantedDraft {
+  title: string;
+  description: string;
+  category: ListingCategory;
+  /** Most they will pay, in USD. 0 means any price. */
+  budget: number;
+}
+
+/** What the shopping assistant answers (POST /api/assistant). */
+export interface AssistantAnswer {
+  reply: string;
+  /** Up to 4 listings to show as cards under the reply. */
+  listings: ListingWithSeller[];
+  wantedDraft: WantedDraft | null;
+}
+
+/** One message in an Ask UniSwap conversation. Only `role` and `text` are sent back to the API. */
+export interface AssistantMessage {
+  role: "user" | "assistant";
+  text: string;
+  /** Assistant messages only: the cards and draft that came with the reply. */
+  answer?: AssistantAnswer;
+}

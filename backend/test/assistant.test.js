@@ -84,6 +84,10 @@ test("plain text, unknown tools and a model that never replies are all handled",
   const text = fakeModel({ role: "model", parts: [{ text: "thinking...", thought: true }, { text: "No luck, sorry." }] });
   const plain = await askAssistant(ask("hi"), { generate: text.generate, searchListings: async () => [] });
   assert.equal(plain.reply, "No luck, sorry.");
+  // Replies are capped like messages, so the conversation can always be sent back.
+  const long = fakeModel(call("reply", { text: "x".repeat(1500) }));
+  const capped = await askAssistant(ask("hi"), { generate: long.generate, searchListings: async () => [] });
+  assert.equal(validateAssistantMessages([...ask("hi"), { role: "assistant", text: capped.reply }, ...ask("ok")]), null);
 
   const unknown = fakeModel(call("buy_item", { id: "a" }), call("reply", { text: "I can't buy things." }));
   await askAssistant(ask("buy it"), { generate: unknown.generate, searchListings: async () => [] });

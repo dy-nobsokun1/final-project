@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { useListingPhotos } from "@/hooks/use-listing-photos";
 import { createListing, updateListing } from "@/lib/api/actions";
 import { CATEGORIES, CONDITIONS, priceFieldLabel } from "@/lib/constants";
-import type { Listing } from "@/types";
+import type { Listing, ListingDraft } from "@/types";
 
 /** Matches the API's longest auction (MAX_AUCTION_DAYS in backend/src/utils/validation.js). */
 const MAX_AUCTION_MS = 30 * 24 * 60 * 60 * 1000;
@@ -23,12 +23,14 @@ const MAX_AUCTION_MS = 30 * 24 * 60 * 60 * 1000;
  *
  * Given a `listing`, it edits that listing instead: the fields start filled in and saving updates it.
  * Once an auction has bids, its type, price and auction settings are locked (as in the API).
+ * Given a `draft` (a wanted post from Ask UniSwap), the fields start filled in, but saving still creates.
  */
-export function NewListingForm({ listing }: { listing?: Listing }) {
+export function NewListingForm({ listing, draft }: { listing?: Listing; draft?: ListingDraft }) {
+  const start = listing ?? draft;
   const router = useRouter();
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [listingType, setListingType] = useState<string>(listing?.listingType ?? "sale");
+  const [listingType, setListingType] = useState<string>(start?.listingType ?? "sale");
   const photos = useListingPhotos(listing?.imageUrls ?? []);
   const lockedByBids = (listing?.auction?.bidCount ?? 0) > 0;
 
@@ -84,7 +86,7 @@ export function NewListingForm({ listing }: { listing?: Listing }) {
       <Field label="Title" error={errors.title}>
         <FieldInput
           name="title"
-          defaultValue={listing?.title}
+          defaultValue={start?.title}
           placeholder="Calculus: Early Transcendentals, 9th ed."
           className="bg-brand-50/40 placeholder:text-foreground/50"
         />
@@ -92,7 +94,7 @@ export function NewListingForm({ listing }: { listing?: Listing }) {
       <Field label="Description" error={errors.description}>
         <FieldTextarea
           name="description"
-          defaultValue={listing?.description}
+          defaultValue={start?.description}
           rows={5}
           placeholder="Condition, defects, and what is included."
           className="bg-brand-50/40 placeholder:text-foreground/50"
@@ -110,14 +112,14 @@ export function NewListingForm({ listing }: { listing?: Listing }) {
               min={0}
               step="1"
               inputMode="decimal"
-              defaultValue={listing?.price}
+              defaultValue={start?.price}
               disabled={lockedByBids}
               className="bg-brand-50/40 placeholder:text-foreground/50"
             />
           </Field>
         ) : null}
         <Field label="Category" error={errors.category}>
-          <FieldSelect name="category" defaultValue={listing?.category ?? "textbooks"} options={CATEGORIES} />
+          <FieldSelect name="category" defaultValue={start?.category ?? "textbooks"} options={CATEGORIES} />
         </Field>
         <Field label="Condition" error={errors.condition}>
           <FieldSelect name="condition" defaultValue={listing?.condition ?? "good"} options={CONDITIONS} />

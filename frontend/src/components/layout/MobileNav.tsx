@@ -1,6 +1,6 @@
 "use client";
 
-import { Heart, LayoutGrid, MessageSquare, Plus, Tag } from "lucide-react";
+import { Heart, LayoutGrid, MessageSquare, Plus, Sparkles, Tag } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { APP_NAME } from "@/lib/constants";
@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 
 const LINKS = [
   { href: "/", label: "Browse", icon: LayoutGrid },
+  { href: "/assistant", label: "Ask", icon: Sparkles },
   { href: "/listings/new", label: "Sell", icon: Plus },
   { href: "/my-listings", label: "Mine", icon: Tag },
   { href: "/saved", label: "Saved", icon: Heart },

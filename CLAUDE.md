@@ -160,7 +160,8 @@ when `uniswap` has none, so an older `uniswap` database needs the upgrade SQL (b
   `gemini-3.5-flash-lite` (free: 15/minute; `gemini-3.6-flash` is 20/day, `gemini-3.8-flash` hung).
   A 429 says "in a minute" or "tomorrow" (daily limit). Its turns go back unchanged (Gemini 3
   thought signatures). Never send it seller names or emails (free tier: Google may read requests).
-  The frontend chat page is not built yet.
+  Frontend: `/assistant` (`components/marketplace/Assistant*.tsx`); the conversation lives in page
+  state only. A draft opens `/listings/new?type=buy_request&title=…`, which fills in `NewListingForm`.
 - **Messaging:** there is no conversations table. A thread is all messages between two users about
   one listing (this follows the ER diagram).
 - **Uploads:** `POST /api/uploads` with raw image bytes (max 5 MB; the form takes 4 MB, `MAX_PHOTO_MB`,

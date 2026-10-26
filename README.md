@@ -48,6 +48,10 @@ Putting it online (Supabase, Render, Vercel, Cloudinary, Stripe, Telegram): [`DE
 - **KHQR payments (Bakong):** sellers add their Bakong account in Settings; buyers scan a QR with
   any Cambodian banking app and the money goes straight to the seller. UniSwap confirms the payment
   with the National Bank's Bakong API and marks the item sold.
+- **Ask UniSwap (shopping assistant):** the Ask page lets a student describe what they need in their own
+  words ("a bike under $50"). Gemini searches the listings and answers with the best matches as
+  cards; when nothing fits, it drafts a wanted post that opens the sell form filled in, to check and
+  post. It only reads listings, and it is switched off until `GEMINI_API_KEY` is set (free tier).
 - **Security:** parameterized SQL everywhere, hashed passwords, verified accounts only, owner-only
   changes, a password change signs out stolen sessions, and no secrets in the repository.
 
@@ -70,8 +74,8 @@ Putting it online (Supabase, Render, Vercel, Cloudinary, Stripe, Telegram): [`DE
   set, photos are saved on the server's disk, and payments and Telegram stay switched off.
 - **KHQR on Render:** Bakong only answers Cambodian IP addresses, so KHQR works when the API runs
   in Cambodia (e.g. a laptop for the demo), not on Render.
-- **Ask UniSwap (shopping assistant):** the API is built and tested with a fake Gemini
-  (`POST /api/assistant`); the chat page is not built yet, and it needs a free key in `GEMINI_API_KEY`.
+- **Ask UniSwap's free tier:** Gemini's free limits are shared by every student (on
+  `gemini-3.5-flash-lite`, 15 requests a minute, about 7 questions), so it suits a demo, not heavy use.
 - **Possible next steps:** real-time chat, safe meetup spots, and notification settings.
 
 ### Known limitations (by design)

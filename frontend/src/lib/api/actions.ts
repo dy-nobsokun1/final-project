@@ -4,7 +4,15 @@ import { refresh } from "next/cache";
 import { cookies } from "next/headers";
 import { ApiError, apiFetch, TOKEN_COOKIE } from "@/lib/api/http";
 import { getKhqrStatus } from "@/lib/api";
-import type { KhqrPayment, KhqrStatus, ListingStatus, ListingWithSeller, User } from "@/types";
+import type {
+  AssistantAnswer,
+  AssistantMessage,
+  KhqrPayment,
+  KhqrStatus,
+  ListingStatus,
+  ListingWithSeller,
+  User,
+} from "@/types";
 
 /**
  * Server Actions: the changes the browser asks for. They run on the Next.js server and forward
@@ -428,4 +436,20 @@ export async function sendMessage(listingId: string, receiverId: string, body: s
   }
   refresh(); // re-render the thread so the new message shows
   return {};
+}
+
+/**
+ * Asks the shopping assistant the last question in `messages`. The API keeps no history, so the
+ * whole conversation goes with every question, as role and text only (not the cards).
+ */
+export async function askAssistant(messages: AssistantMessage[]): Promise<ActionResult & { answer?: AssistantAnswer }> {
+  try {
+    const answer = await apiFetch<AssistantAnswer>("/api/assistant", {
+      method: "POST",
+      body: JSON.stringify({ messages: messages.map(({ role, text }) => ({ role, text })) }),
+    });
+    return { answer };
+  } catch (error) {
+    return toActionError(error);
+  }
 }

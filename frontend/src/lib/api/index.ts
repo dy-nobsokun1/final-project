@@ -72,6 +72,12 @@ export async function getPaymentOptions(): Promise<{ card: boolean; khqr: boolea
   return { card: enabled, khqr };
 }
 
+/** Whether the shopping assistant is switched on in the API (it needs GEMINI_API_KEY). */
+export async function isAssistantEnabled(): Promise<boolean> {
+  const { enabled } = await apiFetch<{ enabled: boolean }>("/api/assistant/config");
+  return enabled;
+}
+
 /**
  * Whether a KHQR has been paid. The API asks Bakong itself each time, so the browser cannot mark
  * anything paid. Null if the payment is not this user's (or does not exist).

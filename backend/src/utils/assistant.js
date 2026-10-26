@@ -141,7 +141,8 @@ export function toWantedDraft(draft) {
 function finish({ text, listingIds, wantedDraft }, found) {
   const ids = [...new Set(Array.isArray(listingIds) ? listingIds : [])];
   return {
-    reply: (typeof text === "string" && text.trim().slice(0, 2000)) || FALLBACK_REPLY,
+    // Capped like the student's messages, so the frontend can send this reply back as conversation history.
+    reply: (typeof text === "string" && text.trim().slice(0, MAX_MESSAGE_LENGTH)) || FALLBACK_REPLY,
     listings: ids.filter((id) => found.has(id)).slice(0, MAX_CARDS).map((id) => found.get(id)),
     wantedDraft: toWantedDraft(wantedDraft),
   };

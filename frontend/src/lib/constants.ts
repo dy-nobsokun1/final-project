@@ -5,6 +5,7 @@ export const APP_NAME = "UniSwap";
 /** Primary navigation shown in the navbar and the mobile bottom bar. */
 export const NAV_LINKS = [
   { href: "/", label: "Browse" },
+  { href: "/assistant", label: "Ask" },
   { href: "/listings/new", label: "Sell" },
   { href: "/my-listings", label: "My Listings" },
   { href: "/saved", label: "Saved" },
