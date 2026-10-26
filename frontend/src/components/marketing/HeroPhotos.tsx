@@ -7,14 +7,18 @@ import { cn, formatListingPrice } from "@/lib/utils";
 const TILTS = ["-rotate-6", "rotate-3", "rotate-[8deg]"];
 
 /**
- * The three newest active listings with a photo, fanned out on the right of the hero (from `lg` up).
+ * The three newest active items with a photo, fanned out on the right of the hero (from `lg` up).
+ * Wanted posts are left out: they ask for an item, so a photo of one would look like it is for sale.
  * Always the newest items, whatever the browse filters are: it asks for the unfiltered list, which
  * the API sorts newest first. On the unfiltered page that is the same request as the grid's, and
  * Next.js runs identical GET fetches only once per render, so it costs no extra API call.
  */
 export async function HeroPhotos() {
   const newest = (await getListings())
-    .filter((listing) => listing.status === "active" && listing.imageUrls.length > 0)
+    .filter(
+      (listing) =>
+        listing.status === "active" && listing.listingType !== "buy_request" && listing.imageUrls.length > 0,
+    )
     .slice(0, 3);
   if (newest.length === 0) return null;
 

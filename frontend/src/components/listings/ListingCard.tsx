@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ListingImage } from "@/components/listings/ListingImage";
 import { ListingTypeTag } from "@/components/listings/ListingTypeTag";
 import { SaveButton } from "@/components/listings/SaveButton";
+import { WantedCard } from "@/components/listings/WantedCard";
 import { VerifiedBadge } from "@/components/profile/VerifiedBadge";
 import { Badge } from "@/components/ui/badge";
 import { CATEGORIES, conditionLabel, statusLabel } from "@/lib/constants";
@@ -24,16 +25,20 @@ interface ListingCardProps {
 
 /** Summary card used on the browse, search and seller pages. */
 export function ListingCard({ listing, saved }: ListingCardProps) {
+  // A wanted post has no photo and asks for an item instead of offering one, so it gets its own look.
+  if (listing.listingType === "buy_request") return <WantedCard listing={listing} saved={saved} />;
+
   const category = CATEGORIES.find((item) => item.value === listing.category);
   const isUnavailable = listing.status !== "active";
 
   return (
     // The heart sits next to the link, not inside it: a button inside a link is invalid HTML, and
-    // clicking it would open the listing too. The lift on hover moves both together.
-    <div className="relative transition-transform hover:-translate-y-0.5">
+    // clicking it would open the listing too. The lift on hover moves both together. `h-full`
+    // makes every card in a grid row as tall as the tallest one.
+    <div className="relative h-full transition-transform hover:-translate-y-0.5">
       <Link
         href={`/listings/${listing.id}`}
-        className="light-surface group flex flex-col overflow-hidden rounded-xl border border-border bg-card transition-all hover:border-brand-600 hover:shadow-lg hover:shadow-brand-600/20"
+        className="light-surface group flex h-full flex-col overflow-hidden rounded-xl border border-border bg-card transition-all hover:border-brand-600 hover:shadow-lg hover:shadow-brand-600/20"
       >
         <div className="relative">
           <ListingImage
