@@ -7,7 +7,7 @@ export const metadata = { title: "Ask UniSwap | UniSwap" };
 
 /** Ask UniSwap, the shopping assistant. Signed-in students only: the API needs a login for it. */
 export default async function AssistantPage() {
-  await requireUser();
+  const user = await requireUser();
 
   if (!(await isAssistantEnabled())) {
     return (
@@ -19,5 +19,5 @@ export default async function AssistantPage() {
       />
     );
   }
-  return <AssistantChat />;
+  return <AssistantChat userId={user.id} />;
 }

@@ -1,44 +1,61 @@
 "use client";
 
-import { Sparkles } from "lucide-react";
+import { MessageSquarePlus, Sparkles } from "lucide-react";
 import { useState } from "react";
+import { AssistantMessages } from "@/components/marketplace/AssistantMessages";
 import { AssistantQuestionBox } from "@/components/marketplace/AssistantQuestionBox";
-import { AssistantReply } from "@/components/marketplace/AssistantReply";
 import { AssistantStarters } from "@/components/marketplace/AssistantStarters";
+import { Button } from "@/components/ui/button";
+import { useAssistantHistory } from "@/hooks/use-assistant-history";
 import { askAssistant } from "@/lib/api/actions";
 import type { AssistantMessage } from "@/types";
 
-/** The API takes at most 20 messages (backend/src/utils/assistant.js), so only the newest are sent. */
-const MAX_HISTORY = 20;
+/**
+ * Each question sends only the newest messages: itself and the two questions and answers before it.
+ * That is enough for a follow-up like "yes, up to $80" after a draft offer, and it keeps long chats
+ * within Groq's free token limit. An odd number, so the first one sent is always a question.
+ */
+const MESSAGES_SENT = 5;
 
 /**
- * Ask UniSwap: a chat with the shopping assistant. The conversation lives only in this page's state
- * (leaving the page clears it), and each question sends its newest messages to the API.
- * Messages are only ever added at the end, so their index is a stable key.
+ * Ask UniSwap: a chat with the shopping assistant. The conversation is saved for this tab
+ * (useAssistantHistory), so it is still there after leaving the page or reloading, until "New chat".
  */
-export function AssistantChat() {
-  const [messages, setMessages] = useState<AssistantMessage[]>([]);
+export function AssistantChat({ userId }: { userId: string }) {
+  const [messages, saveMessages] = useAssistantHistory(userId);
+  // The question waiting for its answer. It is saved only with that answer, so a failed one never is.
+  const [pending, setPending] = useState<string | null>(null);
   const [question, setQuestion] = useState("");
-  const [isAsking, setIsAsking] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [announcement, setAnnouncement] = useState("");
+  const isAsking = pending !== null;
+  const shown: AssistantMessage[] | null =
+    messages && pending !== null ? [...messages, { role: "user", text: pending }] : messages;
 
   async function ask(text: string) {
-    if (!text.trim() || isAsking) return;
-    const conversation: AssistantMessage[] = [...messages, { role: "user", text: text.trim() }];
-    setMessages(conversation);
+    if (!text.trim() || isAsking || !messages) return;
+    const asked: AssistantMessage = { role: "user", text: text.trim() };
+    setPending(asked.text);
     setQuestion("");
     setError(null);
-    setIsAsking(true);
-    const result = await askAssistant(conversation.slice(-MAX_HISTORY));
-    setIsAsking(false);
+    const result = await askAssistant([...messages, asked].slice(-MESSAGES_SENT));
+    setPending(null);
     if (result.answer) {
-      setMessages([...conversation, { role: "assistant", text: result.answer.reply, answer: result.answer }]);
+      saveMessages([...messages, asked, { role: "assistant", text: result.answer.reply, answer: result.answer }]);
+      setAnnouncement(result.answer.reply);
     } else {
-      // Take the question off the chat and put it back in the box, so it can be sent again.
-      setMessages(messages);
+      // Put the question back in the box, so it can be sent again.
       setQuestion(text);
       setError(result.error ?? "Something went wrong. Please try again.");
     }
+  }
+
+  function startNewChat() {
+    saveMessages([]);
+    setError(null);
+    setAnnouncement("");
+    // The button disappears with the chat, so focus moves to the question box.
+    document.getElementById("assistant-question")?.focus();
   }
 
   return (
@@ -48,35 +65,24 @@ export function AssistantChat() {
       <header className="flex items-center gap-2">
         <Sparkles aria-hidden="true" className="size-5" />
         <h1 className="font-heading text-2xl tracking-tight">Ask UniSwap</h1>
+        {messages && messages.length > 0 ? (
+          <Button variant="ghost" onClick={startNewChat} disabled={isAsking} className="ml-auto">
+            <MessageSquarePlus aria-hidden="true" />
+            New chat
+          </Button>
+        ) : null}
       </header>
 
-      {/* flex-col-reverse starts the scroll at the bottom, so the newest answer is in view. */}
+      {/* flex-col-reverse starts the scroll at the bottom, so the newest answer is in view.
+          Empty until the saved chat is read, so the starters never flash before it. */}
       <div className="flex min-h-0 flex-1 flex-col-reverse overflow-y-auto">
-        {messages.length === 0 ? (
-          <AssistantStarters onPick={(text) => void ask(text)} />
-        ) : (
-          <ul className="flex flex-col gap-4">
-            {messages.map((message, index) => message.answer ? (
-              <AssistantReply key={index} answer={message.answer} />
-            ) : (
-              <li key={index} className="flex justify-end">
-                <p className="max-w-[75%] whitespace-pre-wrap break-words rounded-2xl bg-primary px-3.5 py-2 text-sm text-primary-foreground">
-                  {message.text}
-                </p>
-              </li>
-            ))}
-            {isAsking ? (
-              <li className="animate-pulse text-sm text-muted-foreground motion-reduce:animate-none">
-                Looking through the listings...
-              </li>
-            ) : null}
-          </ul>
-        )}
+        {shown?.length === 0 ? <AssistantStarters onPick={(text) => void ask(text)} /> : null}
+        {shown && shown.length > 0 ? <AssistantMessages messages={shown} isAsking={isAsking} /> : null}
       </div>
 
-      {/* Screen readers hear each new answer here, without the cards read out too. */}
+      {/* Screen readers hear each new answer here (not a restored one), without the cards read out too. */}
       <p role="status" className="sr-only">
-        {isAsking ? "Looking through the listings" : messages.at(-1)?.answer?.reply}
+        {isAsking ? "Looking through the listings" : announcement}
       </p>
 
       <AssistantQuestionBox

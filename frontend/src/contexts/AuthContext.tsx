@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { createContext, useCallback, useContext, useMemo, useState } from "react";
 import type { ReactNode } from "react";
+import { clearAssistantHistory } from "@/hooks/use-assistant-history";
 import { signIn as signInAction, signOut as signOutAction } from "@/lib/api/actions";
 import type { User } from "@/types";
 
@@ -55,6 +56,7 @@ export function AuthProvider({
   }, []);
 
   const signOut = useCallback(async () => {
+    clearAssistantHistory();
     await signOutAction();
     setUser(null);
     router.push("/");
