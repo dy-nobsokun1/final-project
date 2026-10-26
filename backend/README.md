@@ -13,12 +13,27 @@ npm install
 cp .env.example .env      # then edit DATABASE_URL and JWT_SECRET
 npm run db:setup          # creates the tables (drops existing data!)
 npm run db:seed           # optional demo data; every demo user's password is "password123"
+npm run db:samples        # optional: 60 more realistic items (see "Sample listings" below)
 npm run dev               # http://localhost:4000, restarts on file changes
 npm test                  # unit tests (Node's built-in test runner)
 npm run test:api          # API tests against a separate test database (see Testing below)
 ```
 
 Check it works: `curl http://localhost:4000/api/health` → `{"status":"ok"}`
+
+### Sample listings
+
+`npm run db:samples` adds 60 realistic items to the database you already have (it wipes nothing and
+skips items it added before), posted by 6 demo students whose emails end in `@demo.edu.kh` (password
+`password123`). `npm run db:samples -- --remove` deletes those students and everything they posted.
+
+The items come from two free public datasets, saved in `scripts/sample-listings.json` so loading
+needs no internet: electronics, clothing, furniture, scooters, sports and kitchen items from
+[DummyJSON](https://dummyjson.com) (a fake product API made for prototypes), and textbooks from
+[Open Library](https://openlibrary.org) (public-domain book data). `scripts/fetch-sample-listings.js`
+rebuilt that file: it maps them to our categories, prices them second-hand, varies the condition, and
+makes a few giveaways, trades, wanted posts and 2 auctions. Photos stay on those two sites (the
+listings store their URLs), so no third-party images are copied into this repository.
 
 ### Verification emails (optional)
 

@@ -1,0 +1,898 @@
+{
+  "sellers": [
+    {
+      "name": "Sreyneang Chea",
+      "email": "sreyneang@demo.edu.kh",
+      "major": "Marketing",
+      "graduationYear": 2027
+    },
+    {
+      "name": "Vannak Sok",
+      "email": "vannak@demo.edu.kh",
+      "major": "Computer Science",
+      "graduationYear": 2026
+    },
+    {
+      "name": "Bopha Kim",
+      "email": "bopha@demo.edu.kh",
+      "major": "Biology",
+      "graduationYear": 2028
+    },
+    {
+      "name": "Rithy Heng",
+      "email": "rithy@demo.edu.kh",
+      "major": "Economics",
+      "graduationYear": 2027
+    },
+    {
+      "name": "Sophea Mao",
+      "email": "sophea@demo.edu.kh",
+      "major": "Architecture",
+      "graduationYear": 2026
+    },
+    {
+      "name": "Pisey Lim",
+      "email": "pisey@demo.edu.kh",
+      "major": "Psychology",
+      "graduationYear": 2028
+    }
+  ],
+  "listings": [
+    {
+      "title": "Lenovo Yoga 920",
+      "description": "The Lenovo Yoga 920 is a 2-in-1 convertible laptop with a flexible hinge, allowing you to use it as a laptop or tablet, offering versatility and portability. Used, in good working condition.",
+      "category": "electronics",
+      "condition": "good",
+      "type": "auction",
+      "price": 605,
+      "images": [
+        "https://cdn.dummyjson.com/product-images/laptops/lenovo-yoga-920/1.webp",
+        "https://cdn.dummyjson.com/product-images/laptops/lenovo-yoga-920/2.webp",
+        "https://cdn.dummyjson.com/product-images/laptops/lenovo-yoga-920/3.webp"
+      ],
+      "auction": {
+        "days": 3,
+        "minIncrement": 5
+      },
+      "seller": 0,
+      "hoursAgo": 0
+    },
+    {
+      "title": "Huawei Matebook X Pro",
+      "description": "The Huawei Matebook X Pro is a slim and stylish laptop with a high-resolution touchscreen display, offering a premium experience for users on the go. Used only a few times, works like new.",
+      "category": "electronics",
+      "condition": "like_new",
+      "type": "sale",
+      "price": 980,
+      "images": [
+        "https://cdn.dummyjson.com/product-images/laptops/huawei-matebook-x-pro/1.webp",
+        "https://cdn.dummyjson.com/product-images/laptops/huawei-matebook-x-pro/2.webp",
+        "https://cdn.dummyjson.com/product-images/laptops/huawei-matebook-x-pro/3.webp"
+      ],
+      "seller": 1,
+      "hoursAgo": 7
+    },
+    {
+      "title": "New DELL XPS 13 9300 Laptop",
+      "description": "The New DELL XPS 13 9300 Laptop is a compact and powerful device, featuring a virtually borderless InfinityEdge display and high-end performance for various tasks. Shows some signs of use, but works fine.",
+      "category": "electronics",
+      "condition": "fair",
+      "type": "sale",
+      "price": 600,
+      "images": [
+        "https://cdn.dummyjson.com/product-images/laptops/new-dell-xps-13-9300-laptop/1.webp",
+        "https://cdn.dummyjson.com/product-images/laptops/new-dell-xps-13-9300-laptop/2.webp",
+        "https://cdn.dummyjson.com/product-images/laptops/new-dell-xps-13-9300-laptop/3.webp"
+      ],
+      "seller": 2,
+      "hoursAgo": 14
+    },
+    {
+      "title": "Asus Zenbook Pro Dual Screen Laptop",
+      "description": "The Asus Zenbook Pro Dual Screen Laptop is a high-performance device with dual screens, providing productivity and versatility for creative professionals. Used, in good working condition.",
+      "category": "electronics",
+      "condition": "good",
+      "type": "sale",
+      "price": 990,
+      "images": [
+        "https://cdn.dummyjson.com/product-images/laptops/asus-zenbook-pro-dual-screen-laptop/1.webp",
+        "https://cdn.dummyjson.com/product-images/laptops/asus-zenbook-pro-dual-screen-laptop/2.webp",
+        "https://cdn.dummyjson.com/product-images/laptops/asus-zenbook-pro-dual-screen-laptop/3.webp"
+      ],
+      "seller": 3,
+      "hoursAgo": 21
+    },
+    {
+      "title": "Realme C35",
+      "description": "The Realme C35 is a budget-friendly smartphone with a focus on providing essential features for everyday use. It offers a reliable performance and user-friendly experience. Still unopened. Open to trades: tell me what you have.",
+      "category": "electronics",
+      "condition": "new",
+      "type": "trade",
+      "price": 120,
+      "images": [
+        "https://cdn.dummyjson.com/product-images/smartphones/realme-c35/1.webp",
+        "https://cdn.dummyjson.com/product-images/smartphones/realme-c35/2.webp",
+        "https://cdn.dummyjson.com/product-images/smartphones/realme-c35/3.webp"
+      ],
+      "seller": 4,
+      "hoursAgo": 28
+    },
+    {
+      "title": "iPhone 5s",
+      "description": "The iPhone 5s is a classic smartphone known for its compact design and advanced features during its release. While it's an older model, it still provides a reliable user experience. Used, in good working condition.",
+      "category": "electronics",
+      "condition": "good",
+      "type": "sale",
+      "price": 110,
+      "images": [
+        "https://cdn.dummyjson.com/product-images/smartphones/iphone-5s/1.webp",
+        "https://cdn.dummyjson.com/product-images/smartphones/iphone-5s/2.webp",
+        "https://cdn.dummyjson.com/product-images/smartphones/iphone-5s/3.webp"
+      ],
+      "seller": 5,
+      "hoursAgo": 35
+    },
+    {
+      "title": "Oppo A57",
+      "description": "The Oppo A57 is a mid-range smartphone known for its sleek design and capable features. It offers a balance of performance and affordability, making it a popular choice. Used only a few times, works like new.",
+      "category": "electronics",
+      "condition": "like_new",
+      "type": "sale",
+      "price": 175,
+      "images": [
+        "https://cdn.dummyjson.com/product-images/smartphones/oppo-a57/1.webp",
+        "https://cdn.dummyjson.com/product-images/smartphones/oppo-a57/2.webp",
+        "https://cdn.dummyjson.com/product-images/smartphones/oppo-a57/3.webp"
+      ],
+      "seller": 0,
+      "hoursAgo": 42
+    },
+    {
+      "title": "Vivo S1",
+      "description": "The Vivo S1 is a stylish and mid-range smartphone offering a blend of design and performance. It features a vibrant display, capable camera system, and reliable functionality. Shows some signs of use, but works fine.",
+      "category": "electronics",
+      "condition": "fair",
+      "type": "sale",
+      "price": 100,
+      "images": [
+        "https://cdn.dummyjson.com/product-images/smartphones/vivo-s1/1.webp",
+        "https://cdn.dummyjson.com/product-images/smartphones/vivo-s1/2.webp",
+        "https://cdn.dummyjson.com/product-images/smartphones/vivo-s1/3.webp"
+      ],
+      "seller": 1,
+      "hoursAgo": 49
+    },
+    {
+      "title": "iPhone 6",
+      "description": "The iPhone 6 is a stylish and capable smartphone with a larger display and improved performance. It introduced new features and design elements, making it a popular choice in its time. Used, in good working condition.",
+      "category": "electronics",
+      "condition": "good",
+      "type": "sale",
+      "price": 165,
+      "images": [
+        "https://cdn.dummyjson.com/product-images/smartphones/iphone-6/1.webp",
+        "https://cdn.dummyjson.com/product-images/smartphones/iphone-6/2.webp",
+        "https://cdn.dummyjson.com/product-images/smartphones/iphone-6/3.webp"
+      ],
+      "seller": 2,
+      "hoursAgo": 56
+    },
+    {
+      "title": "Samsung Galaxy Tab White",
+      "description": "The Samsung Galaxy Tab in White is a sleek and versatile Android tablet. With a vibrant display, long-lasting battery, and a range of features, it offers a great user experience for various tasks. Still unopened.",
+      "category": "electronics",
+      "condition": "new",
+      "type": "sale",
+      "price": 280,
+      "images": [
+        "https://cdn.dummyjson.com/product-images/tablets/samsung-galaxy-tab-white/1.webp",
+        "https://cdn.dummyjson.com/product-images/tablets/samsung-galaxy-tab-white/2.webp",
+        "https://cdn.dummyjson.com/product-images/tablets/samsung-galaxy-tab-white/3.webp"
+      ],
+      "seller": 3,
+      "hoursAgo": 63
+    },
+    {
+      "title": "iPad Mini 2021 Starlight",
+      "description": "The iPad Mini 2021 in Starlight is a compact and powerful tablet from Apple. Featuring a stunning Retina display, powerful A-series chip, and a sleek design, it offers a premium tablet experience. Used, in good working condition.",
+      "category": "electronics",
+      "condition": "good",
+      "type": "sale",
+      "price": 275,
+      "images": [
+        "https://cdn.dummyjson.com/product-images/tablets/ipad-mini-2021-starlight/1.webp",
+        "https://cdn.dummyjson.com/product-images/tablets/ipad-mini-2021-starlight/2.webp",
+        "https://cdn.dummyjson.com/product-images/tablets/ipad-mini-2021-starlight/3.webp"
+      ],
+      "seller": 4,
+      "hoursAgo": 70
+    },
+    {
+      "title": "Samsung Galaxy Tab S8 Plus Grey",
+      "description": "The Samsung Galaxy Tab S8 Plus in Grey is a high-performance Android tablet by Samsung. With a large AMOLED display, powerful processor, and S Pen support, it's ideal for productivity and entertainment. Used only a few times, works like new.",
+      "category": "electronics",
+      "condition": "like_new",
+      "type": "sale",
+      "price": 420,
+      "images": [
+        "https://cdn.dummyjson.com/product-images/tablets/samsung-galaxy-tab-s8-plus-grey/1.webp",
+        "https://cdn.dummyjson.com/product-images/tablets/samsung-galaxy-tab-s8-plus-grey/2.webp",
+        "https://cdn.dummyjson.com/product-images/tablets/samsung-galaxy-tab-s8-plus-grey/3.webp"
+      ],
+      "seller": 5,
+      "hoursAgo": 77
+    },
+    {
+      "title": "Selfie Stick Monopod",
+      "description": "The Selfie Stick Monopod is a extendable and foldable device for capturing the perfect selfie or group photo. Compatible with smartphones and cameras. Shows some signs of use, but works fine.",
+      "category": "electronics",
+      "condition": "fair",
+      "type": "giveaway",
+      "price": 0,
+      "images": [
+        "https://cdn.dummyjson.com/product-images/mobile-accessories/selfie-stick-monopod/1.webp"
+      ],
+      "seller": 0,
+      "hoursAgo": 84
+    },
+    {
+      "title": "Selfie Lamp with iPhone",
+      "description": "The Selfie Lamp with iPhone is a portable and adjustable LED light designed to enhance your selfies and video calls. Attach it to your iPhone for well-lit photos. Used, in good working condition. Open to trades: tell me what you have.",
+      "category": "electronics",
+      "condition": "good",
+      "type": "trade",
+      "price": 8,
+      "images": [
+        "https://cdn.dummyjson.com/product-images/mobile-accessories/selfie-lamp-with-iphone/1.webp"
+      ],
+      "seller": 1,
+      "hoursAgo": 91
+    },
+    {
+      "title": "Apple iPhone Charger",
+      "description": "The Apple iPhone Charger is a high-quality charger designed for fast and efficient charging of your iPhone. Ensure your device stays powered up and ready to go. Still unopened.",
+      "category": "electronics",
+      "condition": "new",
+      "type": "sale",
+      "price": 16,
+      "images": [
+        "https://cdn.dummyjson.com/product-images/mobile-accessories/apple-iphone-charger/1.webp",
+        "https://cdn.dummyjson.com/product-images/mobile-accessories/apple-iphone-charger/2.webp"
+      ],
+      "seller": 2,
+      "hoursAgo": 98
+    },
+    {
+      "title": "Monopod",
+      "description": "The Monopod is a versatile camera accessory for stable and adjustable shooting. Perfect for capturing selfies, group photos, and videos with ease. Used, in good working condition.",
+      "category": "electronics",
+      "condition": "good",
+      "type": "sale",
+      "price": 11,
+      "images": [
+        "https://cdn.dummyjson.com/product-images/mobile-accessories/monopod/1.webp",
+        "https://cdn.dummyjson.com/product-images/mobile-accessories/monopod/2.webp"
+      ],
+      "seller": 3,
+      "hoursAgo": 105
+    },
+    {
+      "title": "Bedside Table African Cherry",
+      "description": "The Bedside Table in African Cherry is a stylish and functional addition to your bedroom, providing convenient storage space and a touch of elegance. Used only a few times, works like new.",
+      "category": "furniture",
+      "condition": "like_new",
+      "type": "sale",
+      "price": 210,
+      "images": [
+        "https://cdn.dummyjson.com/product-images/furniture/bedside-table-african-cherry/1.webp",
+        "https://cdn.dummyjson.com/product-images/furniture/bedside-table-african-cherry/2.webp",
+        "https://cdn.dummyjson.com/product-images/furniture/bedside-table-african-cherry/3.webp"
+      ],
+      "seller": 4,
+      "hoursAgo": 112
+    },
+    {
+      "title": "Knoll Saarinen Executive Conference Chair",
+      "description": "The Knoll Saarinen Executive Conference Chair is a modern and ergonomic chair, perfect for your office or conference room with its timeless design. Shows some signs of use, but works fine.",
+      "category": "furniture",
+      "condition": "fair",
+      "type": "sale",
+      "price": 200,
+      "images": [
+        "https://cdn.dummyjson.com/product-images/furniture/knoll-saarinen-executive-conference-chair/1.webp",
+        "https://cdn.dummyjson.com/product-images/furniture/knoll-saarinen-executive-conference-chair/2.webp",
+        "https://cdn.dummyjson.com/product-images/furniture/knoll-saarinen-executive-conference-chair/3.webp"
+      ],
+      "seller": 5,
+      "hoursAgo": 119
+    },
+    {
+      "title": "Plant Pot",
+      "description": "The Plant Pot is a stylish container for your favorite plants. With a sleek design, it complements your indoor or outdoor garden, adding a modern touch to your plant display. Used, in good working condition.",
+      "category": "furniture",
+      "condition": "good",
+      "type": "sale",
+      "price": 8,
+      "images": [
+        "https://cdn.dummyjson.com/product-images/home-decoration/plant-pot/1.webp",
+        "https://cdn.dummyjson.com/product-images/home-decoration/plant-pot/2.webp",
+        "https://cdn.dummyjson.com/product-images/home-decoration/plant-pot/3.webp"
+      ],
+      "seller": 0,
+      "hoursAgo": 126
+    },
+    {
+      "title": "Table Lamp",
+      "description": "The Table Lamp is a functional and decorative lighting solution for your living space. With a modern design, it provides both ambient and task lighting, enhancing the atmosphere. Still unopened.",
+      "category": "furniture",
+      "condition": "new",
+      "type": "sale",
+      "price": 40,
+      "images": [
+        "https://cdn.dummyjson.com/product-images/home-decoration/table-lamp/1.webp"
+      ],
+      "seller": 1,
+      "hoursAgo": 133
+    },
+    {
+      "title": "Man Short Sleeve Shirt",
+      "description": "The Man Short Sleeve Shirt is a breezy and stylish option for warm days. With a comfortable fit and short sleeves, it's perfect for a laid-back yet polished look. Used, in good working condition.",
+      "category": "clothing",
+      "condition": "good",
+      "type": "sale",
+      "price": 11,
+      "images": [
+        "https://cdn.dummyjson.com/product-images/mens-shirts/man-short-sleeve-shirt/1.webp",
+        "https://cdn.dummyjson.com/product-images/mens-shirts/man-short-sleeve-shirt/2.webp",
+        "https://cdn.dummyjson.com/product-images/mens-shirts/man-short-sleeve-shirt/3.webp"
+      ],
+      "seller": 2,
+      "hoursAgo": 140
+    },
+    {
+      "title": "Gigabyte Aorus Men Tshirt",
+      "description": "The Gigabyte Aorus Men Tshirt is a cool and casual shirt for gaming enthusiasts. With the Aorus logo and sleek design, it's perfect for expressing your gaming style. Used only a few times, works like new.",
+      "category": "clothing",
+      "condition": "like_new",
+      "type": "sale",
+      "price": 17,
+      "images": [
+        "https://cdn.dummyjson.com/product-images/mens-shirts/gigabyte-aorus-men-tshirt/1.webp",
+        "https://cdn.dummyjson.com/product-images/mens-shirts/gigabyte-aorus-men-tshirt/2.webp",
+        "https://cdn.dummyjson.com/product-images/mens-shirts/gigabyte-aorus-men-tshirt/3.webp"
+      ],
+      "seller": 3,
+      "hoursAgo": 147
+    },
+    {
+      "title": "Men Check Shirt",
+      "description": "The Men Check Shirt is a classic and versatile shirt featuring a stylish check pattern. Suitable for various occasions, it adds a smart and polished touch to your wardrobe. Shows some signs of use, but works fine. Open to trades: tell me what you have.",
+      "category": "clothing",
+      "condition": "fair",
+      "type": "trade",
+      "price": 11,
+      "images": [
+        "https://cdn.dummyjson.com/product-images/mens-shirts/men-check-shirt/1.webp",
+        "https://cdn.dummyjson.com/product-images/mens-shirts/men-check-shirt/2.webp",
+        "https://cdn.dummyjson.com/product-images/mens-shirts/men-check-shirt/3.webp"
+      ],
+      "seller": 4,
+      "hoursAgo": 154
+    },
+    {
+      "title": "Girl Summer Dress",
+      "description": "The Girl Summer Dress is a cute and breezy dress designed for warm weather. With playful patterns and lightweight fabric, it's perfect for keeping cool and stylish during the summer. Used, in good working condition.",
+      "category": "clothing",
+      "condition": "good",
+      "type": "sale",
+      "price": 11,
+      "images": [
+        "https://cdn.dummyjson.com/product-images/tops/girl-summer-dress/1.webp",
+        "https://cdn.dummyjson.com/product-images/tops/girl-summer-dress/2.webp",
+        "https://cdn.dummyjson.com/product-images/tops/girl-summer-dress/3.webp"
+      ],
+      "seller": 5,
+      "hoursAgo": 161
+    },
+    {
+      "title": "Short Frock",
+      "description": "The Short Frock is a playful and trendy dress with a shorter length. Ideal for casual outings or special occasions, it combines style and comfort for a fashionable look. Still unopened.",
+      "category": "clothing",
+      "condition": "new",
+      "type": "sale",
+      "price": 20,
+      "images": [
+        "https://cdn.dummyjson.com/product-images/tops/short-frock/1.webp",
+        "https://cdn.dummyjson.com/product-images/tops/short-frock/2.webp",
+        "https://cdn.dummyjson.com/product-images/tops/short-frock/3.webp"
+      ],
+      "seller": 0,
+      "hoursAgo": 168
+    },
+    {
+      "title": "Dress Pea",
+      "description": "The Dress Pea is a stylish and comfortable dress with a pea pattern. Perfect for casual outings, it adds a playful and fun element to your wardrobe, making it a great choice for day-to-day wear. Used, in good working condition.",
+      "category": "clothing",
+      "condition": "good",
+      "type": "sale",
+      "price": 27,
+      "images": [
+        "https://cdn.dummyjson.com/product-images/womens-dresses/dress-pea/1.webp",
+        "https://cdn.dummyjson.com/product-images/womens-dresses/dress-pea/2.webp",
+        "https://cdn.dummyjson.com/product-images/womens-dresses/dress-pea/3.webp"
+      ],
+      "seller": 1,
+      "hoursAgo": 175
+    },
+    {
+      "title": "Corset With Black Skirt",
+      "description": "The Corset With Black Skirt is a chic and versatile outfit that pairs a fashionable corset with a classic black skirt. It offers a trendy and coordinated look for various occasions. Used only a few times, works like new.",
+      "category": "clothing",
+      "condition": "like_new",
+      "type": "sale",
+      "price": 56,
+      "images": [
+        "https://cdn.dummyjson.com/product-images/womens-dresses/corset-with-black-skirt/1.webp",
+        "https://cdn.dummyjson.com/product-images/womens-dresses/corset-with-black-skirt/2.webp",
+        "https://cdn.dummyjson.com/product-images/womens-dresses/corset-with-black-skirt/3.webp"
+      ],
+      "seller": 2,
+      "hoursAgo": 182
+    },
+    {
+      "title": "Nike Baseball Cleats",
+      "description": "Nike Baseball Cleats are designed for maximum traction and performance on the baseball field. They provide stability and support for players during games and practices. Shows some signs of use, but works fine.",
+      "category": "clothing",
+      "condition": "fair",
+      "type": "sale",
+      "price": 32,
+      "images": [
+        "https://cdn.dummyjson.com/product-images/mens-shoes/nike-baseball-cleats/1.webp",
+        "https://cdn.dummyjson.com/product-images/mens-shoes/nike-baseball-cleats/2.webp",
+        "https://cdn.dummyjson.com/product-images/mens-shoes/nike-baseball-cleats/3.webp"
+      ],
+      "seller": 3,
+      "hoursAgo": 189
+    },
+    {
+      "title": "Puma Future Rider Trainers",
+      "description": "The Puma Future Rider Trainers offer a blend of retro style and modern comfort. Perfect for casual wear, these trainers provide a fashionable and comfortable option for everyday use. Used, in good working condition.",
+      "category": "clothing",
+      "condition": "good",
+      "type": "sale",
+      "price": 49,
+      "images": [
+        "https://cdn.dummyjson.com/product-images/mens-shoes/puma-future-rider-trainers/1.webp",
+        "https://cdn.dummyjson.com/product-images/mens-shoes/puma-future-rider-trainers/2.webp",
+        "https://cdn.dummyjson.com/product-images/mens-shoes/puma-future-rider-trainers/3.webp"
+      ],
+      "seller": 4,
+      "hoursAgo": 196
+    },
+    {
+      "title": "Black & Brown Slipper",
+      "description": "The Black & Brown Slipper is a comfortable and stylish choice for casual wear. Featuring a blend of black and brown colors, it adds a touch of sophistication to your relaxation. Still unopened.",
+      "category": "clothing",
+      "condition": "new",
+      "type": "sale",
+      "price": 16,
+      "images": [
+        "https://cdn.dummyjson.com/product-images/womens-shoes/black-&-brown-slipper/1.webp",
+        "https://cdn.dummyjson.com/product-images/womens-shoes/black-&-brown-slipper/2.webp",
+        "https://cdn.dummyjson.com/product-images/womens-shoes/black-&-brown-slipper/3.webp"
+      ],
+      "seller": 5,
+      "hoursAgo": 203
+    },
+    {
+      "title": "Pampi Shoes",
+      "description": "Pampi Shoes offer a blend of comfort and style for everyday use. With a versatile design, they are suitable for various casual occasions, providing a trendy and relaxed look. Used, in good working condition.",
+      "category": "clothing",
+      "condition": "good",
+      "type": "sale",
+      "price": 16,
+      "images": [
+        "https://cdn.dummyjson.com/product-images/womens-shoes/pampi-shoes/1.webp",
+        "https://cdn.dummyjson.com/product-images/womens-shoes/pampi-shoes/2.webp",
+        "https://cdn.dummyjson.com/product-images/womens-shoes/pampi-shoes/3.webp"
+      ],
+      "seller": 0,
+      "hoursAgo": 210
+    },
+    {
+      "title": "White Faux Leather Backpack",
+      "description": "The White Faux Leather Backpack is a trendy and practical backpack for the modern woman. With a sleek white design and ample storage space, it's perfect for both casual and on-the-go styles. Used only a few times, works like new. Open to trades: tell me what you have.",
+      "category": "clothing",
+      "condition": "like_new",
+      "type": "trade",
+      "price": 28,
+      "images": [
+        "https://cdn.dummyjson.com/product-images/womens-bags/white-faux-leather-backpack/1.webp",
+        "https://cdn.dummyjson.com/product-images/womens-bags/white-faux-leather-backpack/2.webp",
+        "https://cdn.dummyjson.com/product-images/womens-bags/white-faux-leather-backpack/3.webp"
+      ],
+      "seller": 1,
+      "hoursAgo": 217
+    },
+    {
+      "title": "Blue Women's Handbag",
+      "description": "The Blue Women's Handbag is a stylish and spacious accessory for everyday use. With a vibrant blue color and multiple compartments, it combines fashion and functionality. Shows some signs of use, but works fine.",
+      "category": "clothing",
+      "condition": "fair",
+      "type": "sale",
+      "price": 20,
+      "images": [
+        "https://cdn.dummyjson.com/product-images/womens-bags/blue-women's-handbag/1.webp",
+        "https://cdn.dummyjson.com/product-images/womens-bags/blue-women's-handbag/2.webp",
+        "https://cdn.dummyjson.com/product-images/womens-bags/blue-women's-handbag/3.webp"
+      ],
+      "seller": 2,
+      "hoursAgo": 224
+    },
+    {
+      "title": "Scooter Motorcycle",
+      "description": "The Scooter Motorcycle is a practical and fuel-efficient bike ideal for urban commuting. It features a step-through design and user-friendly controls for easy maneuverability. Used, in good working condition.",
+      "category": "bikes",
+      "condition": "good",
+      "type": "auction",
+      "price": 1650,
+      "images": [
+        "https://cdn.dummyjson.com/product-images/motorcycle/scooter-motorcycle/1.webp",
+        "https://cdn.dummyjson.com/product-images/motorcycle/scooter-motorcycle/2.webp",
+        "https://cdn.dummyjson.com/product-images/motorcycle/scooter-motorcycle/3.webp"
+      ],
+      "auction": {
+        "days": 5,
+        "minIncrement": 20
+      },
+      "seller": 3,
+      "hoursAgo": 231
+    },
+    {
+      "title": "Generic Motorcycle",
+      "description": "The Generic Motorcycle is a versatile and reliable bike suitable for various riding preferences. With a balanced design, it provides a comfortable and efficient riding experience. Still unopened.",
+      "category": "bikes",
+      "condition": "new",
+      "type": "sale",
+      "price": 3200,
+      "images": [
+        "https://cdn.dummyjson.com/product-images/motorcycle/generic-motorcycle/1.webp",
+        "https://cdn.dummyjson.com/product-images/motorcycle/generic-motorcycle/2.webp",
+        "https://cdn.dummyjson.com/product-images/motorcycle/generic-motorcycle/3.webp"
+      ],
+      "seller": 4,
+      "hoursAgo": 238
+    },
+    {
+      "title": "Feather Shuttlecock",
+      "description": "The Feather Shuttlecock is used in the sport of badminton. It features natural feathers and is designed for high-speed play, providing stability and accuracy during matches. Used, in good working condition.",
+      "category": "other",
+      "condition": "good",
+      "type": "giveaway",
+      "price": 0,
+      "images": [
+        "https://cdn.dummyjson.com/product-images/sports-accessories/feather-shuttlecock/1.webp"
+      ],
+      "seller": 5,
+      "hoursAgo": 245
+    },
+    {
+      "title": "Basketball",
+      "description": "The Basketball is a standard ball used in basketball games. It is designed for dribbling, shooting, and passing in the game of basketball, suitable for both indoor and outdoor play. Used only a few times, works like new.",
+      "category": "other",
+      "condition": "like_new",
+      "type": "sale",
+      "price": 10,
+      "images": [
+        "https://cdn.dummyjson.com/product-images/sports-accessories/basketball/1.webp"
+      ],
+      "seller": 0,
+      "hoursAgo": 252
+    },
+    {
+      "title": "Football",
+      "description": "The Football, also known as a soccer ball, is the standard ball used in the sport of football (soccer). It is designed for kicking and passing in the game. Shows some signs of use, but works fine.",
+      "category": "other",
+      "condition": "fair",
+      "type": "giveaway",
+      "price": 0,
+      "images": [
+        "https://cdn.dummyjson.com/product-images/sports-accessories/football/1.webp"
+      ],
+      "seller": 1,
+      "hoursAgo": 259
+    },
+    {
+      "title": "Cricket Bat",
+      "description": "The Cricket Bat is an essential piece of cricket equipment used by batsmen to hit the cricket ball. It is made of wood and comes in various sizes and designs. Used, in good working condition.",
+      "category": "other",
+      "condition": "good",
+      "type": "sale",
+      "price": 16,
+      "images": [
+        "https://cdn.dummyjson.com/product-images/sports-accessories/cricket-bat/1.webp"
+      ],
+      "seller": 2,
+      "hoursAgo": 266
+    },
+    {
+      "title": "Tennis Racket",
+      "description": "The Tennis Racket is an essential piece of equipment used in the sport of tennis. It features a frame with strings and a grip, allowing players to hit the tennis ball. Still unopened.",
+      "category": "other",
+      "condition": "new",
+      "type": "sale",
+      "price": 40,
+      "images": [
+        "https://cdn.dummyjson.com/product-images/sports-accessories/tennis-racket/1.webp"
+      ],
+      "seller": 3,
+      "hoursAgo": 273
+    },
+    {
+      "title": "Lunch Box",
+      "description": "The Lunch Box is a convenient and portable container for packing and carrying your meals. With compartments for different foods, it's perfect for on-the-go dining. Used, in good working condition.",
+      "category": "other",
+      "condition": "good",
+      "type": "giveaway",
+      "price": 0,
+      "images": [
+        "https://cdn.dummyjson.com/product-images/kitchen-accessories/lunch-box/1.webp"
+      ],
+      "seller": 4,
+      "hoursAgo": 280
+    },
+    {
+      "title": "Carbon Steel Wok",
+      "description": "The Carbon Steel Wok is a versatile cooking pan suitable for stir-frying, sautéing, and deep frying. Its sturdy construction ensures even heat distribution for delicious meals. Used only a few times, works like new.",
+      "category": "other",
+      "condition": "like_new",
+      "type": "sale",
+      "price": 21,
+      "images": [
+        "https://cdn.dummyjson.com/product-images/kitchen-accessories/carbon-steel-wok/1.webp"
+      ],
+      "seller": 5,
+      "hoursAgo": 287
+    },
+    {
+      "title": "Boxed Blender",
+      "description": "The Boxed Blender is a powerful and compact blender perfect for smoothies, shakes, and more. Its convenient design and multiple functions make it a versatile kitchen appliance. Shows some signs of use, but works fine.",
+      "category": "other",
+      "condition": "fair",
+      "type": "sale",
+      "price": 16,
+      "images": [
+        "https://cdn.dummyjson.com/product-images/kitchen-accessories/boxed-blender/1.webp",
+        "https://cdn.dummyjson.com/product-images/kitchen-accessories/boxed-blender/2.webp",
+        "https://cdn.dummyjson.com/product-images/kitchen-accessories/boxed-blender/3.webp"
+      ],
+      "seller": 0,
+      "hoursAgo": 294
+    },
+    {
+      "title": "Electric Stove",
+      "description": "The Electric Stove provides a portable and efficient cooking solution. Ideal for small kitchens or as an additional cooking surface for various culinary needs. Used, in good working condition.",
+      "category": "other",
+      "condition": "good",
+      "type": "sale",
+      "price": 27,
+      "images": [
+        "https://cdn.dummyjson.com/product-images/kitchen-accessories/electric-stove/1.webp",
+        "https://cdn.dummyjson.com/product-images/kitchen-accessories/electric-stove/2.webp",
+        "https://cdn.dummyjson.com/product-images/kitchen-accessories/electric-stove/3.webp"
+      ],
+      "seller": 1,
+      "hoursAgo": 301
+    },
+    {
+      "title": "Microwave Oven",
+      "description": "The Microwave Oven is a versatile kitchen appliance for quick and efficient cooking, reheating, and defrosting. Its compact size makes it suitable for various kitchen setups. Still unopened.",
+      "category": "other",
+      "condition": "new",
+      "type": "sale",
+      "price": 72,
+      "images": [
+        "https://cdn.dummyjson.com/product-images/kitchen-accessories/microwave-oven/1.webp",
+        "https://cdn.dummyjson.com/product-images/kitchen-accessories/microwave-oven/2.webp",
+        "https://cdn.dummyjson.com/product-images/kitchen-accessories/microwave-oven/3.webp"
+      ],
+      "seller": 2,
+      "hoursAgo": 308
+    },
+    {
+      "title": "Calculus",
+      "description": "Calculus by James Stewart (1986). Used, in good working condition.",
+      "category": "textbooks",
+      "condition": "good",
+      "type": "sale",
+      "price": 18,
+      "images": [
+        "https://covers.openlibrary.org/b/id/364094-L.jpg"
+      ],
+      "seller": 3,
+      "hoursAgo": 315
+    },
+    {
+      "title": "Concepts of physics",
+      "description": "Concepts of physics by Harish Chandra Verma (1993). Used only a few times, works like new.",
+      "category": "textbooks",
+      "condition": "like_new",
+      "type": "sale",
+      "price": 25,
+      "images": [
+        "https://covers.openlibrary.org/b/id/8631889-L.jpg"
+      ],
+      "seller": 4,
+      "hoursAgo": 322
+    },
+    {
+      "title": "Operational organic chemistry",
+      "description": "Operational organic chemistry by John W. Lehman (1981). Shows some signs of use, but works fine.",
+      "category": "textbooks",
+      "condition": "fair",
+      "type": "sale",
+      "price": 12,
+      "images": [
+        "https://covers.openlibrary.org/b/id/4128310-L.jpg"
+      ],
+      "seller": 5,
+      "hoursAgo": 329
+    },
+    {
+      "title": "Biology",
+      "description": "Biology by Neil Alexander Campbell (1987). Used, in good working condition.",
+      "category": "textbooks",
+      "condition": "good",
+      "type": "sale",
+      "price": 30,
+      "images": [
+        "https://covers.openlibrary.org/b/id/581911-L.jpg"
+      ],
+      "seller": 0,
+      "hoursAgo": 336
+    },
+    {
+      "title": "Small Is Beautiful",
+      "description": "Small Is Beautiful by E. F. Schumacher (1905). Used, in good working condition.",
+      "category": "textbooks",
+      "condition": "good",
+      "type": "sale",
+      "price": 15,
+      "images": [
+        "https://covers.openlibrary.org/b/id/6738557-L.jpg"
+      ],
+      "seller": 1,
+      "hoursAgo": 343
+    },
+    {
+      "title": "Accounting Principles",
+      "description": "Accounting Principles by Jerry J. Weygandt (1987). Used only a few times, works like new.",
+      "category": "textbooks",
+      "condition": "like_new",
+      "type": "sale",
+      "price": 22,
+      "images": [
+        "https://covers.openlibrary.org/b/id/1241487-L.jpg"
+      ],
+      "seller": 2,
+      "hoursAgo": 350
+    },
+    {
+      "title": "Marketing Management",
+      "description": "Marketing Management by Philip Kotler (2016). Shows some signs of use, but works fine.",
+      "category": "textbooks",
+      "condition": "fair",
+      "type": "sale",
+      "price": 10,
+      "images": [
+        "https://covers.openlibrary.org/b/id/14426392-L.jpg"
+      ],
+      "seller": 3,
+      "hoursAgo": 357
+    },
+    {
+      "title": "How to Lie with Statistics",
+      "description": "How to Lie with Statistics by Darrell Huff (1954). Used, in good working condition.",
+      "category": "textbooks",
+      "condition": "good",
+      "type": "sale",
+      "price": 28,
+      "images": [
+        "https://covers.openlibrary.org/b/id/13115835-L.jpg"
+      ],
+      "seller": 4,
+      "hoursAgo": 364
+    },
+    {
+      "title": "Automate the Boring Stuff with Python",
+      "description": "Automate the Boring Stuff with Python by Al Sweigart (2015). Used, in good working condition.",
+      "category": "textbooks",
+      "condition": "good",
+      "type": "sale",
+      "price": 20,
+      "images": [
+        "https://covers.openlibrary.org/b/id/7363640-L.jpg"
+      ],
+      "seller": 5,
+      "hoursAgo": 371
+    },
+    {
+      "title": "Atomic Habits",
+      "description": "Atomic Habits by James Clear (2016). Used only a few times, works like new.",
+      "category": "textbooks",
+      "condition": "like_new",
+      "type": "sale",
+      "price": 16,
+      "images": [
+        "https://covers.openlibrary.org/b/id/12539702-L.jpg"
+      ],
+      "seller": 0,
+      "hoursAgo": 378
+    },
+    {
+      "title": "Introduction to linear algebra",
+      "description": "Introduction to linear algebra by Gilbert Strang (1998). Shows some signs of use, but works fine.",
+      "category": "textbooks",
+      "condition": "fair",
+      "type": "sale",
+      "price": 24,
+      "images": [
+        "https://covers.openlibrary.org/b/id/725050-L.jpg"
+      ],
+      "seller": 1,
+      "hoursAgo": 385
+    },
+    {
+      "title": "Thirty Days to Better English",
+      "description": "Thirty Days to Better English by Norman Lewis (1965). Used, in good working condition.",
+      "category": "textbooks",
+      "condition": "good",
+      "type": "sale",
+      "price": 14,
+      "images": [
+        "https://covers.openlibrary.org/b/id/6688871-L.jpg"
+      ],
+      "seller": 2,
+      "hoursAgo": 392
+    },
+    {
+      "title": "Looking for: Data Structures and Algorithms Made Easy",
+      "description": "Need \"Data Structures and Algorithms Made Easy\" by Narasimha Karumanchi for class. Any edition is fine, message me.",
+      "category": "textbooks",
+      "condition": "good",
+      "type": "buy_request",
+      "price": 20,
+      "images": [
+        "https://covers.openlibrary.org/b/id/11067110-L.jpg"
+      ],
+      "seller": 3,
+      "hoursAgo": 399
+    },
+    {
+      "title": "Looking for: Macroeconomics",
+      "description": "Need \"Macroeconomics\" by N. Gregory Mankiw for class. Any edition is fine, message me.",
+      "category": "textbooks",
+      "condition": "like_new",
+      "type": "buy_request",
+      "price": 15,
+      "images": [
+        "https://covers.openlibrary.org/b/id/12584771-L.jpg"
+      ],
+      "seller": 4,
+      "hoursAgo": 6
+    },
+    {
+      "title": "Looking for: Anatomy",
+      "description": "Need \"Anatomy\" by Henry Gray F.R.S. for class. Any edition is fine, message me.",
+      "category": "textbooks",
+      "condition": "fair",
+      "type": "buy_request",
+      "price": 25,
+      "images": [
+        "https://covers.openlibrary.org/b/id/692969-L.jpg"
+      ],
+      "seller": 5,
+      "hoursAgo": 13
+    }
+  ]
+}
