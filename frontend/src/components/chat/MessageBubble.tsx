@@ -13,7 +13,11 @@ export function MessageBubble({ message, isOwn }: MessageBubbleProps) {
       <div
         className={cn(
           "max-w-[75%] rounded-2xl px-3.5 py-2 text-sm",
-          isOwn ? "bg-primary text-primary-foreground" : "bg-muted text-foreground",
+          // Not bg-muted for replies: inside the light-surface card --muted is the
+          // card's own colour, so the bubble vanished and replies read as loose text.
+          isOwn
+            ? "bg-primary text-primary-foreground"
+            : "border border-brand-600/40 bg-brand-50 text-foreground",
         )}
       >
         <p className="whitespace-pre-wrap break-words">{message.body}</p>
