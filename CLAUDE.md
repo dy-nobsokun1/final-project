@@ -155,14 +155,19 @@ when `uniswap` has none, so an older `uniswap` database needs the upgrade SQL (b
   `sale`. Mark as sold (offered on reserved items too) keeps `reserved_for`, which `findDealPartner`
   uses. While it is set, the type is locked and DELETE is refused.
 - **Shopping assistant ("Ask UniSwap"):** `routes/assistant.js`, `utils/assistant.js` (prompt, tools, loop;
-  the model is passed in, so `test/assistant.test.js` scripts a fake), `services/gemini.js`
-  (`generateContent`, plain `fetch`). Off (503) until `GEMINI_API_KEY` is set. Stateless: the frontend
-  sends the conversation with every question. Gemini must call a tool (`mode: "ANY"`): `search_listings`
-  (browse search, active, no wanted posts or ended auctions, 5 results), then `reply { text, listingIds, wantedDraft }`;
-  cards only for ids found in that question; at most 3 calls, the last reply-only. Default model
-  `gemini-3.5-flash-lite` (free: 15/minute; `gemini-3.6-flash` is 20/day, `gemini-3.8-flash` hung).
-  A 429 says "in a minute" or "tomorrow" (daily limit). Its turns go back unchanged (Gemini 3
-  thought signatures). Never send it seller names or emails (free tier: Google may read requests).
+  the model is passed in, so `test/assistant.test.js` scripts a fake), and one adapter per provider, both
+  plain `fetch`: `services/groq.js` (OpenAI-style `tool_calls`) and `services/gemini.js` (signed turns go
+  back unchanged). `services/assistantModel.js` picks Groq when `GROQ_API_KEY` is set, else Gemini when
+  `GEMINI_API_KEY` is set, else off (503); `ASSISTANT_PROVIDER=gemini|groq` forces one (restart the API;
+  a forced provider without its key means off). Keep provider differences in the adapters; the loop uses
+  neutral turns. Stateless: the frontend sends the conversation (plain `{ role, text }`) with every
+  question. The model must call a tool (Groq `tool_choice: "required"`, Gemini `mode: "ANY"`):
+  `search_listings` (browse search, active, no wanted posts or ended auctions, 5 results), then
+  `reply { text, listingIds, wantedDraft }`; cards only for ids found in that question; at most 3 calls,
+  the last reply-only. Groq default `openai/gpt-oss-120b` (free: 30/minute, 1,000/day, 8K tokens/minute,
+  200K tokens/day, so tokens run out first); Gemini default `gemini-3.5-flash-lite` (the free tier gave
+  about 20 requests a day by Oct 2026). A 429 says "in a minute" or "tomorrow". Never send either
+  provider seller names or emails. API tests fake Groq and never call a real provider.
   Frontend: `/assistant` (`components/marketplace/Assistant*.tsx`); the conversation lives in page
   state only. A draft opens `/listings/new?type=buy_request&title=…`, which fills in `NewListingForm`.
 - **Messaging:** there is no conversations table. A thread is all messages between two users about
@@ -189,7 +194,7 @@ between the owner and the buyer: whoever paid online, else the auction winner, e
 offer was accepted, else (in-person deals) someone who chatted with the owner both ways (`reviewBlocker` in `routes/reviews.js`). API tests in `backend/test/api/`.
 
 Done (week 6, 26 Oct):
-- **Ask UniSwap**, the Gemini shopping assistant, with its `/assistant` chat page, a pill in the navbar and a link in the hero.
+- **Ask UniSwap**, the shopping assistant (Groq, with Gemini as the backup), with its `/assistant` chat page, a pill in the navbar and a link in the hero.
 - **Home page polish:**
   - The hero says who UniSwap is for and how paying works ("Made for AUPP students", plus three points in `HeroPoints`).
   - The Telegram strip shows for everyone.
@@ -206,7 +211,7 @@ deployment, Cloudinary photos, Stripe test payments, Telegram bot.
 ### Picking up on another machine
 
 Everything above is pushed to `implement_backend`. Last full check (26 Oct):
-- `npm test` (38) and `npm run test:api` (101) pass.
+- `npm test` (40) and `npm run test:api` (101) pass.
 - The frontend's lint and `tsc --noEmit` are clean.
 - `next build` was last run before the 26 Oct UI work.
 After `git pull origin implement_backend`:
