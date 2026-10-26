@@ -1,6 +1,7 @@
 import { Images } from "lucide-react";
 import Link from "next/link";
 import { ListingImage } from "@/components/listings/ListingImage";
+import { ListingTypeTag } from "@/components/listings/ListingTypeTag";
 import { SaveButton } from "@/components/listings/SaveButton";
 import { VerifiedBadge } from "@/components/profile/VerifiedBadge";
 import { Badge } from "@/components/ui/badge";
@@ -47,6 +48,8 @@ export function ListingCard({ listing, saved }: ListingCardProps) {
               </Badge>
             </span>
           ) : null}
+          {/* Bottom-left, mirroring the photo count at bottom-right. */}
+          <ListingTypeTag type={listing.listingType} className="absolute bottom-2 left-2" />
           {listing.imageUrls.length > 1 ? (
             <Badge variant="secondary" className="absolute bottom-2 right-2">
               <Images aria-hidden="true" />

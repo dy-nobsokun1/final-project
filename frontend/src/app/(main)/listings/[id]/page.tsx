@@ -9,6 +9,7 @@ import { ListingHeading } from "@/components/listings/ListingHeading";
 import { ListingMatches } from "@/components/listings/ListingMatches";
 import { ListingOwnerActions } from "@/components/listings/ListingOwnerActions";
 import { ListingPayButtons } from "@/components/listings/ListingPayButtons";
+import { ListingTypeTag } from "@/components/listings/ListingTypeTag";
 import { SellerOffersPanel } from "@/components/listings/SellerOffersPanel";
 import { UserAvatar } from "@/components/profile/UserAvatar";
 import { VerifiedBadge } from "@/components/profile/VerifiedBadge";
@@ -84,7 +85,12 @@ export default async function ListingDetailPage({ params, searchParams }: PagePr
         <div className="flex flex-col gap-4">
           <div className="flex flex-col gap-2">
             <div className="flex flex-wrap items-center gap-2">
-              <Badge>{listingTypeLabel(listing.listingType)}</Badge>
+              {/* The same tag as on the cards; sale has none, so it keeps the plain "For sale" badge. */}
+              {listing.listingType === "sale" ? (
+                <Badge>{listingTypeLabel(listing.listingType)}</Badge>
+              ) : (
+                <ListingTypeTag type={listing.listingType} />
+              )}
               {category ? <Badge variant="secondary">{category.label}</Badge> : null}
               <Badge variant="outline">{conditionLabel(listing.condition)}</Badge>
               {listing.status !== "active" ? (
