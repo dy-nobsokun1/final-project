@@ -61,6 +61,7 @@ export async function getListings(filters: ListingFilters = {}): Promise<Listing
   if (filters.condition && filters.condition !== "all") params.set("condition", filters.condition);
   if (filters.minPrice !== undefined) params.set("minPrice", String(filters.minPrice));
   if (filters.maxPrice !== undefined) params.set("maxPrice", String(filters.maxPrice));
+  if (filters.limit !== undefined) params.set("limit", String(filters.limit));
 
   const { listings } = await apiFetch<{ listings: ListingWithSeller[] }>(`/api/listings?${params}`);
   return listings;

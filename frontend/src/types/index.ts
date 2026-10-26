@@ -174,6 +174,18 @@ export interface ListingFilters {
   minPrice?: number;
   maxPrice?: number;
   condition?: ListingCondition | "all";
+  /** At most this many listings (the API takes 1 to 100 and defaults to 100). */
+  limit?: number;
+}
+
+/** One row of the navbar search box's suggestions (the Next app's GET /api/search-suggestions). */
+export interface SearchSuggestion {
+  id: string;
+  title: string;
+  listingType: ListingType;
+  /** formatListingPrice's text, e.g. "$12", "Free" or "Up to $50". */
+  priceText: string;
+  imageUrl: string | null;
 }
 
 /** Starting values for a new listing, e.g. a wanted post drafted by Ask UniSwap (see NewListingForm). */
