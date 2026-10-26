@@ -1,52 +1,51 @@
 import { Inbox } from "lucide-react";
 import Link from "next/link";
 import { ListingGrid } from "@/components/listings/ListingGrid";
-import { UserAvatar } from "@/components/profile/UserAvatar";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { VerifiedBadge } from "@/components/profile/VerifiedBadge";
-import { getConversations, getMyListings, requireUser } from "@/lib/api";
+import { ProfileHeader } from "@/components/profile/ProfileHeader";
+import { getConversations, getMyListings, getUserReviews, requireUser } from "@/lib/api";
 
 export const metadata = { title: "My profile | UniSwap" };
 
 /** Profile of the signed-in user. */
 export default async function ProfilePage() {
   const user = await requireUser();
-  const [listings, conversations] = await Promise.all([getMyListings(), getConversations()]);
+  const [listings, conversations, { averageRating, reviewCount }] = await Promise.all([
+    getMyListings(),
+    getConversations(),
+    getUserReviews(user.id),
+  ]);
 
   return (
     <div className="flex flex-col gap-6">
-      <Card>
-        <CardContent className="flex flex-wrap items-start gap-4 p-6">
-          <UserAvatar name={user.name} src={user.avatarUrl} size="lg" />
-          <div className="flex min-w-0 flex-1 flex-col gap-1">
-            <h1 className="flex items-center gap-1.5 text-2xl font-semibold tracking-tight">
-              {user.name}
-              <VerifiedBadge isVerified={user.isVerified} />
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              {[user.major, user.graduationYear && `Class of ${user.graduationYear}`]
-                .filter(Boolean)
-                .join(" · ")}
-            </p>
-            <p className="mt-2 text-sm text-foreground">{user.bio}</p>
-          </div>
-          <div className="flex gap-2">
-            <Link href="/settings">
-              <Button variant="secondary">Settings</Button>
+      <ProfileHeader
+        user={user}
+        listings={listings}
+        averageRating={averageRating}
+        reviewCount={reviewCount}
+        isOwnProfile
+        actions={
+          <>
+            {/* Styled links, not <Link><Button/></Link>, which put a button inside a link.
+                Same dark and light pills as the home page hero. */}
+            <Link
+              href="/settings"
+              className="inline-flex items-center justify-center rounded-lg border border-brand-50/30 bg-brand-deep px-5 py-2.5 text-sm font-semibold text-brand-50 transition-colors hover:bg-brand-900"
+            >
+              Settings
             </Link>
-            <Link href="/messages">
-              <Button variant="ghost">
-                <Inbox aria-hidden="true" className="size-4" />
-                {conversations.length} chats
-              </Button>
+            <Link
+              href="/messages"
+              className="inline-flex items-center justify-center gap-2 rounded-lg border border-border bg-brand-50 px-5 py-2.5 text-sm font-semibold text-brand-ink transition-colors hover:bg-brand-200"
+            >
+              <Inbox aria-hidden="true" className="size-4" />
+              {conversations.length} chats
             </Link>
-          </div>
-        </CardContent>
-      </Card>
+          </>
+        }
+      />
 
       <section className="flex flex-col gap-4">
-        <h2 className="text-lg font-semibold">Active listings</h2>
+        <h2 className="font-heading text-2xl tracking-tight">Active listings</h2>
         <ListingGrid
           listings={listings.filter((listing) => listing.status === "active")}
           emptyTitle="No active listings"
@@ -57,4 +56,3 @@ export default async function ProfilePage() {
     </div>
   );
 }
-

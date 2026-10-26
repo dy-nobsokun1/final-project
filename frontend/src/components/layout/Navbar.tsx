@@ -96,7 +96,7 @@ function UserMenu() {
   return (
     <div className="flex shrink-0 items-center gap-2">
       <Link href="/profile" aria-label="Your profile">
-        <UserAvatar name={user.name} src={user.avatarUrl} size="sm" />
+        <UserAvatar name={user.name} src={user.avatarUrl} />
       </Link>
       <button
         type="button"
