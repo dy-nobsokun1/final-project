@@ -83,7 +83,10 @@ export function FilterPanel() {
       else params.delete(key);
     }
     const query = params.toString();
-    router.push(query ? `${pathname}?${query}` : pathname);
+    // Stay put: on phones the grid sits below the hero and the category tiles, so jumping to
+    // the top meant scrolling back down after every filter. `push` keeps Back stepping
+    // through earlier filter sets.
+    router.push(query ? `${pathname}?${query}` : pathname, { scroll: false });
   };
 
   const activeCount = Object.values(values).filter((value) => value !== ANY).length;
