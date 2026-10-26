@@ -78,6 +78,16 @@ export async function isAssistantEnabled(): Promise<boolean> {
   return enabled;
 }
 
+/** Whether Telegram alerts are switched on in the API (no sign-in needed). Any error counts as off. */
+export async function isTelegramEnabled(): Promise<boolean> {
+  try {
+    return (await apiFetch<{ enabled: boolean }>("/api/telegram")).enabled;
+  } catch (error) {
+    console.error(error);
+    return false;
+  }
+}
+
 /**
  * Whether a KHQR has been paid. The API asks Bakong itself each time, so the browser cannot mark
  * anything paid. Null if the payment is not this user's (or does not exist).

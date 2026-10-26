@@ -526,6 +526,7 @@ A token issued before the account's last password change or reset is refused (40
 | POST | `/api/payments/webhook` | Called by Stripe only, with a signature check |
 | POST 🔒 | `/api/payments/khqr` | `{ listingId }` → `{ paymentId, qr, amount, expiresAt }`. Asking again within 30 minutes returns the same QR, as long as it still pays the seller's current Bakong account. First records any earlier QR for the item that was paid but not yet confirmed: `409` if it was this buyer's. `400` if the seller has no Bakong account. `403` if the item is reserved for another buyer; for the buyer it is reserved for, the amount is the agreed price (or the asking price, if lower). `503` if Bakong cannot be reached right now (no QR is shown that could not be confirmed) |
 | GET 🔒 | `/api/payments/khqr/:id` | Buyer only → `{ status: "paid" \| "pending" \| "expired" \| "refund_due" \| "unavailable" }`, checked with Bakong. `refund_due`: paid after the item was already sold or reserved for another buyer. `unavailable`: not paid, and the item has been sold or traded another way or reserved for another buyer, the seller changed the Bakong account this QR pays, or this buyer would now pay a different amount (see KHQR above), so the QR should not be paid |
+| GET | `/api/telegram` | `{ enabled }`: whether Telegram alerts are switched on (no sign-in needed) |
 | GET 🔒 | `/api/users/me/telegram` | `{ enabled, connected }` |
 | POST 🔒 | `/api/users/me/telegram` | `{ link }`: one-time link that opens the bot |
 | DELETE 🔒 | `/api/users/me/telegram` | Disconnect Telegram |

@@ -5,6 +5,13 @@ import { requireAuth } from "../middleware/auth.js";
 import { botStartLink, isTelegramConfigured } from "../services/telegram.js";
 import { HttpError } from "../utils/httpError.js";
 
+// Mounted at /api/telegram, with no sign-in. GET -> { enabled }: whether the bot is set up, so the
+// home page can tell signed-out visitors about Telegram alerts. It returns no user data.
+export const telegramStatusRouter = Router();
+telegramStatusRouter.get("/", (req, res) => {
+  res.json({ enabled: isTelegramConfigured });
+});
+
 // Mounted at /api/users/me/telegram. Linking works like this:
 //  1. POST here returns a t.me link containing a one-time code.
 //  2. The user opens it and presses Start, so Telegram sends our bot "/start <code>".

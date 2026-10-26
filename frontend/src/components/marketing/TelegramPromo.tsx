@@ -1,17 +1,28 @@
 import { Send } from "lucide-react";
 import Link from "next/link";
 import { DismissibleTip } from "@/components/marketing/DismissibleTip";
-import { getCurrentUser } from "@/lib/api";
+import { getCurrentUser, isTelegramEnabled } from "@/lib/api";
 import { getTelegramStatus } from "@/lib/api/actions";
 
 /**
- * A slim strip on the home page telling students they can get alerts on Telegram, linking to the
- * Telegram card in Settings. Shown only to signed-in students whose account is not linked yet, and
- * only when the API has a bot set up. The API answers that for signed-in users only, so signed-out
- * visitors never see it. The X hides it for good (DismissibleTip).
+ * The strip's button for each case. On phones only `label` shows, to keep the strip one line tall;
+ * screen readers still hear the whole text ("Sign in to connect", "Connect Telegram").
+ */
+const BUTTONS = {
+  signedOut: { href: "/login", label: "Sign in", rest: " to connect" },
+  notLinked: { href: "/settings#telegram", label: "Connect", rest: " Telegram" },
+} as const;
+
+/**
+ * A slim strip on the home page telling students they can get alerts on Telegram. Shown only when
+ * the API has a bot set up: signed-out visitors are asked to sign in, and signed-in students whose
+ * account is not linked yet go to the Telegram card in Settings. Linked students see nothing.
+ * The X hides it for good (DismissibleTip).
  */
 export async function TelegramPromo() {
-  if (!(await shouldShow())) return null;
+  const state = await promoState();
+  if (!state) return null;
+  const button = BUTTONS[state];
 
   return (
     <DismissibleTip
@@ -29,29 +40,30 @@ export async function TelegramPromo() {
           Get new messages, outbids and price drops instantly.
         </p>
       </div>
-      {/* Dark, like the hero's "Browse listings": #E6F2DD on #22312D is 11.72:1. On phones it shows
-          just "Connect"; screen readers still hear "Connect Telegram". */}
+      {/* Dark, like the hero's "Browse listings": #E6F2DD on #22312D is 11.72:1. */}
       <Link
-        href="/settings#telegram"
+        href={button.href}
         className="shrink-0 rounded-lg bg-brand-deep px-3 py-2 text-sm font-semibold text-brand-50 transition-colors hover:bg-brand-900"
       >
-        Connect<span className="max-sm:sr-only"> Telegram</span>
+        {button.label}
+        <span className="max-sm:sr-only">{button.rest}</span>
       </Link>
     </DismissibleTip>
   );
 }
 
 /**
- * Any error means no strip, so a slow or broken API can never take the home page down. (The page
- * also wraps this in its own Suspense, so the rest of the page never waits for it.)
+ * Which strip to show, or null for none. Any error means no strip, so a slow or broken API can
+ * never take the home page down. (The page also wraps this in its own Suspense, so the rest of the
+ * page never waits for it.)
  */
-async function shouldShow(): Promise<boolean> {
+async function promoState(): Promise<keyof typeof BUTTONS | null> {
   try {
-    if (!(await getCurrentUser())) return false;
+    if (!(await getCurrentUser())) return (await isTelegramEnabled()) ? "signedOut" : null;
     const { enabled, connected } = await getTelegramStatus();
-    return enabled && !connected;
+    return enabled && !connected ? "notLinked" : null;
   } catch (error) {
     console.error(error);
-    return false;
+    return null;
   }
 }

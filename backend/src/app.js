@@ -12,7 +12,7 @@ import { listingOffersRouter, offersRouter } from "./routes/offers.js";
 import { paymentsRouter, stripeWebhook } from "./routes/payments.js";
 import { listingReviewsRouter, userReviewsRouter } from "./routes/reviews.js";
 import { listingSaveRouter, mySavedRouter } from "./routes/saved.js";
-import { telegramRouter } from "./routes/telegram.js";
+import { telegramRouter, telegramStatusRouter } from "./routes/telegram.js";
 import { UPLOAD_DIR, uploadsRouter } from "./routes/uploads.js";
 import { usersRouter } from "./routes/users.js";
 
@@ -37,6 +37,7 @@ app.use("/api/listings/:id/reviews", listingReviewsRouter);
 app.use("/api/listings/:id/save", listingSaveRouter);
 app.use("/api/listings/:id/offers", listingOffersRouter);
 app.use("/api/listings", listingsRouter);
+app.use("/api/telegram", telegramStatusRouter);
 app.use("/api/users/me/telegram", telegramRouter);
 app.use("/api/users/me/saved", mySavedRouter);
 app.use("/api/users/:id/reviews", userReviewsRouter);
