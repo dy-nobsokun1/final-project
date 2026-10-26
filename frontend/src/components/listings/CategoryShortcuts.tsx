@@ -31,8 +31,10 @@ export function CategoryShortcuts({ params, active }: CategoryShortcutsProps) {
           const isActive = value === active;
           return (
             <li key={value} className="shrink-0 snap-start">
+              {/* Stay put, like the filters: on phones the grid is below these tiles. */}
               <Link
                 href={categoryHref(params, isActive ? null : value)}
+                scroll={false}
                 aria-current={isActive ? "true" : undefined}
                 className={cn(
                   "light-surface flex w-24 flex-col items-center gap-2 rounded-xl border border-border bg-card px-2 py-3 text-sm font-semibold transition-all hover:-translate-y-0.5 hover:border-brand-600 hover:shadow-lg hover:shadow-brand-600/20 sm:w-auto",
