@@ -9,6 +9,6 @@ after(() => api.close());
 test("anyone can ask whether Telegram alerts are switched on, without signing in", async () => {
   const { status, body } = await api.request("GET", "/api/telegram");
   assert.equal(status, 200);
-  assert.deepEqual(Object.keys(body), ["enabled"]);
-  assert.equal(typeof body.enabled, "boolean");
+  // With the bot off there is no chat to link to. Nothing about any user is sent.
+  assert.deepEqual(body, { enabled: false, botUrl: null });
 });

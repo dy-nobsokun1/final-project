@@ -1,32 +1,41 @@
 import { Send } from "lucide-react";
+import { cookies } from "next/headers";
 import Link from "next/link";
 import { DismissibleTip } from "@/components/marketing/DismissibleTip";
-import { getCurrentUser, isTelegramEnabled } from "@/lib/api";
+import { getCurrentUser, getTelegramBotUrl } from "@/lib/api";
 import { getTelegramStatus } from "@/lib/api/actions";
 
-/**
- * The strip's button for each case. On phones only `label` shows, to keep the strip one line tall;
- * screen readers still hear the whole text ("Sign in to connect", "Connect Telegram").
- */
-const BUTTONS = {
-  signedOut: { href: "/login", label: "Sign in", rest: " to connect" },
-  notLinked: { href: "/settings#telegram", label: "Connect", rest: " Telegram" },
-} as const;
+/** Set by the strip's X (DismissibleTip). Once it is there, the strip is left out of the page. */
+const HIDE_COOKIE = "uniswap_hide_telegram_tip";
+
+const ALERTS_TEXT = "Get new messages, outbids and price drops instantly.";
 
 /**
- * A slim strip on the home page telling students they can get alerts on Telegram. Shown only when
- * the API has a bot set up: signed-out visitors are asked to sign in, and signed-in students whose
- * account is not linked yet go to the Telegram card in Settings. Linked students see nothing.
- * The X hides it for good (DismissibleTip).
+ * What the strip says in each case. On phones the button shows only `label`, to keep the strip one
+ * line tall; screen readers still hear `label` + `rest` ("Sign in to connect", "Open Telegram").
+ */
+interface Promo {
+  text: string;
+  href: string;
+  label: string;
+  rest: string;
+}
+
+/**
+ * A slim strip on the home page about Telegram alerts, shown only when the API has a bot set up.
+ * Signed-out visitors are asked to sign in, signed-in students not linked yet go to the Telegram
+ * card in Settings, and linked students get a quick way to open the bot's chat. The X hides it for
+ * good (DismissibleTip).
  */
 export async function TelegramPromo() {
-  const state = await promoState();
-  if (!state) return null;
-  const button = BUTTONS[state];
+  const promo = await choosePromo();
+  if (!promo) return null;
+  // Only the linked case leaves the site (t.me), so only that one opens in a new tab.
+  const external = promo.href.startsWith("https://");
 
   return (
     <DismissibleTip
-      storageKey="uniswap.hideTelegramTip"
+      cookieName={HIDE_COOKIE}
       hideLabel="Hide Telegram tip"
       className="light-surface flex items-center gap-3 rounded-xl border border-border bg-card px-3 py-2.5 sm:px-4"
     >
@@ -36,17 +45,17 @@ export async function TelegramPromo() {
       <div className="min-w-0 flex-1">
         <p className="font-heading text-lg leading-none tracking-wide sm:text-xl">Alerts on Telegram</p>
         {/* Hidden on phones to keep the strip one line tall there. */}
-        <p className="hidden text-sm text-muted-foreground sm:block">
-          Get new messages, outbids and price drops instantly.
-        </p>
+        <p className="hidden text-sm text-muted-foreground sm:block">{promo.text}</p>
       </div>
       {/* Dark, like the hero's "Browse listings": #E6F2DD on #22312D is 11.72:1. */}
       <Link
-        href={button.href}
+        href={promo.href}
+        target={external ? "_blank" : undefined}
+        rel={external ? "noopener" : undefined}
         className="shrink-0 rounded-lg bg-brand-deep px-3 py-2 text-sm font-semibold text-brand-50 transition-colors hover:bg-brand-900"
       >
-        {button.label}
-        <span className="max-sm:sr-only">{button.rest}</span>
+        {promo.label}
+        <span className="max-sm:sr-only">{promo.rest}</span>
       </Link>
     </DismissibleTip>
   );
@@ -57,11 +66,20 @@ export async function TelegramPromo() {
  * never take the home page down. (The page also wraps this in its own Suspense, so the rest of the
  * page never waits for it.)
  */
-async function promoState(): Promise<keyof typeof BUTTONS | null> {
+async function choosePromo(): Promise<Promo | null> {
   try {
-    if (!(await getCurrentUser())) return (await isTelegramEnabled()) ? "signedOut" : null;
+    if ((await cookies()).has(HIDE_COOKIE)) return null;
+    const [botUrl, user] = await Promise.all([getTelegramBotUrl(), getCurrentUser()]);
+    if (!botUrl) return null;
+    if (!user) return { text: ALERTS_TEXT, href: "/login", label: "Sign in", rest: " to connect" };
+
+    // getTelegramStatus answers { enabled: false } on any error.
     const { enabled, connected } = await getTelegramStatus();
-    return enabled && !connected ? "notLinked" : null;
+    if (!enabled) return null;
+    if (connected) {
+      return { text: "Your Telegram alerts are on.", href: botUrl, label: "Open", rest: " Telegram" };
+    }
+    return { text: ALERTS_TEXT, href: "/settings#telegram", label: "Connect", rest: " Telegram" };
   } catch (error) {
     console.error(error);
     return null;

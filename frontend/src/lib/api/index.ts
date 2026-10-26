@@ -78,13 +78,16 @@ export async function isAssistantEnabled(): Promise<boolean> {
   return enabled;
 }
 
-/** Whether Telegram alerts are switched on in the API (no sign-in needed). Any error counts as off. */
-export async function isTelegramEnabled(): Promise<boolean> {
+/**
+ * The link to the Telegram bot's chat, or null when Telegram alerts are switched off in the API
+ * (no sign-in needed). Any error counts as off.
+ */
+export async function getTelegramBotUrl(): Promise<string | null> {
   try {
-    return (await apiFetch<{ enabled: boolean }>("/api/telegram")).enabled;
+    return (await apiFetch<{ botUrl: string | null }>("/api/telegram")).botUrl;
   } catch (error) {
     console.error(error);
-    return false;
+    return null;
   }
 }
 

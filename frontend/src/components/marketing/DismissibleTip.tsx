@@ -1,49 +1,33 @@
 "use client";
 
 import { X } from "lucide-react";
-import { useState, useSyncExternalStore } from "react";
+import { useState } from "react";
 
 interface DismissibleTipProps {
-  /** The localStorage key that remembers the tip was hidden. */
-  storageKey: string;
+  /** The cookie that remembers the tip was hidden. The server checks it before rendering the tip. */
+  cookieName: string;
   /** Screen-reader name of the X button, e.g. "Hide Telegram tip". */
   hideLabel: string;
   className?: string;
   children: React.ReactNode;
 }
 
-/** Whether the tip was hidden before. Storage can be blocked (private mode), so then it was not. */
-function wasHidden(storageKey: string): boolean {
-  try {
-    return window.localStorage.getItem(storageKey) === "1";
-  } catch {
-    return false;
-  }
-}
-
-/** Hiding the tip in another tab hides it here too. */
-function subscribe(onChange: () => void) {
-  window.addEventListener("storage", onChange);
-  return () => window.removeEventListener("storage", onChange);
-}
+/** A year, in seconds. */
+const ONE_YEAR = 60 * 60 * 24 * 365;
 
 /**
- * A tip with an X that hides it for good in this browser (localStorage). The server cannot read
- * localStorage, so it renders nothing there (`() => true`) and the browser shows the tip once it has
- * checked: someone who hid it never sees it flash back.
+ * A tip with an X that hides it for good in this browser. The X saves a cookie, and the server
+ * leaves the tip out of the page once that cookie is there. So a visible tip is already in the
+ * first HTML (no waiting, no pop-in), and a hidden one is never sent at all.
  */
-export function DismissibleTip({ storageKey, hideLabel, className, children }: DismissibleTipProps) {
-  const hiddenBefore = useSyncExternalStore(subscribe, () => wasHidden(storageKey), () => true);
-  const [hiddenNow, setHiddenNow] = useState(false);
-  if (hiddenBefore || hiddenNow) return null;
+export function DismissibleTip({ cookieName, hideLabel, className, children }: DismissibleTipProps) {
+  const [hidden, setHidden] = useState(false);
+  if (hidden) return null;
 
   function hide() {
-    setHiddenNow(true);
-    try {
-      window.localStorage.setItem(storageKey, "1");
-    } catch {
-      // Storage is blocked: it stays hidden until the page is reloaded.
-    }
+    setHidden(true);
+    // Only a display preference, so a plain cookie the page can set is enough (no server call).
+    document.cookie = `${cookieName}=1; path=/; max-age=${ONE_YEAR}; samesite=lax`;
   }
 
   return (

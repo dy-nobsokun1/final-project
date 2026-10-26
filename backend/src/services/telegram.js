@@ -17,6 +17,11 @@ async function telegram(method, body) {
   return result.result;
 }
 
+/** The link that opens a chat with our bot. The bot's username is public, so anyone may see it. */
+export function botChatLink() {
+  return `https://t.me/${botUsername}`;
+}
+
 /** The link that opens a chat with our bot and sends "/start <code>" when the user presses Start. */
 export function botStartLink(code) {
   return `https://t.me/${botUsername}?start=${code}`;

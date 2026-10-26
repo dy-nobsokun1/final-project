@@ -2,14 +2,15 @@ import { randomBytes } from "node:crypto";
 import { Router } from "express";
 import { query } from "../db/pool.js";
 import { requireAuth } from "../middleware/auth.js";
-import { botStartLink, isTelegramConfigured } from "../services/telegram.js";
+import { botChatLink, botStartLink, isTelegramConfigured } from "../services/telegram.js";
 import { HttpError } from "../utils/httpError.js";
 
-// Mounted at /api/telegram, with no sign-in. GET -> { enabled }: whether the bot is set up, so the
-// home page can tell signed-out visitors about Telegram alerts. It returns no user data.
+// Mounted at /api/telegram, with no sign-in. GET -> { enabled, botUrl }: whether the bot is set up
+// and the link to its chat (null when it is not), so the home page can tell everyone about Telegram
+// alerts. It returns no user data.
 export const telegramStatusRouter = Router();
 telegramStatusRouter.get("/", (req, res) => {
-  res.json({ enabled: isTelegramConfigured });
+  res.json({ enabled: isTelegramConfigured, botUrl: isTelegramConfigured ? botChatLink() : null });
 });
 
 // Mounted at /api/users/me/telegram. Linking works like this:
