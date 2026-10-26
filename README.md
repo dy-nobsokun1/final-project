@@ -50,19 +50,19 @@ Putting it online (Supabase, Render, Vercel, Cloudinary, Stripe, Telegram): [`DE
   with the National Bank's Bakong API and marks the item sold.
 - **Ask UniSwap (shopping assistant):** the Ask page lets a student describe what they need in their own
   words ("a bike under $50"). An AI model (Groq, with Gemini as a backup) searches the listings and
-  answers with the best matches as cards; when nothing fits, it drafts a wanted post that opens the
-  sell form filled in, to check and post. It only reads listings, and it is switched off until
-  `GROQ_API_KEY` or `GEMINI_API_KEY` is set (both free).
+  answers with the best matches as cards; when nothing fits, it offers to draft a wanted post, and on a
+  yes opens the sell form filled in with what the student said, to check and post. It only reads
+  listings, and it is switched off until `GROQ_API_KEY` or `GEMINI_API_KEY` is set (both free).
 - **Security:** parameterized SQL everywhere, hashed passwords, verified accounts only, owner-only
   changes, a password change signs out stolen sessions, and no secrets in the repository.
 
 ### Tested
 
-- `npm test` (in `backend/`): 40 unit tests for validation (including the photo rules), the search
+- `npm test` (in `backend/`): 47 unit tests for validation (including the photo rules), the search
   query and wanted-post matching, the payment amount rules, the Stripe and Cloudinary helpers, the
   KHQR builder (checked against the National Bank's own library), and the shopping assistant's tool loop
   and its Groq and Gemini adapters.
-- `npm run test:api` (in `backend/`): 101 tests that send real requests to the running API, covering
+- `npm run test:api` (in `backend/`): 102 tests that send real requests to the running API, covering
   sign-up and verification, password reset and change, owner-only changes, messaging, simultaneous
   bids, card and KHQR payments, reviews, saved listings, listing photos, wanted-post matching and
   alerts, offers (including two accepted at the same moment), and refusing to delete a listing whose

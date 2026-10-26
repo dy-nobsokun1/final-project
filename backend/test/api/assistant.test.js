@@ -5,16 +5,19 @@ import { startApi } from "./helpers.js";
 
 // The assistant is switched on for this file, but Groq itself is replaced. The fake searches for
 // the student's last message, then replies showing the first listing it found. While `groq.limit`
-// is "minute" or "day", it answers 429 for that free limit. Every request body is kept in `groq.requests`.
+// is "minute" or "day", it answers 429 for that free limit (counted in `groq.limited`). Every other
+// request body is kept in `groq.requests`.
 // Both keys are set, so Groq must be picked over Gemini; a call to Gemini fails the test.
 // All other requests (the tests calling our API) go through as normal.
 const realFetch = globalThis.fetch;
-const groq = { limit: null, requests: [] };
+const groq = { limit: null, limited: 0, requests: [] };
 globalThis.fetch = async (url, options) => {
   if (String(url).startsWith("https://generativelanguage.googleapis.com/")) throw new Error("Gemini was called instead of Groq");
   if (!String(url).startsWith("https://api.groq.com/")) return realFetch(url, options);
   if (groq.limit) {
-    const message = `Rate limit reached for model \`qwen/qwen3.8-27b\` on requests per ${groq.limit} (RP${groq.limit[0].toUpperCase()}): Limit 30, Used 30, Requested 1. Please try again in 2s.`;
+    groq.limited++;
+    // A short wait, so the API's one retry after a busy minute keeps this test fast.
+    const message = `Rate limit reached for model \`qwen/qwen3.8-27b\` on requests per ${groq.limit} (RP${groq.limit[0].toUpperCase()}): Limit 30, Used 30, Requested 1. Please try again in 0.1s.`;
     return Response.json({ error: { message, type: "requests", code: "rate_limit_exceeded" } }, { status: 429 });
   }
   const body = JSON.parse(options.body);
@@ -69,15 +72,18 @@ test("finds a real listing, leaves wanted posts out, and sends Groq no seller de
 test("when Groq's free limit is used up, students are told when to try again", async () => {
   const student = await api.createUser();
   try {
+    // A busy minute is waited out and tried once more; a used-up day is not.
     groq.limit = "minute";
     const busy = await ask(student, "a bike");
     assert.equal(busy.status, 429);
     assert.match(busy.body.error, /in a minute/);
+    assert.equal(groq.limited, 2);
 
     groq.limit = "day";
     const done = await ask(student, "a bike");
     assert.equal(done.status, 429);
     assert.match(done.body.error, /tomorrow/);
+    assert.equal(groq.limited, 3);
   } finally {
     groq.limit = null;
   }

@@ -437,11 +437,25 @@ service's web API with `fetch`.
   two tools: `search_listings`, our normal browse search (active items only, no wanted posts or ended
   auctions, 5 results), and `reply`, its answer plus the ids of up to 4 listings to show as cards. It
   must always call one of them (Groq `tool_choice: "required"`, Gemini `mode: "ANY"`). A question gets
-  at most 3 calls, and the last may only be `reply`, so there is always an answer: a typical question
-  uses 2, a follow-up like "yes, draft it" uses 1.
+  at most 3 rounds, and the last may only be `reply`, so there is always an answer: a typical question
+  uses 2 calls, a follow-up like "yes, draft it" uses 1.
+  **Retries:** a call is tried once more after a per-minute 429, waiting as long as it says plus half a
+  second, or straight away when the model's tool call came out broken (Groq's 400 `tool_use_failed`,
+  arguments that are not JSON, an unknown tool, or no `reply` on the last round). Each call is retried
+  at most once and a question at most twice (`MAX_RETRIES`), so it makes at most 5 calls. A question
+  waits at most 20 seconds in all (`MAX_WAIT_MS`), so even with waits it answers in about 25 seconds.
+  Groq's free 7,000 input tokens a minute fit about 3 questions (about 2,500 tokens each), so a 4th in
+  the same minute usually waits and answers in about 15 seconds. When several students wait at the same
+  time, one can take the room another waited for, and that one is still told it is busy.
+  A daily 429 and any other failure are not retried. Only Groq's 429s say how long to wait, so
+  Gemini's are not retried (its per-minute and daily messages are harder to tell apart).
   Cards can only be listings its searches returned in that question, so it cannot show a made-up
-  item. When nothing fits, `reply` can carry a wanted-post draft, which the student checks and posts
-  themselves: the assistant never writes to the database. Nothing is stored either: the frontend
+  item. When nothing fits, the reply only offers a wanted post in its text. Only when the student
+  then says yes (or asks for a wanted post outright) does `reply` carry a draft, built from what the
+  student said: the item, the budget they named (else 0, any price) and their own words. As a check
+  in code, a budget the student never typed becomes 0 and a description with a number they never
+  typed is left empty. The student checks the draft and posts it themselves: the assistant never
+  writes to the database. Nothing is stored either: the frontend
   sends the conversation (plain text only) with each question, so switching models never breaks an
   open chat. The model only sees the question and each listing's title, type, price, category,
   condition and the start of its description, never seller names or emails.
@@ -462,8 +476,8 @@ service's web API with `fetch`.
   Measured on 26 Oct 2026: `gemini-3.5-flash-lite` allows 15 requests a minute; `gemini-3.6-flash`
   (and `gemini-3.5-flash`, which counts as it) only 5 a minute and 20 a day; `gemini-3.8-flash` did
   not answer at all. Google may read free-tier requests.
-  A 429 from either becomes our 429 with "try again in a minute", or "try again tomorrow" when its
-  message says a daily limit is used up.
+  A 429 from either (after any retry) becomes our 429 with "try again in a minute", or "try again
+  tomorrow" when its message says a daily limit is used up.
 
 **Upgrading a database created before payments and Telegram?** Run this once. It keeps your data and is safe to re-run:
 
