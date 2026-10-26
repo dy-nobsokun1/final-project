@@ -30,10 +30,12 @@ export function SearchSuggestions({ id, suggestions, resultsFor, query, activeIn
       index === activeIndex ? "bg-brand-200 text-brand-ink" : "text-brand-50",
     );
 
+  // As wide as the box, but at least 26rem from its left edge, so titles stay readable where the
+  // box is narrow (about 300px at 1024px wide).
   return (
     <div
       onMouseDown={(event) => event.preventDefault()}
-      className="absolute inset-x-0 top-full z-50 mt-1.5 rounded-xl border border-brand-200/50 bg-brand-deep-2 p-1.5 shadow-lg"
+      className="absolute top-full left-0 z-50 mt-1.5 w-full min-w-[26rem] rounded-xl border border-brand-200/50 bg-brand-deep-2 p-1.5 shadow-lg"
     >
       {suggestions.length === 0 ? (
         <p className="px-2 py-1.5 text-sm text-brand-200">No items match &ldquo;{resultsFor}&rdquo;</p>
