@@ -39,6 +39,14 @@ test("the limit is a parameter too, 100 unless the caller gives one", () => {
   assert.match(buildBrowseQuery({ status: "active" }).text, /LIMIT \$2$/);
 });
 
+test("the typo test only runs for terms of 4+ characters, checked in SQL on the parameter", () => {
+  const { text, params } = buildBrowseQuery({ status: "active", query: "ram" });
+  assert.equal(params[1], "ram");
+  assert.ok(text.includes("char_length(trim($2)) >= 4"));
+  assert.ok(text.includes("AND word_similarity($2, l.title) >= 0.5"));
+  assert.doesNotMatch(text, /'ram'/);
+});
+
 test("% and _ in a search term are literal characters, not wildcards", () => {
   const { params } = buildBrowseQuery({ status: "active", query: "50%_off" });
   assert.equal(params[2], "%50\\%\\_off%");

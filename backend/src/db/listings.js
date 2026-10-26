@@ -30,6 +30,9 @@ export const LISTING_SELECT = `
 // 0.5 lets "frige" find "fridge" (0.50) and "calculs" find "Calculus" (0.75), while unrelated
 // titles in our test data score 0.33 or lower.
 const TYPO_THRESHOLD = 0.5;
+// The typo test needs a term of at least this many characters. Shorter ones share too much with
+// any word that starts the same way: "ram" scores 0.5 for "racket".
+const TYPO_MIN_LENGTH = 4;
 
 // In ILIKE patterns, % and _ are wildcards. Escape them so a search for "%" means a literal "%".
 function escapeLike(value) {
@@ -41,13 +44,15 @@ function escapeLike(value) {
  * parameter when a student searches, or a wanted post's title in db/matches.js, so both follow one rule.
  * Both arguments come from our own code, never from a request.
  *  - full-text search on title, description and category, ignoring word endings ("textbook" finds the "textbooks" category)
- *  - a typo of a title word: "calculs" finds "Calculus" (pg_trgm)
+ *  - a typo of a title word: "calculs" finds "Calculus" (pg_trgm). Only for terms of 4+ characters
+ *    (TYPO_MIN_LENGTH), checked in SQL, so the term stays a parameter. Wanted matches follow it too.
  * `rank` scores a match: the full-text score (title words count more) plus how closely the title matches.
  */
 export function wordMatchSql(alias, term) {
   return {
     matches: `(${alias}.search_vector @@ websearch_to_tsquery('english', ${term})
-      OR word_similarity(${term}, ${alias}.title) >= ${TYPO_THRESHOLD})`,
+      OR (char_length(trim(${term})) >= ${TYPO_MIN_LENGTH}
+          AND word_similarity(${term}, ${alias}.title) >= ${TYPO_THRESHOLD}))`,
     rank: `ts_rank(${alias}.search_vector, websearch_to_tsquery('english', ${term}))
                + word_similarity(${term}, ${alias}.title)`,
   };

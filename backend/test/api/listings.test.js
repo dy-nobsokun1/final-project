@@ -77,6 +77,13 @@ test("search finds a listing from a misspelled or partial title word", async () 
   }
 });
 
+test("short terms skip the typo test, so 'ram' does not find a racket, but 'rackt' does", async () => {
+  const seller = await api.createUser();
+  const racket = await api.createListing(seller, { title: "Badminton racket", description: "Light, with two shuttlecocks." });
+  assert.ok(!ids(await api.request("GET", "/api/listings?query=ram")).includes(racket.id), "ram");
+  assert.ok(ids(await api.request("GET", "/api/listings?query=rackt")).includes(racket.id), "rackt");
+});
+
 test("a search with a limit returns at most that many, best match first", async () => {
   const seller = await api.createUser();
   // "Platypus" is in no other test's listings. The title match is posted first, so it is the
