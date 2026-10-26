@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { Package } from "lucide-react";
+import { CategoryShortcuts } from "@/components/listings/CategoryShortcuts";
 import { FilterPanel } from "@/components/listings/FilterPanel";
 import { ListingGrid } from "@/components/listings/ListingGrid";
 import { HeroBand } from "@/components/marketing/HeroBand";
@@ -15,6 +16,8 @@ export default async function BrowsePage({ searchParams }: PageProps<"/">) {
   return (
     <div className="flex flex-col gap-6">
       <HeroBand />
+
+      <CategoryShortcuts params={params} active={filters.category ?? "all"} />
 
       <section id="listings" className="flex flex-col gap-4">
         <header className="flex flex-wrap items-end justify-between gap-2">

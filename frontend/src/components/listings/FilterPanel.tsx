@@ -55,9 +55,18 @@ export function FilterPanel() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  const [values, setValues] = useState<Record<string, string>>(() =>
-    Object.fromEntries(FILTERS.map(({ key }) => [key, searchParams.get(key) ?? ANY])),
-  );
+  const readUrl = () =>
+    Object.fromEntries(FILTERS.map(({ key }) => [key, searchParams.get(key) ?? ANY]));
+  const [values, setValues] = useState<Record<string, string>>(readUrl);
+
+  // Other controls change the URL too (the category tiles, the navbar search), so read it
+  // again when it changes. React's "adjust state when a prop changes" pattern, not an effect.
+  const query = searchParams.toString();
+  const [seenQuery, setSeenQuery] = useState(query);
+  if (query !== seenQuery) {
+    setSeenQuery(query);
+    setValues(readUrl());
+  }
 
   const apply = (next: Record<string, string>) => {
     setValues((current) => ({ ...current, ...next }));
