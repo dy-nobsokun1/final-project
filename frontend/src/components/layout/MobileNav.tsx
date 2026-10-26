@@ -39,7 +39,22 @@ export function MobileNav() {
                     : "text-muted-foreground hover:text-foreground",
                 )}
               >
-                <Icon aria-hidden="true" className="size-5" />
+                {href === "/assistant" ? (
+                  // Ask UniSwap gets a filled circle so it stands out; it turns pale with a ring
+                  // when active. -my-1 keeps the bar 59.5px tall, which ListingBuyBar and the
+                  // chat thread are sized to.
+                  <span
+                    aria-hidden="true"
+                    className={cn(
+                      "-my-1 flex size-7 items-center justify-center rounded-full text-brand-ink",
+                      isActive ? "bg-brand-50 ring-2 ring-brand-400" : "bg-brand-400",
+                    )}
+                  >
+                    <Icon className="size-4" />
+                  </span>
+                ) : (
+                  <Icon aria-hidden="true" className="size-5" />
+                )}
                 {label}
               </Link>
             </li>

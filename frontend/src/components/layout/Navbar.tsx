@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { Suspense } from "react";
+import { AskNavPill } from "@/components/layout/AskNavPill";
 import { UserAvatar } from "@/components/profile/UserAvatar";
 import { useAuth } from "@/contexts/AuthContext";
 import { APP_NAME, NAV_LINKS } from "@/lib/constants";
@@ -27,15 +28,19 @@ export function Navbar() {
         </Suspense>
 
         <nav aria-label="Primary" className="hidden items-center gap-1 md:flex">
-          {NAV_LINKS.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className="rounded-full px-3 py-1.5 text-sm font-semibold text-muted-foreground transition-colors hover:bg-brand-200 hover:text-foreground"
-            >
-              {link.label}
-            </Link>
-          ))}
+          {NAV_LINKS.map((link) =>
+            link.href === "/assistant" ? (
+              <AskNavPill key={link.href} href={link.href} label={link.label} />
+            ) : (
+              <Link
+                key={link.href}
+                href={link.href}
+                className="rounded-full px-3 py-1.5 text-sm font-semibold text-muted-foreground transition-colors hover:bg-brand-200 hover:text-foreground"
+              >
+                {link.label}
+              </Link>
+            ),
+          )}
         </nav>
 
         <UserMenu />

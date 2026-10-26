@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Suspense } from "react";
-import { ArrowRight, Recycle } from "lucide-react";
+import { ArrowRight, Recycle, Sparkles } from "lucide-react";
 import { HeroHeading } from "@/components/marketing/HeroHeading";
 import { HeroPhotos } from "@/components/marketing/HeroPhotos";
 import { HeroSubheading } from "@/components/marketing/HeroSubheading";
@@ -24,24 +24,39 @@ export function HeroBand() {
         {/* Subheading, typed out on load. */}
         <HeroSubheading />
 
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-col gap-3">
+          <div className="flex flex-wrap items-center gap-3">
+            <Link
+              href="/listings/new"
+              className="inline-flex items-center gap-2 rounded-lg border border-border bg-brand-50 px-5 py-2.5 text-sm font-semibold text-brand-ink transition-colors hover:bg-brand-200"
+            >
+              Sell an item
+              <ArrowRight aria-hidden="true" className="size-4" />
+            </Link>
+            {/* Dark CTA against the light hero. #E6F2DD on #22312D is 11.72:1.
+                The border moves to brand-50/30 because the old brand-ink/40 read
+                as invisible on a dark fill, and hover goes to brand-900 rather
+                than brand-50, which would flash bright against the hero. */}
+            <a
+              href="#listings"
+              className="inline-flex items-center rounded-lg border border-brand-50/30 bg-brand-deep px-5 py-2.5 text-sm font-semibold text-brand-50 transition-colors hover:bg-brand-900"
+            >
+              Browse listings
+            </a>
+          </div>
+
+          {/* A way into Ask UniSwap, styled like a question box. Its border (black at 60%, 3.9:1 on
+              brand-200) outlines it, since its fill matches the pale end of the gradient. */}
           <Link
-            href="/listings/new"
-            className="inline-flex items-center gap-2 rounded-lg border border-border bg-brand-50 px-5 py-2.5 text-sm font-semibold text-brand-ink transition-colors hover:bg-brand-200"
+            href="/assistant"
+            className="inline-flex w-full items-center gap-2 rounded-2xl border border-brand-ink/60 bg-brand-50 px-3 py-2.5 text-sm text-brand-ink transition-colors hover:bg-brand-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-ink sm:w-fit sm:gap-3 sm:rounded-full sm:px-4"
           >
-            Sell an item
-            <ArrowRight aria-hidden="true" className="size-4" />
+            <Sparkles aria-hidden="true" className="size-4 shrink-0" />
+            <span>
+              Not sure what to search? <span className="whitespace-nowrap font-semibold">Ask UniSwap</span>
+            </span>
+            <ArrowRight aria-hidden="true" className="ml-auto size-4 shrink-0" />
           </Link>
-          {/* Dark CTA against the light hero. #E6F2DD on #22312D is 11.72:1.
-              The border moves to brand-50/30 because the old brand-ink/40 read
-              as invisible on a dark fill, and hover goes to brand-900 rather
-              than brand-50, which would flash bright against the hero. */}
-          <a
-            href="#listings"
-            className="inline-flex items-center rounded-lg border border-brand-50/30 bg-brand-deep px-5 py-2.5 text-sm font-semibold text-brand-50 transition-colors hover:bg-brand-900"
-          >
-            Browse listings
-          </a>
         </div>
       </div>
 
