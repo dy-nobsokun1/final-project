@@ -1,4 +1,4 @@
-// Adds the 60 sample listings in sample-listings.json (made by fetch-sample-listings.js) under 6 demo
+// Adds the sample listings in sample-listings.json (made by fetch-sample-listings.js) under 6 demo
 // students, keeping everything already in the database. Safe to re-run: items already added are skipped.
 //   npm run db:samples                 add them
 //   npm run db:samples -- --remove     remove the demo students and everything they posted

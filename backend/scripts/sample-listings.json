@@ -893,6 +893,296 @@
       ],
       "seller": 5,
       "hoursAgo": 13
+    },
+    {
+      "title": "Apple MacBook Pro 14 Inch Space Grey",
+      "description": "The MacBook Pro 14 Inch in Space Grey is a powerful and sleek laptop, featuring Apple's M1 Pro chip for exceptional performance and a stunning Retina display. Used, in good working condition.",
+      "category": "electronics",
+      "condition": "good",
+      "type": "sale",
+      "price": 1100,
+      "images": [
+        "https://cdn.dummyjson.com/product-images/laptops/apple-macbook-pro-14-inch-space-grey/1.webp",
+        "https://cdn.dummyjson.com/product-images/laptops/apple-macbook-pro-14-inch-space-grey/2.webp",
+        "https://cdn.dummyjson.com/product-images/laptops/apple-macbook-pro-14-inch-space-grey/3.webp"
+      ],
+      "seller": 0,
+      "hoursAgo": 20
+    },
+    {
+      "title": "Samsung Galaxy S8",
+      "description": "The Samsung Galaxy S8 is a premium smartphone with an Infinity Display, offering a stunning visual experience. It boasts advanced camera capabilities and cutting-edge technology. Used only a few times, works like new.",
+      "category": "electronics",
+      "condition": "like_new",
+      "type": "sale",
+      "price": 350,
+      "images": [
+        "https://cdn.dummyjson.com/product-images/smartphones/samsung-galaxy-s8/1.webp",
+        "https://cdn.dummyjson.com/product-images/smartphones/samsung-galaxy-s8/2.webp",
+        "https://cdn.dummyjson.com/product-images/smartphones/samsung-galaxy-s8/3.webp"
+      ],
+      "seller": 1,
+      "hoursAgo": 27
+    },
+    {
+      "title": "iPhone X",
+      "description": "The iPhone X is a flagship smartphone featuring a bezel-less OLED display, facial recognition technology (Face ID), and impressive performance. It represents a milestone in iPhone design and innovation. Shows some signs of use, but works fine.",
+      "category": "electronics",
+      "condition": "fair",
+      "type": "sale",
+      "price": 360,
+      "images": [
+        "https://cdn.dummyjson.com/product-images/smartphones/iphone-x/1.webp",
+        "https://cdn.dummyjson.com/product-images/smartphones/iphone-x/2.webp",
+        "https://cdn.dummyjson.com/product-images/smartphones/iphone-x/3.webp"
+      ],
+      "seller": 2,
+      "hoursAgo": 34
+    },
+    {
+      "title": "Beats Flex Wireless Earphones",
+      "description": "The Beats Flex Wireless Earphones offer a comfortable and versatile audio experience. With magnetic earbuds and up to 12 hours of battery life, they are ideal for everyday use. Used, in good working condition.",
+      "category": "electronics",
+      "condition": "good",
+      "type": "sale",
+      "price": 27,
+      "images": [
+        "https://cdn.dummyjson.com/product-images/mobile-accessories/beats-flex-wireless-earphones/1.webp"
+      ],
+      "seller": 3,
+      "hoursAgo": 41
+    },
+    {
+      "title": "Apple MagSafe Battery Pack",
+      "description": "The Apple MagSafe Battery Pack is a portable and convenient way to add extra battery life to your MagSafe-compatible iPhone. Attach it magnetically for a secure connection. Still unopened.",
+      "category": "electronics",
+      "condition": "new",
+      "type": "sale",
+      "price": 80,
+      "images": [
+        "https://cdn.dummyjson.com/product-images/mobile-accessories/apple-magsafe-battery-pack/1.webp",
+        "https://cdn.dummyjson.com/product-images/mobile-accessories/apple-magsafe-battery-pack/2.webp"
+      ],
+      "seller": 4,
+      "hoursAgo": 48
+    },
+    {
+      "title": "Apple Airpods",
+      "description": "The Apple Airpods offer a seamless wireless audio experience. With easy pairing, high-quality sound, and Siri integration, they are perfect for on-the-go listening. Used, in good working condition.",
+      "category": "electronics",
+      "condition": "good",
+      "type": "sale",
+      "price": 71,
+      "images": [
+        "https://cdn.dummyjson.com/product-images/mobile-accessories/apple-airpods/1.webp",
+        "https://cdn.dummyjson.com/product-images/mobile-accessories/apple-airpods/2.webp",
+        "https://cdn.dummyjson.com/product-images/mobile-accessories/apple-airpods/3.webp"
+      ],
+      "seller": 5,
+      "hoursAgo": 55
+    },
+    {
+      "title": "Brown Leather Belt Watch",
+      "description": "The Brown Leather Belt Watch is a stylish timepiece with a classic design. Featuring a genuine leather strap and a sleek dial, it adds a touch of sophistication to your look. Used only a few times, works like new.",
+      "category": "clothing",
+      "condition": "like_new",
+      "type": "sale",
+      "price": 63,
+      "images": [
+        "https://cdn.dummyjson.com/product-images/mens-watches/brown-leather-belt-watch/1.webp",
+        "https://cdn.dummyjson.com/product-images/mens-watches/brown-leather-belt-watch/2.webp",
+        "https://cdn.dummyjson.com/product-images/mens-watches/brown-leather-belt-watch/3.webp"
+      ],
+      "seller": 0,
+      "hoursAgo": 62
+    },
+    {
+      "title": "Women's Wrist Watch",
+      "description": "The Women's Wrist Watch is a versatile and fashionable timepiece for everyday wear. With a comfortable strap and a simple yet elegant design, it complements various styles. Shows some signs of use, but works fine. Open to trades: tell me what you have.",
+      "category": "clothing",
+      "condition": "fair",
+      "type": "trade",
+      "price": 52,
+      "images": [
+        "https://cdn.dummyjson.com/product-images/womens-watches/women's-wrist-watch/1.webp",
+        "https://cdn.dummyjson.com/product-images/womens-watches/women's-wrist-watch/2.webp",
+        "https://cdn.dummyjson.com/product-images/womens-watches/women's-wrist-watch/3.webp"
+      ],
+      "seller": 1,
+      "hoursAgo": 69
+    },
+    {
+      "title": "Classic Sun Glasses",
+      "description": "The Classic Sun Glasses offer a timeless design with a neutral frame and UV-protected lenses. These sunglasses are versatile and suitable for various occasions. Used, in good working condition.",
+      "category": "clothing",
+      "condition": "good",
+      "type": "sale",
+      "price": 14,
+      "images": [
+        "https://cdn.dummyjson.com/product-images/sunglasses/classic-sun-glasses/1.webp",
+        "https://cdn.dummyjson.com/product-images/sunglasses/classic-sun-glasses/2.webp",
+        "https://cdn.dummyjson.com/product-images/sunglasses/classic-sun-glasses/3.webp"
+      ],
+      "seller": 2,
+      "hoursAgo": 76
+    },
+    {
+      "title": "Baseball Glove",
+      "description": "The Baseball Glove is a protective glove worn by baseball players. It is designed to catch and field the baseball, providing players with comfort and control during the game. Still unopened.",
+      "category": "other",
+      "condition": "new",
+      "type": "sale",
+      "price": 20,
+      "images": [
+        "https://cdn.dummyjson.com/product-images/sports-accessories/baseball-glove/1.webp",
+        "https://cdn.dummyjson.com/product-images/sports-accessories/baseball-glove/2.webp",
+        "https://cdn.dummyjson.com/product-images/sports-accessories/baseball-glove/3.webp"
+      ],
+      "seller": 3,
+      "hoursAgo": 83
+    },
+    {
+      "title": "Chopping Board",
+      "description": "The Chopping Board is an essential kitchen accessory for food preparation. Made from durable material, it provides a safe and hygienic surface for cutting and chopping. Used, in good working condition.",
+      "category": "other",
+      "condition": "good",
+      "type": "giveaway",
+      "price": 0,
+      "images": [
+        "https://cdn.dummyjson.com/product-images/kitchen-accessories/chopping-board/1.webp"
+      ],
+      "seller": 4,
+      "hoursAgo": 90
+    },
+    {
+      "title": "Pan",
+      "description": "The Pan is a versatile and essential cookware item for frying, sautéing, and cooking various dishes. Its non-stick coating ensures easy food release and cleanup. Used only a few times, works like new.",
+      "category": "other",
+      "condition": "like_new",
+      "type": "sale",
+      "price": 17,
+      "images": [
+        "https://cdn.dummyjson.com/product-images/kitchen-accessories/pan/1.webp"
+      ],
+      "seller": 5,
+      "hoursAgo": 97
+    },
+    {
+      "title": "Hand Blender",
+      "description": "The Hand Blender is a versatile kitchen appliance for blending, pureeing, and mixing. Its compact design and powerful motor make it a convenient tool for various recipes. Shows some signs of use, but works fine.",
+      "category": "other",
+      "condition": "fair",
+      "type": "sale",
+      "price": 14,
+      "images": [
+        "https://cdn.dummyjson.com/product-images/kitchen-accessories/hand-blender/1.webp"
+      ],
+      "seller": 0,
+      "hoursAgo": 104
+    },
+    {
+      "title": "Foundations of college chemistry",
+      "description": "Foundations of college chemistry by Morris Hein (1967). Used, in good working condition.",
+      "category": "textbooks",
+      "condition": "good",
+      "type": "sale",
+      "price": 20,
+      "images": [
+        "https://covers.openlibrary.org/b/id/6598795-L.jpg"
+      ],
+      "seller": 1,
+      "hoursAgo": 111
+    },
+    {
+      "title": "Human Resource Management",
+      "description": "Human Resource Management by Gary Dessler (1994). Used only a few times, works like new.",
+      "category": "textbooks",
+      "condition": "like_new",
+      "type": "sale",
+      "price": 18,
+      "images": [
+        "https://covers.openlibrary.org/b/id/84029-L.jpg"
+      ],
+      "seller": 2,
+      "hoursAgo": 118
+    },
+    {
+      "title": "Database Design for Mere Mortals",
+      "description": "Database Design for Mere Mortals by Michael J. Hernandez (1996). Shows some signs of use, but works fine.",
+      "category": "textbooks",
+      "condition": "fair",
+      "type": "sale",
+      "price": 22,
+      "images": [
+        "https://covers.openlibrary.org/b/id/135738-L.jpg"
+      ],
+      "seller": 3,
+      "hoursAgo": 125
+    },
+    {
+      "title": "Thermodynamics",
+      "description": "Thermodynamics by Yunus A. Çengel (1989). Used, in good working condition.",
+      "category": "textbooks",
+      "condition": "good",
+      "type": "sale",
+      "price": 28,
+      "images": [
+        "https://covers.openlibrary.org/b/id/62976-L.jpg"
+      ],
+      "seller": 4,
+      "hoursAgo": 132
+    },
+    {
+      "title": "Traditions & encounters",
+      "description": "Traditions & encounters by Jerry H. Bentley (1999). Used, in good working condition.",
+      "category": "textbooks",
+      "condition": "good",
+      "type": "sale",
+      "price": 16,
+      "images": [
+        "https://covers.openlibrary.org/b/id/65184-L.jpg"
+      ],
+      "seller": 5,
+      "hoursAgo": 139
+    },
+    {
+      "title": "The story of art",
+      "description": "The story of art by E. H. Gombrich (1950). Used only a few times, works like new.",
+      "category": "textbooks",
+      "condition": "like_new",
+      "type": "sale",
+      "price": 24,
+      "images": [
+        "https://covers.openlibrary.org/b/id/538390-L.jpg"
+      ],
+      "seller": 0,
+      "hoursAgo": 146
+    },
+    {
+      "title": "Rich Dad, Poor Dad",
+      "description": "Rich Dad, Poor Dad by Robert T. Kiyosaki (1990). Shows some signs of use, but works fine.",
+      "category": "textbooks",
+      "condition": "fair",
+      "type": "sale",
+      "price": 12,
+      "images": [
+        "https://covers.openlibrary.org/b/id/8315603-L.jpg"
+      ],
+      "seller": 1,
+      "hoursAgo": 153
+    },
+    {
+      "title": "Looking for: Discrete mathematics",
+      "description": "Need \"Discrete mathematics\" by Kenneth A. Ross for class. Any edition is fine, message me.",
+      "category": "textbooks",
+      "condition": "good",
+      "type": "buy_request",
+      "price": 20,
+      "images": [
+        "https://covers.openlibrary.org/b/id/3968622-L.jpg"
+      ],
+      "seller": 2,
+      "hoursAgo": 160
     }
   ]
 }

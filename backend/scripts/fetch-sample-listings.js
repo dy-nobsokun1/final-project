@@ -28,11 +28,30 @@ const PRODUCT_CATEGORIES = {
   "kitchen-accessories": ["other", ["Microwave Oven", "Electric Stove", "Boxed Blender", "Lunch Box", "Carbon Steel Wok"]],
 };
 
-// Course subjects for textbooks (Open Library). The last three become "wanted" posts.
-const SUBJECTS = ["calculus", "physics", "organic chemistry", "biology", "microeconomics", "accounting",
-  "marketing", "statistics", "computer programming", "psychology", "linear algebra", "english grammar",
-  "data structures", "macroeconomics", "anatomy"];
-const WANTED_SUBJECTS = 3;
+// Course subjects for textbooks (Open Library), each with its price. The last three become "wanted"
+// posts, where the price is the budget.
+const SUBJECTS = [["calculus", 18], ["physics", 25], ["organic chemistry", 12], ["biology", 30],
+  ["microeconomics", 15], ["accounting", 22], ["marketing", 10], ["statistics", 28],
+  ["computer programming", 20], ["psychology", 16], ["linear algebra", 24], ["english grammar", 14],
+  ["data structures", 20], ["macroeconomics", 15], ["anatomy", 25]];
+
+// A second batch, added later. It comes after the first 60 items, so those keep their seller, date
+// and condition, and `npm run db:samples` adds only the new ones.
+const MORE_PRODUCTS = {
+  laptops: ["electronics", ["Apple MacBook Pro 14 Inch Space Grey"]],
+  smartphones: ["electronics", ["Samsung Galaxy S8", "iPhone X"]],
+  "mobile-accessories": ["electronics", ["Apple Airpods", "Beats Flex Wireless Earphones", "Apple MagSafe Battery Pack"]],
+  "mens-watches": ["clothing", ["Brown Leather Belt Watch"]],
+  "womens-watches": ["clothing", ["Women's Wrist Watch"]],
+  sunglasses: ["clothing", ["Classic Sun Glasses"]],
+  "sports-accessories": ["other", ["Baseball Glove"]],
+  "kitchen-accessories": ["other", ["Pan", "Hand Blender", "Chopping Board"]],
+};
+// Chosen because their top Open Library book is an English textbook (sociology, philosophy and
+// architecture gave German, French or Swedish editions).
+const MORE_SUBJECTS = [["general chemistry", 20], ["human resource management", 18], ["databases", 22],
+  ["thermodynamics", 28], ["world history", 16], ["art history", 24], ["finance", 12],
+  ["discrete mathematics", 20]]; // the last one is wanted
 
 const CONDITIONS = ["good", "like_new", "fair", "good", "new"];
 // What a used item sells for, as a share of its new price.
@@ -53,52 +72,65 @@ async function getJson(url) {
 const listings = [];
 
 const { products } = await getJson("https://dummyjson.com/products?limit=0");
-for (const [source, [category, choice]] of Object.entries(PRODUCT_CATEGORIES)) {
-  const cheapest = products.filter((p) => p.category === source).sort((a, b) => a.price - b.price);
-  const picked = Array.isArray(choice) ? cheapest.filter((p) => choice.includes(p.title)) : cheapest.slice(0, choice);
-  for (const product of picked) {
-    const condition = CONDITIONS[listings.length % CONDITIONS.length];
-    const price = Math.max(1, Math.round(product.price * RESALE[condition]));
-    // Items that would sell for under $8 are given away instead; every 9th item is up for trade.
-    const type = price < 8 ? "giveaway" : listings.length % 9 === 4 ? "trade" : "sale";
+
+/** Adds DummyJSON products, chosen as in PRODUCT_CATEGORIES, priced second-hand. */
+function addProducts(categories) {
+  for (const [source, [category, choice]] of Object.entries(categories)) {
+    const cheapest = products.filter((p) => p.category === source).sort((a, b) => a.price - b.price);
+    const picked = Array.isArray(choice) ? cheapest.filter((p) => choice.includes(p.title)) : cheapest.slice(0, choice);
+    for (const product of picked) {
+      const condition = CONDITIONS[listings.length % CONDITIONS.length];
+      const price = Math.max(1, Math.round(product.price * RESALE[condition]));
+      // Items that would sell for under $8 are given away instead; every 9th item is up for trade.
+      const type = price < 8 ? "giveaway" : listings.length % 9 === 4 ? "trade" : "sale";
+      listings.push({
+        title: product.title,
+        description: `${product.description} ${NOTES[condition]}${type === "trade" ? " Open to trades: tell me what you have." : ""}`,
+        category,
+        condition,
+        type,
+        price: type === "giveaway" ? 0 : price,
+        images: product.images.slice(0, 3),
+      });
+    }
+  }
+}
+
+/** Adds one Open Library book per [subject, price]; the last `wanted` subjects become wanted posts. */
+async function addTextbooks(subjects, wanted) {
+  for (const [index, [subject, price]] of subjects.entries()) {
+    const { docs } = await getJson(`https://openlibrary.org/search.json?subject=${encodeURIComponent(subject)}`
+      + "&limit=10&fields=title,author_name,cover_i,first_publish_year");
+    const book = docs.find((doc) => doc.cover_i && doc.author_name && doc.title.length <= 80
+      && !listings.some((listing) => listing.title.endsWith(doc.title))); // no book twice
+    if (!book) continue;
+    const isWanted = index >= subjects.length - wanted;
+    const condition = CONDITIONS[index % 4]; // textbooks are never "new" here
     listings.push({
-      title: product.title,
-      description: `${product.description} ${NOTES[condition]}${type === "trade" ? " Open to trades: tell me what you have." : ""}`,
-      category,
+      title: isWanted ? `Looking for: ${book.title}` : book.title,
+      description: isWanted
+        ? `Need "${book.title}" by ${book.author_name[0]} for class. Any edition is fine, message me.`
+        : `${book.title} by ${book.author_name[0]} (${book.first_publish_year ?? "n.d."}). ${NOTES[condition]}`,
+      category: "textbooks",
       condition,
-      type,
-      price: type === "giveaway" ? 0 : price,
-      images: product.images.slice(0, 3),
+      type: isWanted ? "buy_request" : "sale",
+      price, // for a wanted post, this is the budget
+      images: [`https://covers.openlibrary.org/b/id/${book.cover_i}-L.jpg`],
     });
   }
 }
 
-const textbookPrices = [18, 25, 12, 30, 15, 22, 10, 28, 20, 16, 24, 14, 20, 15, 25];
-for (const [index, subject] of SUBJECTS.entries()) {
-  const { docs } = await getJson(`https://openlibrary.org/search.json?subject=${encodeURIComponent(subject)}`
-    + "&limit=10&fields=title,author_name,cover_i,first_publish_year");
-  const book = docs.find((doc) => doc.cover_i && doc.author_name && doc.title.length <= 80);
-  if (!book) continue;
-  const isWanted = index >= SUBJECTS.length - WANTED_SUBJECTS;
-  const condition = CONDITIONS[index % 4]; // textbooks are never "new" here
-  listings.push({
-    title: isWanted ? `Looking for: ${book.title}` : book.title,
-    description: isWanted
-      ? `Need "${book.title}" by ${book.author_name[0]} for class. Any edition is fine, message me.`
-      : `${book.title} by ${book.author_name[0]} (${book.first_publish_year ?? "n.d."}). ${NOTES[condition]}`,
-    category: "textbooks",
-    condition,
-    type: isWanted ? "buy_request" : "sale",
-    price: textbookPrices[index], // for a wanted post, this is the budget
-    images: [`https://covers.openlibrary.org/b/id/${book.cover_i}-L.jpg`],
-  });
-}
+addProducts(PRODUCT_CATEGORIES);
+await addTextbooks(SUBJECTS, 3);
 
 // Two auctions: the cheapest laptop and the first scooter, ending a few days after loading.
 for (const [title, days, minIncrement] of [["Lenovo Yoga 920", 3, 5], ["Scooter Motorcycle", 5, 20]]) {
   const item = listings.find((listing) => listing.title === title);
   if (item) Object.assign(item, { type: "auction", auction: { days, minIncrement } });
 }
+
+addProducts(MORE_PRODUCTS);
+await addTextbooks(MORE_SUBJECTS, 1);
 
 // Spread the items over 6 demo sellers and over the last few weeks, like real posts.
 for (const [index, listing] of listings.entries()) {

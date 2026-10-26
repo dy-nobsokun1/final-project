@@ -13,7 +13,7 @@ npm install
 cp .env.example .env      # then edit DATABASE_URL and JWT_SECRET
 npm run db:setup          # creates the tables (drops existing data!)
 npm run db:seed           # optional demo data; every demo user's password is "password123"
-npm run db:samples        # optional: 60 more realistic items (see "Sample listings" below)
+npm run db:samples        # optional: 81 more realistic items (see "Sample listings" below)
 npm run dev               # http://localhost:4000, restarts on file changes
 npm test                  # unit tests (Node's built-in test runner)
 npm run test:api          # API tests against a separate test database (see Testing below)
@@ -23,7 +23,7 @@ Check it works: `curl http://localhost:4000/api/health` → `{"status":"ok"}`
 
 ### Sample listings
 
-`npm run db:samples` adds 60 realistic items to the database you already have (it wipes nothing and
+`npm run db:samples` adds 81 realistic items to the database you already have (it wipes nothing and
 skips items it added before), posted by 6 demo students whose emails end in `@demo.edu.kh` (password
 `password123`). `npm run db:samples -- --remove` deletes those students and everything they posted.
 
