@@ -65,8 +65,9 @@ export function HeroBand() {
       </div>
 
       {/* The newest items, on the empty right half from `lg` up. Its own Suspense, so the
-          heading and buttons never wait for it. */}
-      <div className="absolute inset-y-0 right-10 hidden items-center lg:flex">
+          heading and buttons never wait for it. Below `xl` it sits at the top, beside the heading,
+          because centred it would cover the third hero point; from `xl` up there is room to centre it. */}
+      <div className="absolute top-14 right-10 hidden lg:flex xl:inset-y-0 xl:items-center">
         <Suspense fallback={null}>
           <HeroPhotos />
         </Suspense>
