@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useId, useState } from "react";
+import { useId, useState, useTransition } from "react";
 import { FilterSelect } from "@/components/listings/FilterSelect";
 import { FilterToggle } from "@/components/listings/FilterToggle";
 import { Button } from "@/components/ui/button";
@@ -65,6 +65,8 @@ export function FilterPanel() {
   // Phones only: the panel stays open after a filter is picked, since the page keeps it mounted.
   const [isOpen, setIsOpen] = useState(false);
   const panelId = useId();
+  // True from a filter change until the new results are on screen (see the marker below).
+  const [isPending, startTransition] = useTransition();
 
   // Other controls change the URL too (the category tiles, the navbar search), so read it
   // again when it changes. React's "adjust state when a prop changes" pattern, not an effect.
@@ -86,13 +88,15 @@ export function FilterPanel() {
     // Stay put: on phones the grid sits below the hero and the category tiles, so jumping to
     // the top meant scrolling back down after every filter. `push` keeps Back stepping
     // through earlier filter sets.
-    router.push(query ? `${pathname}?${query}` : pathname, { scroll: false });
+    startTransition(() => router.push(query ? `${pathname}?${query}` : pathname, { scroll: false }));
   };
 
   const activeCount = Object.values(values).filter((value) => value !== ANY).length;
 
   return (
     <div className="flex flex-col gap-3">
+      {/* Makes the browse page dim its results while they load (see `app/(main)/page.tsx`). */}
+      {isPending ? <span data-browse-pending hidden /> : null}
       <FilterToggle count={activeCount} isOpen={isOpen} controls={panelId} onToggle={() => setIsOpen(!isOpen)} />
       <section
         id={panelId}

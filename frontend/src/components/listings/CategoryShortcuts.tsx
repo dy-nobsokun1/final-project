@@ -1,5 +1,6 @@
 import { Bike, BookOpen, Laptop, type LucideIcon, Shapes, Shirt, Sofa } from "lucide-react";
 import Link from "next/link";
+import { LinkPendingMarker } from "@/components/listings/LinkPendingMarker";
 import { CATEGORIES } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import type { ListingCategory } from "@/types";
@@ -46,6 +47,7 @@ export function CategoryShortcuts({ params, active }: CategoryShortcutsProps) {
                   <Icon aria-hidden="true" className="size-5" />
                 </span>
                 {label}
+                <LinkPendingMarker />
               </Link>
             </li>
           );
