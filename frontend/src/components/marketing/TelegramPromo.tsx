@@ -1,12 +1,8 @@
 import { Send } from "lucide-react";
-import { cookies } from "next/headers";
 import Link from "next/link";
 import { DismissibleTip } from "@/components/marketing/DismissibleTip";
 import { getCurrentUser, getTelegramBotUrl } from "@/lib/api";
 import { getTelegramStatus } from "@/lib/api/actions";
-
-/** Set by the strip's X (DismissibleTip). Once it is there, the strip is left out of the page. */
-const HIDE_COOKIE = "uniswap_hide_telegram_tip";
 
 const ALERTS_TEXT = "Get new messages, outbids and price drops instantly.";
 
@@ -24,8 +20,8 @@ interface Promo {
 /**
  * A slim strip on the home page about Telegram alerts, shown only when the API has a bot set up.
  * Signed-out visitors are asked to sign in, signed-in students not linked yet go to the Telegram
- * card in Settings, and linked students get a quick way to open the bot's chat. The X hides it for
- * good (DismissibleTip).
+ * card in Settings, and linked students get a quick way to open the bot's chat. The X hides it until
+ * the page loads again (DismissibleTip).
  */
 export async function TelegramPromo() {
   const promo = await choosePromo();
@@ -35,7 +31,6 @@ export async function TelegramPromo() {
 
   return (
     <DismissibleTip
-      cookieName={HIDE_COOKIE}
       hideLabel="Hide Telegram tip"
       className="light-surface flex items-center gap-3 rounded-xl border border-border bg-card px-3 py-2.5 sm:px-4"
     >
@@ -68,7 +63,6 @@ export async function TelegramPromo() {
  */
 async function choosePromo(): Promise<Promo | null> {
   try {
-    if ((await cookies()).has(HIDE_COOKIE)) return null;
     const [botUrl, user] = await Promise.all([getTelegramBotUrl(), getCurrentUser()]);
     if (!botUrl) return null;
     if (!user) return { text: ALERTS_TEXT, href: "/login", label: "Sign in", rest: " to connect" };
