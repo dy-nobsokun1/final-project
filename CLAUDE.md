@@ -164,8 +164,10 @@ when `uniswap` has none, so an older `uniswap` database needs the upgrade SQL (b
   question. The model must call a tool (Groq `tool_choice: "required"`, Gemini `mode: "ANY"`):
   `search_listings` (browse search, active, no wanted posts or ended auctions, 5 results), then
   `reply { text, listingIds, wantedDraft }`; cards only for ids found in that question; at most 3 calls,
-  the last reply-only. Groq default `openai/gpt-oss-120b` (free: 30/minute, 1,000/day, 8K tokens/minute,
-  200K tokens/day, so tokens run out first); Gemini default `gemini-3.5-flash-lite` (the free tier gave
+  the last reply-only. Groq default `qwen/qwen3.8-27b` (`openai/gpt-oss-120b` often answered in plain
+  text instead of calling `reply`, which Groq refuses with a 400 `tool_use_failed`). Free: 30 requests a
+  minute, 1,000 a day, 200K tokens a day, and its 429s name 7,000 input tokens a minute. At about 2.5K
+  tokens a question that is roughly 3 questions a minute and 80 a day for the whole app. Gemini default `gemini-3.5-flash-lite` (the free tier gave
   about 20 requests a day by Oct 2026). A 429 says "in a minute" or "tomorrow". Never send either
   provider seller names or emails. API tests fake Groq and never call a real provider.
   Frontend: `/assistant` (`components/marketplace/Assistant*.tsx`); the conversation lives in page
