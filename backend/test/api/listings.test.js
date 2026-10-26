@@ -77,6 +77,22 @@ test("search finds a listing from a misspelled or partial title word", async () 
   }
 });
 
+test("a search with a limit returns at most that many, best match first", async () => {
+  const seller = await api.createUser();
+  // "Platypus" is in no other test's listings. The title match is posted first, so it is the
+  // oldest: only ranking (not newest first) can put it at the top.
+  const best = await api.createListing(seller, { title: "Platypus lamp" });
+  for (let i = 0; i < 2; i += 1) {
+    await api.createListing(seller, { title: "Desk lamp", description: "Shaped like a platypus." });
+  }
+  assert.equal(ids(await api.request("GET", "/api/listings?query=platypus")).length, 3);
+
+  const limited = await api.request("GET", "/api/listings?query=platypus&limit=2");
+  assert.equal(limited.status, 200);
+  assert.equal(ids(limited).length, 2);
+  assert.equal(ids(limited)[0], best.id);
+});
+
 test("a sold listing leaves the browse page but stays on the seller's profile", async () => {
   const seller = await api.createUser();
   const listing = await api.createListing(seller);

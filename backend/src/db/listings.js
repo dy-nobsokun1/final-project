@@ -1,3 +1,4 @@
+import { MAX_BROWSE_LIMIT } from "../utils/validation.js";
 import { query } from "./pool.js";
 
 // Every listing is returned with the seller's public info, so the UI can render
@@ -89,8 +90,10 @@ export function buildBrowseQuery(filters) {
     orderBy = `${words.rank} DESC, l.created_at DESC`;
   }
 
+  // At most `limit` rows (1 to 100, see parseListingFilters); 100 when the caller gives none.
+  params.push(filters.limit ?? MAX_BROWSE_LIMIT);
   return {
-    text: `${LISTING_SELECT} WHERE ${conditions.join(" AND ")} ORDER BY ${orderBy} LIMIT 100`,
+    text: `${LISTING_SELECT} WHERE ${conditions.join(" AND ")} ORDER BY ${orderBy} LIMIT $${params.length}`,
     params,
   };
 }

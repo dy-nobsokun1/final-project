@@ -164,6 +164,15 @@ function toNumber(value) {
   return Number.isFinite(number) ? number : undefined;
 }
 
+/** The most listings one browse request returns, and the default when no `limit` is given. */
+export const MAX_BROWSE_LIMIT = 100;
+
+/** `limit` as a whole number from 1 to 100. Anything else, or none, means 100. */
+function toLimit(value) {
+  const number = Number(value);
+  return Number.isInteger(number) && number >= 1 && number <= MAX_BROWSE_LIMIT ? number : MAX_BROWSE_LIMIT;
+}
+
 /** Turns browse query-string params into a clean filter object. Unknown values are ignored. */
 export function parseListingFilters(query) {
   const pick = (value, allowed) => (allowed.includes(value) ? value : undefined);
@@ -175,5 +184,6 @@ export function parseListingFilters(query) {
     status: pick(query.status, STATUSES) ?? "active",
     minPrice: toNumber(query.minPrice),
     maxPrice: toNumber(query.maxPrice),
+    limit: toLimit(query.limit),
   };
 }

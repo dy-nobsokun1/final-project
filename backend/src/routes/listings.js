@@ -46,8 +46,9 @@ async function findOwnedListing(id, userId) {
   return listing;
 }
 
-// GET /api/listings?query=&category=&condition=&type=&minPrice=&maxPrice=&status=
+// GET /api/listings?query=&category=&condition=&type=&minPrice=&maxPrice=&status=&limit=
 // With `query`, results are ranked best match first and tolerate small typos (see buildBrowseQuery).
+// `limit` (1 to 100, default 100) is for short lists such as the search box's suggestions.
 listingsRouter.get("/", async (req, res) => {
   const { text, params } = buildBrowseQuery(parseListingFilters(req.query));
   const { rows } = await query(text, params);

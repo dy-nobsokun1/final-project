@@ -114,6 +114,19 @@ test("browse filters ignore unknown values and default to active listings", () =
   assert.equal(filters.status, "active");
 });
 
+test("the browse limit is a whole number from 1 to 100, else 100", () => {
+  const limitOf = (limit) => parseListingFilters({ limit }).limit;
+  assert.equal(limitOf("5"), 5);
+  assert.equal(limitOf("100"), 100);
+  assert.equal(limitOf("500"), 100, "too big");
+  assert.equal(limitOf("0"), 100, "zero");
+  assert.equal(limitOf("-3"), 100, "negative");
+  assert.equal(limitOf("2.5"), 100, "not whole");
+  assert.equal(limitOf("abc"), 100, "junk");
+  assert.equal(limitOf(""), 100, "empty");
+  assert.equal(parseListingFilters({}).limit, 100, "missing");
+});
+
 test("an auction needs a future end time within 30 days and a positive minimum raise", () => {
   const base = { title: "Desk", category: "furniture", condition: "good", listingType: "auction" };
   const inDays = (days) => new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString();

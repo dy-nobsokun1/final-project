@@ -8,7 +8,7 @@ const { buildBrowseQuery, wordMatchSql } = await import("../src/db/listings.js")
 
 test("without a search term, listings are newest first", () => {
   const { text, params } = buildBrowseQuery({ status: "active" });
-  assert.deepEqual(params, ["active"]);
+  assert.deepEqual(params, ["active", 100]);
   assert.match(text, /ORDER BY l\.created_at DESC/);
   assert.doesNotMatch(text, /websearch_to_tsquery/);
 });
@@ -17,18 +17,26 @@ test("filters become numbered parameters, never pasted into the SQL", () => {
   const { text, params } = buildBrowseQuery({
     status: "active", category: "bikes", listingType: "trade", minPrice: 10, maxPrice: 100,
   });
-  assert.deepEqual(params, ["active", "bikes", "trade", 10, 100]);
+  assert.deepEqual(params, ["active", "bikes", "trade", 10, 100, 100]); // the last 100 is the limit
   assert.match(text, /l\.listing_type = \$3/);
   assert.match(text, /l\.price >= \$4 AND l\.price <= \$5/);
 });
 
 test("a search term is ranked and typo tolerant, and stays a parameter", () => {
   const { text, params } = buildBrowseQuery({ status: "active", query: "' OR 1=1 --" });
-  assert.deepEqual(params, ["active", "' OR 1=1 --", "%' OR 1=1 --%"]);
+  assert.deepEqual(params, ["active", "' OR 1=1 --", "%' OR 1=1 --%", 100]);
   assert.doesNotMatch(text, /OR 1=1/);
   assert.match(text, /websearch_to_tsquery\('english', \$2\)/);
   assert.match(text, /word_similarity\(\$2, l\.title\)/);
   assert.match(text, /ORDER BY ts_rank/);
+});
+
+test("the limit is a parameter too, 100 unless the caller gives one", () => {
+  const { text, params } = buildBrowseQuery({ status: "active", query: "ram", limit: 5 });
+  assert.equal(params.at(-1), 5);
+  assert.match(text, /LIMIT \$4$/);
+  assert.doesNotMatch(text, /LIMIT 5/);
+  assert.match(buildBrowseQuery({ status: "active" }).text, /LIMIT \$2$/);
 });
 
 test("% and _ in a search term are literal characters, not wildcards", () => {
