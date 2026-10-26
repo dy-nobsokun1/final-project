@@ -7,8 +7,8 @@ import { AssistantQuestionBox } from "@/components/marketplace/AssistantQuestion
 import { AssistantStarters } from "@/components/marketplace/AssistantStarters";
 import { Button } from "@/components/ui/button";
 import { useAssistantHistory } from "@/hooks/use-assistant-history";
-import { askAssistant } from "@/lib/api/actions";
-import type { AssistantMessage } from "@/types";
+import { askAssistant, type ActionResult } from "@/lib/api/actions";
+import type { AssistantAnswer, AssistantMessage } from "@/types";
 
 /**
  * Each question sends only the newest messages: itself and the two questions and answers before it.
@@ -38,8 +38,15 @@ export function AssistantChat({ userId }: { userId: string }) {
     setPending(asked.text);
     setQuestion("");
     setError(null);
-    const result = await askAssistant([...messages, asked].slice(-MESSAGES_SENT));
-    setPending(null);
+    let result: ActionResult & { answer?: AssistantAnswer };
+    try {
+      result = await askAssistant([...messages, asked].slice(-MESSAGES_SENT));
+    } catch {
+      // The request never came back (the Wi-Fi dropped, say): shown like any other error below.
+      result = { error: "Couldn't reach UniSwap. Check your connection and try again." };
+    } finally {
+      setPending(null);
+    }
     if (result.answer) {
       saveMessages([...messages, asked, { role: "assistant", text: result.answer.reply, answer: result.answer }]);
       setAnnouncement(result.answer.reply);
