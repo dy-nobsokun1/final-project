@@ -1,17 +1,22 @@
 import { Suspense } from "react";
-import { Package } from "lucide-react";
+import { BrowseResults } from "@/components/listings/BrowseResults";
 import { CategoryShortcuts } from "@/components/listings/CategoryShortcuts";
 import { FilterPanel } from "@/components/listings/FilterPanel";
-import { ListingGrid } from "@/components/listings/ListingGrid";
+import { ListingCount } from "@/components/listings/ListingCount";
+import { ListingGridSkeleton } from "@/components/listings/ListingGridSkeleton";
 import { HeroBand } from "@/components/marketing/HeroBand";
-import { getListings, getSavedListingIds } from "@/lib/api";
 import type { ListingCategory, ListingCondition, ListingFilters, ListingType } from "@/types";
 
-/** Browse page. Filters arrive as query params and are applied server-side. */
+/**
+ * Browse page. Filters arrive as query params and are applied server-side. The results stream in
+ * (`BrowseResults`, `ListingCount`), so the hero, category tiles and filters show at once.
+ */
 export default async function BrowsePage({ searchParams }: PageProps<"/">) {
   const params = await searchParams;
   const filters = parseFilters(params);
-  const [listings, savedIds] = await Promise.all([getListings(filters), getSavedListingIds()]);
+  // A new key for each filter set makes React show the placeholders again, instead of leaving
+  // the old results on screen while the new ones load.
+  const resultsKey = JSON.stringify(filters);
 
   return (
     <div className="flex flex-col gap-6">
@@ -22,10 +27,12 @@ export default async function BrowsePage({ searchParams }: PageProps<"/">) {
       <section id="listings" className="flex flex-col gap-4">
         <header className="flex flex-wrap items-end justify-between gap-2">
           <h2 className="font-heading text-2xl tracking-tight">Browse listings</h2>
-          <p className="text-sm text-muted-foreground">
-            {listings.length} {listings.length === 1 ? "listing" : "listings"} from
-            students on campus.
-          </p>
+          <Suspense
+            key={resultsKey}
+            fallback={<span aria-hidden="true" className="h-5 w-56 animate-pulse rounded bg-brand-deep-2 motion-reduce:animate-none" />}
+          >
+            <ListingCount filters={filters} />
+          </Suspense>
         </header>
 
         <Suspense fallback={<div className="h-24 rounded-xl border border-border" />}>
@@ -33,13 +40,9 @@ export default async function BrowsePage({ searchParams }: PageProps<"/">) {
         </Suspense>
       </section>
 
-      <ListingGrid
-        listings={listings}
-        savedIds={savedIds}
-        emptyIcon={Package}
-        emptyTitle="No listings match those filters"
-        emptyDescription="Try clearing a filter, or check back once other students post more items."
-      />
+      <Suspense key={resultsKey} fallback={<ListingGridSkeleton />}>
+        <BrowseResults filters={filters} />
+      </Suspense>
     </div>
   );
 }
