@@ -21,21 +21,40 @@ for (const [name, email, major, year, verified] of users) {
   ids.push(rows[0].id);
 }
 
-// [owner index, title, category, condition, type, price, photos (the first is the cover)]
+// Real photos: the first four are in frontend/public/listings/; the desk and jacket stay on
+// Wikimedia Commons (credits next to them), so no third-party images enter this repo.
+const DESK_PHOTO = // "(2) 4 drawer Steel desk with wood top", Bonner Springs Library, CC BY 2.0:
+  // https://commons.wikimedia.org/wiki/File:(2)_4_drawer_Steel_desk_with_wood_top-front_(4791226493).jpg
+  "https://upload.wikimedia.org/wikipedia/commons/thumb/0/06/%282%29_4_drawer_Steel_desk_with_wood_top-front_%284791226493%29.jpg/960px-%282%29_4_drawer_Steel_desk_with_wood_top-front_%284791226493%29.jpg";
+const JACKET_PHOTO = // "Carhartt Hooded Jacket", Eli Duke, CC BY-SA 2.0:
+  // https://commons.wikimedia.org/wiki/File:Carhartt_Hooded_Jacket_(9808828856).jpg
+  "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0b/Carhartt_Hooded_Jacket_%289808828856%29.jpg/960px-Carhartt_Hooded_Jacket_%289808828856%29.jpg";
+
+// [owner index, title, category, condition, type, price, description, photos (the first is the cover)]
 const listings = [
-  [0, "Calculus: Early Transcendentals", "textbooks", "good", "sale", 25, ["/listings/calculus-book.jpg"]],
-  [0, "Used MacBook Air M1", "electronics", "like_new", "sale", 550, ["/listings/used-macbook.jpg", "/listings/laptop.svg"]],
-  [1, "Mini fridge for dorm", "furniture", "good", "sale", 60, ["/listings/mini-fridge.avif"]],
-  [1, "City bike - trade for a desk", "bikes", "fair", "trade", 0, ["/listings/bike.jpg", "/listings/bike.svg"]],
-  [2, "Winter jacket (free)", "clothing", "good", "giveaway", 0, ["/listings/jacket.svg"]],
+  [0, "Calculus: Early Transcendentals", "textbooks", "good", "sale", 25,
+    "Used it for Calculus I and II. Some highlighting in the first chapters, no missing pages. Can meet at AUPP.",
+    ["/listings/calculus-book.jpg"]],
+  [0, "Used MacBook Pro M1 (13-inch)", "electronics", "like_new", "sale", 550,
+    "8GB RAM, 256GB, battery health 92%. Always used with a case, no dents. Charger included, can meet at AUPP.",
+    ["/listings/used-macbook.jpg"]],
+  [1, "Mini fridge for dorm", "furniture", "good", "sale", 60,
+    "Small and quiet, keeps drinks cold. I'm moving out at the end of the semester. Pick up near AUPP.",
+    ["/listings/mini-fridge.avif"]],
+  [1, "City bike - trade for a desk", "bikes", "fair", "trade", 0,
+    "Rides fine and comes with the front basket, the seat is a bit worn. I'd trade it for a study desk. Can meet at AUPP.",
+    ["/listings/bike.jpg"]],
+  [2, "Winter jacket (free)", "clothing", "good", "giveaway", 0,
+    "Warm hooded jacket I bought for a trip, far too hot for Phnom Penh. Free, pick it up at AUPP.",
+    [JACKET_PHOTO]],
 ];
 
 const listingIds = [];
-for (const [owner, title, category, condition, type, price, images] of listings) {
+for (const [owner, title, category, condition, type, price, description, images] of listings) {
   const { rows } = await pool.query(
     `INSERT INTO listings (user_id, title, description, category, condition, listing_type, price, image_urls)
      VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id`,
-    [ids[owner], title, `Demo listing: ${title}.`, category, condition, type, price, images],
+    [ids[owner], title, description, category, condition, type, price, images],
   );
   listingIds.push(rows[0].id);
 }
@@ -58,10 +77,10 @@ await pool.query("INSERT INTO offers (listing_id, buyer_id, amount) VALUES ($1, 
 const { rows: [auction] } = await pool.query(
   `INSERT INTO listings (user_id, title, description, category, condition, listing_type, price,
                          image_urls, auction_ends_at, min_increment)
-   VALUES ($1, 'Study desk (auction)', 'Demo auction: sturdy desk, highest bid wins.', 'furniture',
+   VALUES ($1, 'Study desk (auction)', $3, 'furniture',
            'good', 'auction', 20, $2, now() + interval '3 days', 2)
    RETURNING id`,
-  [ids[1], ["/listings/desk.svg"]],
+  [ids[1], [DESK_PHOTO], "Steel desk with a wooden top and four drawers, very sturdy. Highest bid wins, pick up near AUPP."],
 );
 await pool.query("INSERT INTO bids (listing_id, bidder_id, amount) VALUES ($1, $2, 22)", [auction.id, ids[0]]);
 

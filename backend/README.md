@@ -13,7 +13,7 @@ npm install
 cp .env.example .env      # then edit DATABASE_URL and JWT_SECRET
 npm run db:setup          # creates the tables (drops existing data!)
 npm run db:seed           # optional demo data; every demo user's password is "password123"
-npm run db:samples        # optional: 81 more realistic items (see "Sample listings" below)
+npm run db:samples        # optional: 55 more realistic items (see "Sample listings" below)
 npm run dev               # http://localhost:4000, restarts on file changes
 npm test                  # unit tests (Node's built-in test runner)
 npm run test:api          # API tests against a separate test database (see Testing below)
@@ -23,17 +23,25 @@ Check it works: `curl http://localhost:4000/api/health` → `{"status":"ok"}`
 
 ### Sample listings
 
-`npm run db:samples` adds 81 realistic items to the database you already have (it wipes nothing and
+`npm run db:samples` adds 55 realistic items to the database you already have (it wipes nothing and
 skips items it added before), posted by 6 demo students whose emails end in `@demo.edu.kh` (password
 `password123`). `npm run db:samples -- --remove` deletes those students and everything they posted.
 
-The items come from two free public datasets, saved in `scripts/sample-listings.json` so loading
-needs no internet: electronics, clothing, furniture, scooters, sports and kitchen items from
-[DummyJSON](https://dummyjson.com) (a fake product API made for prototypes), and textbooks from
-[Open Library](https://openlibrary.org) (public-domain book data). `scripts/fetch-sample-listings.js`
-rebuilt that file: it maps them to our categories, prices them second-hand, varies the condition, and
-makes a few giveaways, trades, wanted posts and 2 auctions. Photos stay on those two sites (the
-listings store their URLs), so no third-party images are copied into this repository.
+They are saved in `scripts/sample-listings.json`, so loading needs no internet, and
+`scripts/fetch-sample-listings.js` rebuilds that file:
+
+- **32 hand-written items** in a student's voice: 18 electronics (mostly PC parts: RAM, CPUs,
+  graphics cards, SSDs, a power supply, a cooler), plus furniture, clothing, bikes and everyday
+  things like a rice cooker. They include 2 auctions, 2 trades, 2 giveaways and 3 wanted posts.
+  Their photos are everyday snapshots from [Wikimedia Commons](https://commons.wikimedia.org) and
+  Flickr (found with [Openverse](https://openverse.org)), all CC0, CC BY or CC BY-SA. Each listing's
+  `credits` gives every photo's page, author and licence.
+- **23 textbooks** from [Open Library](https://openlibrary.org) (public-domain book data), with their
+  cover photos; 4 of them are wanted posts.
+
+Photos stay on those sites (the listings store their URLs), so no third-party images are copied into
+this repository. The seed listings (`npm run db:seed`) use photos in `frontend/public/listings/` and
+two from Commons, credited in `scripts/db-seed.js`.
 
 ### Verification emails (optional)
 

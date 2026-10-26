@@ -39,669 +39,668 @@
   ],
   "listings": [
     {
-      "title": "Lenovo Yoga 920",
-      "description": "The Lenovo Yoga 920 is a 2-in-1 convertible laptop with a flexible hinge, allowing you to use it as a laptop or tablet, offering versatility and portability. Used, in good working condition.",
+      "title": "Corsair Vengeance LPX 16GB (2x8GB) DDR4 desktop RAM",
+      "description": "Two 8GB sticks from my desktop, I moved to a 32GB kit. Both pass MemTest and have no scratches. Can meet at AUPP.",
+      "category": "electronics",
+      "condition": "like_new",
+      "type": "sale",
+      "price": 55,
+      "images": [
+        "https://upload.wikimedia.org/wikipedia/commons/thumb/9/94/2*8Go_DDR4_Corsair_-_2018-05-08.jpg/960px-2*8Go_DDR4_Corsair_-_2018-05-08.jpg"
+      ],
+      "credits": [
+        {
+          "page": "https://commons.wikimedia.org/wiki/File:2*8Go_DDR4_Corsair_-_2018-05-08.jpg",
+          "author": "Bretwa",
+          "licence": "CC BY-SA 4.0"
+        }
+      ],
+      "seller": 1,
+      "hoursAgo": 2
+    },
+    {
+      "title": "Gigabyte RTX 3090 Eagle OC 24GB",
+      "description": "Used two years for gaming and some Blender, never mined. Runs cool, I'm going back to a laptop. Highest bid wins, pick up at AUPP.",
       "category": "electronics",
       "condition": "good",
       "type": "auction",
-      "price": 605,
+      "price": 450,
       "images": [
-        "https://cdn.dummyjson.com/product-images/laptops/lenovo-yoga-920/1.webp",
-        "https://cdn.dummyjson.com/product-images/laptops/lenovo-yoga-920/2.webp",
-        "https://cdn.dummyjson.com/product-images/laptops/lenovo-yoga-920/3.webp"
+        "https://upload.wikimedia.org/wikipedia/commons/thumb/9/91/Gigabyte_GeForce_RTX_3090_Eagle_OC_24G%2C_24576_MiB_GDDR6X_Front_20201114_DSC5880.jpg/960px-Gigabyte_GeForce_RTX_3090_Eagle_OC_24G%2C_24576_MiB_GDDR6X_Front_20201114_DSC5880.jpg",
+        "https://upload.wikimedia.org/wikipedia/commons/thumb/3/33/Gigabyte_GeForce_RTX_3090_Eagle_OC_24G%2C_24576_MiB_GDDR6X_Anschl%C3%BCsse_20201114.jpg/960px-Gigabyte_GeForce_RTX_3090_Eagle_OC_24G%2C_24576_MiB_GDDR6X_Anschl%C3%BCsse_20201114.jpg"
+      ],
+      "credits": [
+        {
+          "page": "https://commons.wikimedia.org/wiki/File:Gigabyte_GeForce_RTX_3090_Eagle_OC_24G%2C_24576_MiB_GDDR6X_Front_20201114_DSC5880.jpg",
+          "author": "PantheraLeo1359531",
+          "licence": "CC BY 4.0"
+        },
+        {
+          "page": "https://commons.wikimedia.org/wiki/File:Gigabyte_GeForce_RTX_3090_Eagle_OC_24G%2C_24576_MiB_GDDR6X_Anschl%C3%BCsse_20201114.jpg",
+          "author": "PantheraLeo1359531",
+          "licence": "CC BY 4.0"
+        }
       ],
       "auction": {
-        "days": 3,
-        "minIncrement": 5
+        "days": 4,
+        "minIncrement": 10
       },
-      "seller": 0,
-      "hoursAgo": 0
+      "seller": 3,
+      "hoursAgo": 5
     },
     {
-      "title": "Huawei Matebook X Pro",
-      "description": "The Huawei Matebook X Pro is a slim and stylish laptop with a high-resolution touchscreen display, offering a premium experience for users on the go. Used only a few times, works like new.",
+      "title": "AMD Ryzen 7 1800X",
+      "description": "8 cores, still fast for coding and video editing. I upgraded my board, so it's spare: CPU only, the photo is from before I took it out. Can meet at AUPP.",
       "category": "electronics",
-      "condition": "like_new",
+      "condition": "good",
       "type": "sale",
-      "price": 980,
+      "price": 55,
       "images": [
-        "https://cdn.dummyjson.com/product-images/laptops/huawei-matebook-x-pro/1.webp",
-        "https://cdn.dummyjson.com/product-images/laptops/huawei-matebook-x-pro/2.webp",
-        "https://cdn.dummyjson.com/product-images/laptops/huawei-matebook-x-pro/3.webp"
+        "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3f/AMD_Ryzen_7_1800X.jpg/960px-AMD_Ryzen_7_1800X.jpg"
+      ],
+      "credits": [
+        {
+          "page": "https://commons.wikimedia.org/wiki/File:AMD_Ryzen_7_1800X.jpg",
+          "author": "Brian Wong",
+          "licence": "CC BY-SA 2.0"
+        }
       ],
       "seller": 1,
-      "hoursAgo": 7
+      "hoursAgo": 9
     },
     {
-      "title": "New DELL XPS 13 9300 Laptop",
-      "description": "The New DELL XPS 13 9300 Laptop is a compact and powerful device, featuring a virtually borderless InfinityEdge display and high-end performance for various tasks. Shows some signs of use, but works fine.",
-      "category": "electronics",
-      "condition": "fair",
-      "type": "sale",
-      "price": 600,
-      "images": [
-        "https://cdn.dummyjson.com/product-images/laptops/new-dell-xps-13-9300-laptop/1.webp",
-        "https://cdn.dummyjson.com/product-images/laptops/new-dell-xps-13-9300-laptop/2.webp",
-        "https://cdn.dummyjson.com/product-images/laptops/new-dell-xps-13-9300-laptop/3.webp"
-      ],
-      "seller": 2,
-      "hoursAgo": 14
-    },
-    {
-      "title": "Asus Zenbook Pro Dual Screen Laptop",
-      "description": "The Asus Zenbook Pro Dual Screen Laptop is a high-performance device with dual screens, providing productivity and versatility for creative professionals. Used, in good working condition.",
+      "title": "Looking for 16GB DDR4 laptop RAM",
+      "description": "My laptop slows down with Revit and Chrome open. Need one 16GB DDR4 SO-DIMM stick, 3200 if possible. Can meet at AUPP.",
       "category": "electronics",
       "condition": "good",
-      "type": "sale",
-      "price": 990,
-      "images": [
-        "https://cdn.dummyjson.com/product-images/laptops/asus-zenbook-pro-dual-screen-laptop/1.webp",
-        "https://cdn.dummyjson.com/product-images/laptops/asus-zenbook-pro-dual-screen-laptop/2.webp",
-        "https://cdn.dummyjson.com/product-images/laptops/asus-zenbook-pro-dual-screen-laptop/3.webp"
-      ],
-      "seller": 3,
-      "hoursAgo": 21
-    },
-    {
-      "title": "Realme C35",
-      "description": "The Realme C35 is a budget-friendly smartphone with a focus on providing essential features for everyday use. It offers a reliable performance and user-friendly experience. Still unopened. Open to trades: tell me what you have.",
-      "category": "electronics",
-      "condition": "new",
-      "type": "trade",
-      "price": 120,
-      "images": [
-        "https://cdn.dummyjson.com/product-images/smartphones/realme-c35/1.webp",
-        "https://cdn.dummyjson.com/product-images/smartphones/realme-c35/2.webp",
-        "https://cdn.dummyjson.com/product-images/smartphones/realme-c35/3.webp"
-      ],
-      "seller": 4,
-      "hoursAgo": 28
-    },
-    {
-      "title": "iPhone 5s",
-      "description": "The iPhone 5s is a classic smartphone known for its compact design and advanced features during its release. While it's an older model, it still provides a reliable user experience. Used, in good working condition.",
-      "category": "electronics",
-      "condition": "good",
-      "type": "sale",
-      "price": 110,
-      "images": [
-        "https://cdn.dummyjson.com/product-images/smartphones/iphone-5s/1.webp",
-        "https://cdn.dummyjson.com/product-images/smartphones/iphone-5s/2.webp",
-        "https://cdn.dummyjson.com/product-images/smartphones/iphone-5s/3.webp"
-      ],
-      "seller": 5,
-      "hoursAgo": 35
-    },
-    {
-      "title": "Oppo A57",
-      "description": "The Oppo A57 is a mid-range smartphone known for its sleek design and capable features. It offers a balance of performance and affordability, making it a popular choice. Used only a few times, works like new.",
-      "category": "electronics",
-      "condition": "like_new",
-      "type": "sale",
-      "price": 175,
-      "images": [
-        "https://cdn.dummyjson.com/product-images/smartphones/oppo-a57/1.webp",
-        "https://cdn.dummyjson.com/product-images/smartphones/oppo-a57/2.webp",
-        "https://cdn.dummyjson.com/product-images/smartphones/oppo-a57/3.webp"
-      ],
-      "seller": 0,
-      "hoursAgo": 42
-    },
-    {
-      "title": "Vivo S1",
-      "description": "The Vivo S1 is a stylish and mid-range smartphone offering a blend of design and performance. It features a vibrant display, capable camera system, and reliable functionality. Shows some signs of use, but works fine.",
-      "category": "electronics",
-      "condition": "fair",
-      "type": "sale",
-      "price": 100,
-      "images": [
-        "https://cdn.dummyjson.com/product-images/smartphones/vivo-s1/1.webp",
-        "https://cdn.dummyjson.com/product-images/smartphones/vivo-s1/2.webp",
-        "https://cdn.dummyjson.com/product-images/smartphones/vivo-s1/3.webp"
-      ],
-      "seller": 1,
-      "hoursAgo": 49
-    },
-    {
-      "title": "iPhone 6",
-      "description": "The iPhone 6 is a stylish and capable smartphone with a larger display and improved performance. It introduced new features and design elements, making it a popular choice in its time. Used, in good working condition.",
-      "category": "electronics",
-      "condition": "good",
-      "type": "sale",
-      "price": 165,
-      "images": [
-        "https://cdn.dummyjson.com/product-images/smartphones/iphone-6/1.webp",
-        "https://cdn.dummyjson.com/product-images/smartphones/iphone-6/2.webp",
-        "https://cdn.dummyjson.com/product-images/smartphones/iphone-6/3.webp"
-      ],
-      "seller": 2,
-      "hoursAgo": 56
-    },
-    {
-      "title": "Samsung Galaxy Tab White",
-      "description": "The Samsung Galaxy Tab in White is a sleek and versatile Android tablet. With a vibrant display, long-lasting battery, and a range of features, it offers a great user experience for various tasks. Still unopened.",
-      "category": "electronics",
-      "condition": "new",
-      "type": "sale",
-      "price": 280,
-      "images": [
-        "https://cdn.dummyjson.com/product-images/tablets/samsung-galaxy-tab-white/1.webp",
-        "https://cdn.dummyjson.com/product-images/tablets/samsung-galaxy-tab-white/2.webp",
-        "https://cdn.dummyjson.com/product-images/tablets/samsung-galaxy-tab-white/3.webp"
-      ],
-      "seller": 3,
-      "hoursAgo": 63
-    },
-    {
-      "title": "iPad Mini 2021 Starlight",
-      "description": "The iPad Mini 2021 in Starlight is a compact and powerful tablet from Apple. Featuring a stunning Retina display, powerful A-series chip, and a sleek design, it offers a premium tablet experience. Used, in good working condition.",
-      "category": "electronics",
-      "condition": "good",
-      "type": "sale",
-      "price": 275,
-      "images": [
-        "https://cdn.dummyjson.com/product-images/tablets/ipad-mini-2021-starlight/1.webp",
-        "https://cdn.dummyjson.com/product-images/tablets/ipad-mini-2021-starlight/2.webp",
-        "https://cdn.dummyjson.com/product-images/tablets/ipad-mini-2021-starlight/3.webp"
-      ],
-      "seller": 4,
-      "hoursAgo": 70
-    },
-    {
-      "title": "Samsung Galaxy Tab S8 Plus Grey",
-      "description": "The Samsung Galaxy Tab S8 Plus in Grey is a high-performance Android tablet by Samsung. With a large AMOLED display, powerful processor, and S Pen support, it's ideal for productivity and entertainment. Used only a few times, works like new.",
-      "category": "electronics",
-      "condition": "like_new",
-      "type": "sale",
-      "price": 420,
-      "images": [
-        "https://cdn.dummyjson.com/product-images/tablets/samsung-galaxy-tab-s8-plus-grey/1.webp",
-        "https://cdn.dummyjson.com/product-images/tablets/samsung-galaxy-tab-s8-plus-grey/2.webp",
-        "https://cdn.dummyjson.com/product-images/tablets/samsung-galaxy-tab-s8-plus-grey/3.webp"
-      ],
-      "seller": 5,
-      "hoursAgo": 77
-    },
-    {
-      "title": "Selfie Stick Monopod",
-      "description": "The Selfie Stick Monopod is a extendable and foldable device for capturing the perfect selfie or group photo. Compatible with smartphones and cameras. Shows some signs of use, but works fine.",
-      "category": "electronics",
-      "condition": "fair",
-      "type": "giveaway",
-      "price": 0,
-      "images": [
-        "https://cdn.dummyjson.com/product-images/mobile-accessories/selfie-stick-monopod/1.webp"
-      ],
-      "seller": 0,
-      "hoursAgo": 84
-    },
-    {
-      "title": "Selfie Lamp with iPhone",
-      "description": "The Selfie Lamp with iPhone is a portable and adjustable LED light designed to enhance your selfies and video calls. Attach it to your iPhone for well-lit photos. Used, in good working condition. Open to trades: tell me what you have.",
-      "category": "electronics",
-      "condition": "good",
-      "type": "trade",
-      "price": 8,
-      "images": [
-        "https://cdn.dummyjson.com/product-images/mobile-accessories/selfie-lamp-with-iphone/1.webp"
-      ],
-      "seller": 1,
-      "hoursAgo": 91
-    },
-    {
-      "title": "Apple iPhone Charger",
-      "description": "The Apple iPhone Charger is a high-quality charger designed for fast and efficient charging of your iPhone. Ensure your device stays powered up and ready to go. Still unopened.",
-      "category": "electronics",
-      "condition": "new",
-      "type": "sale",
-      "price": 16,
-      "images": [
-        "https://cdn.dummyjson.com/product-images/mobile-accessories/apple-iphone-charger/1.webp",
-        "https://cdn.dummyjson.com/product-images/mobile-accessories/apple-iphone-charger/2.webp"
-      ],
-      "seller": 2,
-      "hoursAgo": 98
-    },
-    {
-      "title": "Monopod",
-      "description": "The Monopod is a versatile camera accessory for stable and adjustable shooting. Perfect for capturing selfies, group photos, and videos with ease. Used, in good working condition.",
-      "category": "electronics",
-      "condition": "good",
-      "type": "sale",
-      "price": 11,
-      "images": [
-        "https://cdn.dummyjson.com/product-images/mobile-accessories/monopod/1.webp",
-        "https://cdn.dummyjson.com/product-images/mobile-accessories/monopod/2.webp"
-      ],
-      "seller": 3,
-      "hoursAgo": 105
-    },
-    {
-      "title": "Bedside Table African Cherry",
-      "description": "The Bedside Table in African Cherry is a stylish and functional addition to your bedroom, providing convenient storage space and a touch of elegance. Used only a few times, works like new.",
-      "category": "furniture",
-      "condition": "like_new",
-      "type": "sale",
-      "price": 210,
-      "images": [
-        "https://cdn.dummyjson.com/product-images/furniture/bedside-table-african-cherry/1.webp",
-        "https://cdn.dummyjson.com/product-images/furniture/bedside-table-african-cherry/2.webp",
-        "https://cdn.dummyjson.com/product-images/furniture/bedside-table-african-cherry/3.webp"
-      ],
-      "seller": 4,
-      "hoursAgo": 112
-    },
-    {
-      "title": "Knoll Saarinen Executive Conference Chair",
-      "description": "The Knoll Saarinen Executive Conference Chair is a modern and ergonomic chair, perfect for your office or conference room with its timeless design. Shows some signs of use, but works fine.",
-      "category": "furniture",
-      "condition": "fair",
-      "type": "sale",
-      "price": 200,
-      "images": [
-        "https://cdn.dummyjson.com/product-images/furniture/knoll-saarinen-executive-conference-chair/1.webp",
-        "https://cdn.dummyjson.com/product-images/furniture/knoll-saarinen-executive-conference-chair/2.webp",
-        "https://cdn.dummyjson.com/product-images/furniture/knoll-saarinen-executive-conference-chair/3.webp"
-      ],
-      "seller": 5,
-      "hoursAgo": 119
-    },
-    {
-      "title": "Plant Pot",
-      "description": "The Plant Pot is a stylish container for your favorite plants. With a sleek design, it complements your indoor or outdoor garden, adding a modern touch to your plant display. Used, in good working condition.",
-      "category": "furniture",
-      "condition": "good",
-      "type": "sale",
-      "price": 8,
-      "images": [
-        "https://cdn.dummyjson.com/product-images/home-decoration/plant-pot/1.webp",
-        "https://cdn.dummyjson.com/product-images/home-decoration/plant-pot/2.webp",
-        "https://cdn.dummyjson.com/product-images/home-decoration/plant-pot/3.webp"
-      ],
-      "seller": 0,
-      "hoursAgo": 126
-    },
-    {
-      "title": "Table Lamp",
-      "description": "The Table Lamp is a functional and decorative lighting solution for your living space. With a modern design, it provides both ambient and task lighting, enhancing the atmosphere. Still unopened.",
-      "category": "furniture",
-      "condition": "new",
-      "type": "sale",
+      "type": "buy_request",
       "price": 40,
-      "images": [
-        "https://cdn.dummyjson.com/product-images/home-decoration/table-lamp/1.webp"
-      ],
-      "seller": 1,
-      "hoursAgo": 133
+      "images": [],
+      "credits": [],
+      "seller": 4,
+      "hoursAgo": 12
     },
     {
-      "title": "Man Short Sleeve Shirt",
-      "description": "The Man Short Sleeve Shirt is a breezy and stylish option for warm days. With a comfortable fit and short sleeves, it's perfect for a laid-back yet polished look. Used, in good working condition.",
-      "category": "clothing",
-      "condition": "good",
-      "type": "sale",
-      "price": 11,
-      "images": [
-        "https://cdn.dummyjson.com/product-images/mens-shirts/man-short-sleeve-shirt/1.webp",
-        "https://cdn.dummyjson.com/product-images/mens-shirts/man-short-sleeve-shirt/2.webp",
-        "https://cdn.dummyjson.com/product-images/mens-shirts/man-short-sleeve-shirt/3.webp"
-      ],
-      "seller": 2,
-      "hoursAgo": 140
-    },
-    {
-      "title": "Gigabyte Aorus Men Tshirt",
-      "description": "The Gigabyte Aorus Men Tshirt is a cool and casual shirt for gaming enthusiasts. With the Aorus logo and sleek design, it's perfect for expressing your gaming style. Used only a few times, works like new.",
-      "category": "clothing",
+      "title": "Kingston 32GB (2x16GB) DDR4 laptop RAM",
+      "description": "Two 16GB SO-DIMM sticks (DDR4-2400). Bought them for my old laptop, then got a new one with RAM built in. Can meet at AUPP.",
+      "category": "electronics",
       "condition": "like_new",
       "type": "sale",
-      "price": 17,
+      "price": 85,
       "images": [
-        "https://cdn.dummyjson.com/product-images/mens-shirts/gigabyte-aorus-men-tshirt/1.webp",
-        "https://cdn.dummyjson.com/product-images/mens-shirts/gigabyte-aorus-men-tshirt/2.webp",
-        "https://cdn.dummyjson.com/product-images/mens-shirts/gigabyte-aorus-men-tshirt/3.webp"
+        "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f7/KVR24S17D8-16_x2_20170724.jpg/960px-KVR24S17D8-16_x2_20170724.jpg"
       ],
-      "seller": 3,
-      "hoursAgo": 147
-    },
-    {
-      "title": "Men Check Shirt",
-      "description": "The Men Check Shirt is a classic and versatile shirt featuring a stylish check pattern. Suitable for various occasions, it adds a smart and polished touch to your wardrobe. Shows some signs of use, but works fine. Open to trades: tell me what you have.",
-      "category": "clothing",
-      "condition": "fair",
-      "type": "trade",
-      "price": 11,
-      "images": [
-        "https://cdn.dummyjson.com/product-images/mens-shirts/men-check-shirt/1.webp",
-        "https://cdn.dummyjson.com/product-images/mens-shirts/men-check-shirt/2.webp",
-        "https://cdn.dummyjson.com/product-images/mens-shirts/men-check-shirt/3.webp"
-      ],
-      "seller": 4,
-      "hoursAgo": 154
-    },
-    {
-      "title": "Girl Summer Dress",
-      "description": "The Girl Summer Dress is a cute and breezy dress designed for warm weather. With playful patterns and lightweight fabric, it's perfect for keeping cool and stylish during the summer. Used, in good working condition.",
-      "category": "clothing",
-      "condition": "good",
-      "type": "sale",
-      "price": 11,
-      "images": [
-        "https://cdn.dummyjson.com/product-images/tops/girl-summer-dress/1.webp",
-        "https://cdn.dummyjson.com/product-images/tops/girl-summer-dress/2.webp",
-        "https://cdn.dummyjson.com/product-images/tops/girl-summer-dress/3.webp"
+      "credits": [
+        {
+          "page": "https://commons.wikimedia.org/wiki/File:KVR24S17D8-16_x2_20170724.jpg",
+          "author": "Kenming Wang",
+          "licence": "CC BY-SA 2.0"
+        }
       ],
       "seller": 5,
-      "hoursAgo": 161
+      "hoursAgo": 15
     },
     {
-      "title": "Short Frock",
-      "description": "The Short Frock is a playful and trendy dress with a shorter length. Ideal for casual outings or special occasions, it combines style and comfort for a fashionable look. Still unopened.",
-      "category": "clothing",
-      "condition": "new",
-      "type": "sale",
-      "price": 20,
-      "images": [
-        "https://cdn.dummyjson.com/product-images/tops/short-frock/1.webp",
-        "https://cdn.dummyjson.com/product-images/tops/short-frock/2.webp",
-        "https://cdn.dummyjson.com/product-images/tops/short-frock/3.webp"
-      ],
-      "seller": 0,
-      "hoursAgo": 168
-    },
-    {
-      "title": "Dress Pea",
-      "description": "The Dress Pea is a stylish and comfortable dress with a pea pattern. Perfect for casual outings, it adds a playful and fun element to your wardrobe, making it a great choice for day-to-day wear. Used, in good working condition.",
-      "category": "clothing",
+      "title": "Crucial 4GB DDR4 laptop RAM (SO-DIMM)",
+      "description": "The stick my laptop came with, I swapped it for a bigger one. Works fine, good as a spare. Can meet at AUPP.",
+      "category": "electronics",
       "condition": "good",
       "type": "sale",
-      "price": 27,
+      "price": 12,
       "images": [
-        "https://cdn.dummyjson.com/product-images/womens-dresses/dress-pea/1.webp",
-        "https://cdn.dummyjson.com/product-images/womens-dresses/dress-pea/2.webp",
-        "https://cdn.dummyjson.com/product-images/womens-dresses/dress-pea/3.webp"
+        "https://upload.wikimedia.org/wikipedia/commons/thumb/4/49/Crucial_CT4G4SFS8213_on_laptop_motherboard_20171218.jpg/960px-Crucial_CT4G4SFS8213_on_laptop_motherboard_20171218.jpg"
       ],
-      "seller": 1,
-      "hoursAgo": 175
-    },
-    {
-      "title": "Corset With Black Skirt",
-      "description": "The Corset With Black Skirt is a chic and versatile outfit that pairs a fashionable corset with a classic black skirt. It offers a trendy and coordinated look for various occasions. Used only a few times, works like new.",
-      "category": "clothing",
-      "condition": "like_new",
-      "type": "sale",
-      "price": 56,
-      "images": [
-        "https://cdn.dummyjson.com/product-images/womens-dresses/corset-with-black-skirt/1.webp",
-        "https://cdn.dummyjson.com/product-images/womens-dresses/corset-with-black-skirt/2.webp",
-        "https://cdn.dummyjson.com/product-images/womens-dresses/corset-with-black-skirt/3.webp"
+      "credits": [
+        {
+          "page": "https://commons.wikimedia.org/wiki/File:Crucial_CT4G4SFS8213_on_laptop_motherboard_20171218.jpg",
+          "author": "Diego Torres Silvestre",
+          "licence": "CC BY 2.0"
+        }
       ],
       "seller": 2,
-      "hoursAgo": 182
+      "hoursAgo": 20
     },
     {
-      "title": "Nike Baseball Cleats",
-      "description": "Nike Baseball Cleats are designed for maximum traction and performance on the baseball field. They provide stability and support for players during games and practices. Shows some signs of use, but works fine.",
-      "category": "clothing",
-      "condition": "fair",
-      "type": "sale",
-      "price": 32,
-      "images": [
-        "https://cdn.dummyjson.com/product-images/mens-shoes/nike-baseball-cleats/1.webp",
-        "https://cdn.dummyjson.com/product-images/mens-shoes/nike-baseball-cleats/2.webp",
-        "https://cdn.dummyjson.com/product-images/mens-shoes/nike-baseball-cleats/3.webp"
-      ],
-      "seller": 3,
-      "hoursAgo": 189
-    },
-    {
-      "title": "Puma Future Rider Trainers",
-      "description": "The Puma Future Rider Trainers offer a blend of retro style and modern comfort. Perfect for casual wear, these trainers provide a fashionable and comfortable option for everyday use. Used, in good working condition.",
-      "category": "clothing",
+      "title": "Looking for a used graphics card (GTX 1660 or better)",
+      "description": "Building my first PC on a student budget. Anything from a GTX 1660 up, as long as it works. Message me.",
+      "category": "electronics",
       "condition": "good",
-      "type": "sale",
-      "price": 49,
-      "images": [
-        "https://cdn.dummyjson.com/product-images/mens-shoes/puma-future-rider-trainers/1.webp",
-        "https://cdn.dummyjson.com/product-images/mens-shoes/puma-future-rider-trainers/2.webp",
-        "https://cdn.dummyjson.com/product-images/mens-shoes/puma-future-rider-trainers/3.webp"
-      ],
-      "seller": 4,
-      "hoursAgo": 196
-    },
-    {
-      "title": "Black & Brown Slipper",
-      "description": "The Black & Brown Slipper is a comfortable and stylish choice for casual wear. Featuring a blend of black and brown colors, it adds a touch of sophistication to your relaxation. Still unopened.",
-      "category": "clothing",
-      "condition": "new",
-      "type": "sale",
-      "price": 16,
-      "images": [
-        "https://cdn.dummyjson.com/product-images/womens-shoes/black-&-brown-slipper/1.webp",
-        "https://cdn.dummyjson.com/product-images/womens-shoes/black-&-brown-slipper/2.webp",
-        "https://cdn.dummyjson.com/product-images/womens-shoes/black-&-brown-slipper/3.webp"
-      ],
+      "type": "buy_request",
+      "price": 120,
+      "images": [],
+      "credits": [],
       "seller": 5,
-      "hoursAgo": 203
+      "hoursAgo": 26
     },
     {
-      "title": "Pampi Shoes",
-      "description": "Pampi Shoes offer a blend of comfort and style for everyday use. With a versatile design, they are suitable for various casual occasions, providing a trendy and relaxed look. Used, in good working condition.",
-      "category": "clothing",
+      "title": "Gigabyte GTX 1660 Ti 6GB",
+      "description": "Runs most games at 1080p on medium to high. No crashes and the fans are quiet, selling because I upgraded. Can meet at AUPP.",
+      "category": "electronics",
       "condition": "good",
       "type": "sale",
-      "price": 16,
+      "price": 95,
       "images": [
-        "https://cdn.dummyjson.com/product-images/womens-shoes/pampi-shoes/1.webp",
-        "https://cdn.dummyjson.com/product-images/womens-shoes/pampi-shoes/2.webp",
-        "https://cdn.dummyjson.com/product-images/womens-shoes/pampi-shoes/3.webp"
+        "https://upload.wikimedia.org/wikipedia/commons/thumb/2/20/Gigabyte_GTX_1660_Ti_graphics_card_(51993493927).jpg/960px-Gigabyte_GTX_1660_Ti_graphics_card_(51993493927).jpg"
+      ],
+      "credits": [
+        {
+          "page": "https://commons.wikimedia.org/wiki/File:Gigabyte_GTX_1660_Ti_graphics_card_(51993493927).jpg",
+          "author": "Chi Ho Chan",
+          "licence": "CC BY 2.0"
+        }
       ],
       "seller": 0,
-      "hoursAgo": 210
+      "hoursAgo": 31
     },
     {
-      "title": "White Faux Leather Backpack",
-      "description": "The White Faux Leather Backpack is a trendy and practical backpack for the modern woman. With a sleek white design and ample storage space, it's perfect for both casual and on-the-go styles. Used only a few times, works like new. Open to trades: tell me what you have.",
-      "category": "clothing",
-      "condition": "like_new",
-      "type": "trade",
-      "price": 28,
-      "images": [
-        "https://cdn.dummyjson.com/product-images/womens-bags/white-faux-leather-backpack/1.webp",
-        "https://cdn.dummyjson.com/product-images/womens-bags/white-faux-leather-backpack/2.webp",
-        "https://cdn.dummyjson.com/product-images/womens-bags/white-faux-leather-backpack/3.webp"
-      ],
-      "seller": 1,
-      "hoursAgo": 217
-    },
-    {
-      "title": "Blue Women's Handbag",
-      "description": "The Blue Women's Handbag is a stylish and spacious accessory for everyday use. With a vibrant blue color and multiple compartments, it combines fashion and functionality. Shows some signs of use, but works fine.",
-      "category": "clothing",
-      "condition": "fair",
-      "type": "sale",
-      "price": 20,
-      "images": [
-        "https://cdn.dummyjson.com/product-images/womens-bags/blue-women's-handbag/1.webp",
-        "https://cdn.dummyjson.com/product-images/womens-bags/blue-women's-handbag/2.webp",
-        "https://cdn.dummyjson.com/product-images/womens-bags/blue-women's-handbag/3.webp"
-      ],
-      "seller": 2,
-      "hoursAgo": 224
-    },
-    {
-      "title": "Scooter Motorcycle",
-      "description": "The Scooter Motorcycle is a practical and fuel-efficient bike ideal for urban commuting. It features a step-through design and user-friendly controls for easy maneuverability. Used, in good working condition.",
+      "title": "Teal city bike",
+      "description": "Easy to ride to class, the brakes and chain were serviced last month. Graduating soon, so highest bid wins. Pick up at AUPP.",
       "category": "bikes",
       "condition": "good",
       "type": "auction",
-      "price": 1650,
+      "price": 40,
       "images": [
-        "https://cdn.dummyjson.com/product-images/motorcycle/scooter-motorcycle/1.webp",
-        "https://cdn.dummyjson.com/product-images/motorcycle/scooter-motorcycle/2.webp",
-        "https://cdn.dummyjson.com/product-images/motorcycle/scooter-motorcycle/3.webp"
+        "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Bicycle_parked_at_a_no_bicycle_parking_sign%2C_Rotterdam-Centrum%2C_Rotterdam_(2020)_01.jpg/960px-Bicycle_parked_at_a_no_bicycle_parking_sign%2C_Rotterdam-Centrum%2C_Rotterdam_(2020)_01.jpg",
+        "https://upload.wikimedia.org/wikipedia/commons/thumb/6/64/Bicycle_parked_at_a_no_bicycle_parking_sign%2C_Rotterdam-Centrum%2C_Rotterdam_(2020)_02.jpg/960px-Bicycle_parked_at_a_no_bicycle_parking_sign%2C_Rotterdam-Centrum%2C_Rotterdam_(2020)_02.jpg"
+      ],
+      "credits": [
+        {
+          "page": "https://commons.wikimedia.org/wiki/File:Bicycle_parked_at_a_no_bicycle_parking_sign%2C_Rotterdam-Centrum%2C_Rotterdam_(2020)_01.jpg",
+          "author": "Donald Trung Quoc Don",
+          "licence": "CC BY-SA 4.0"
+        },
+        {
+          "page": "https://commons.wikimedia.org/wiki/File:Bicycle_parked_at_a_no_bicycle_parking_sign%2C_Rotterdam-Centrum%2C_Rotterdam_(2020)_02.jpg",
+          "author": "Donald Trung Quoc Don",
+          "licence": "CC BY-SA 4.0"
+        }
       ],
       "auction": {
         "days": 5,
-        "minIncrement": 20
+        "minIncrement": 2
       },
-      "seller": 3,
-      "hoursAgo": 231
-    },
-    {
-      "title": "Generic Motorcycle",
-      "description": "The Generic Motorcycle is a versatile and reliable bike suitable for various riding preferences. With a balanced design, it provides a comfortable and efficient riding experience. Still unopened.",
-      "category": "bikes",
-      "condition": "new",
-      "type": "sale",
-      "price": 3200,
-      "images": [
-        "https://cdn.dummyjson.com/product-images/motorcycle/generic-motorcycle/1.webp",
-        "https://cdn.dummyjson.com/product-images/motorcycle/generic-motorcycle/2.webp",
-        "https://cdn.dummyjson.com/product-images/motorcycle/generic-motorcycle/3.webp"
-      ],
       "seller": 4,
-      "hoursAgo": 238
+      "hoursAgo": 36
     },
     {
-      "title": "Feather Shuttlecock",
-      "description": "The Feather Shuttlecock is used in the sport of badminton. It features natural feathers and is designed for high-speed play, providing stability and accuracy during matches. Used, in good working condition.",
-      "category": "other",
+      "title": "Samsung 960 EVO 500GB NVMe SSD",
+      "description": "M.2 NVMe drive, about 90% health in CrystalDiskInfo. Wiped and ready to use. Can meet at AUPP.",
+      "category": "electronics",
       "condition": "good",
+      "type": "sale",
+      "price": 30,
+      "images": [
+        "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e2/Samsung_960_EVO_NVME_M.2_SSD_by_Daniel_Aleksandersen.jpg/960px-Samsung_960_EVO_NVME_M.2_SSD_by_Daniel_Aleksandersen.jpg"
+      ],
+      "credits": [
+        {
+          "page": "https://commons.wikimedia.org/wiki/File:Samsung_960_EVO_NVME_M.2_SSD_by_Daniel_Aleksandersen.jpg",
+          "author": "Daniel Aleksandersen",
+          "licence": "CC BY-SA 2.0"
+        }
+      ],
+      "seller": 1,
+      "hoursAgo": 42
+    },
+    {
+      "title": "Metal desk lamp (free)",
+      "description": "Old desk lamp with an arm you can bend. Works, bulb included. Free, just pick it up at AUPP.",
+      "category": "furniture",
+      "condition": "fair",
       "type": "giveaway",
       "price": 0,
       "images": [
-        "https://cdn.dummyjson.com/product-images/sports-accessories/feather-shuttlecock/1.webp"
+        "https://live.staticflickr.com/5088/5249956913_4ae598757a_b.jpg"
       ],
-      "seller": 5,
-      "hoursAgo": 245
+      "credits": [
+        {
+          "page": "https://www.flickr.com/photos/36910487@N07/5249956913",
+          "author": "TheLivingRoominKenmore",
+          "licence": "CC BY 2.0"
+        }
+      ],
+      "seller": 2,
+      "hoursAgo": 47
     },
     {
-      "title": "Basketball",
-      "description": "The Basketball is a standard ball used in basketball games. It is designed for dribbling, shooting, and passing in the game of basketball, suitable for both indoor and outdoor play. Used only a few times, works like new.",
-      "category": "other",
+      "title": "Samsung 870 QVO 1TB SATA SSD",
+      "description": "2.5-inch SSD, used a few months as extra storage. Good for bringing an old laptop back to life. Can meet at AUPP.",
+      "category": "electronics",
       "condition": "like_new",
+      "type": "sale",
+      "price": 45,
+      "images": [
+        "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0f/SAMSUNG_SATA_SSD_870_QVO_1TB_FRONT.jpg/960px-SAMSUNG_SATA_SSD_870_QVO_1TB_FRONT.jpg",
+        "https://upload.wikimedia.org/wikipedia/commons/thumb/3/30/SAMSUNG_SATA_SSD_870_QVO_1TB_REAR.jpg/960px-SAMSUNG_SATA_SSD_870_QVO_1TB_REAR.jpg"
+      ],
+      "credits": [
+        {
+          "page": "https://commons.wikimedia.org/wiki/File:SAMSUNG_SATA_SSD_870_QVO_1TB_FRONT.jpg",
+          "author": "Dinkun Chen",
+          "licence": "CC BY-SA 4.0"
+        },
+        {
+          "page": "https://commons.wikimedia.org/wiki/File:SAMSUNG_SATA_SSD_870_QVO_1TB_REAR.jpg",
+          "author": "Dinkun Chen",
+          "licence": "CC BY-SA 4.0"
+        }
+      ],
+      "seller": 2,
+      "hoursAgo": 55
+    },
+    {
+      "title": "Looking for a mini fridge for my dorm",
+      "description": "A small one is fine, just for drinks and fruit. It has to work and not be too loud. I can pick it up near AUPP.",
+      "category": "furniture",
+      "condition": "good",
+      "type": "buy_request",
+      "price": 45,
+      "images": [],
+      "credits": [],
+      "seller": 3,
+      "hoursAgo": 60
+    },
+    {
+      "title": "OCZ 600W power supply",
+      "description": "Old but reliable, it ran my PC for four years without a problem. All cables included. Can meet at AUPP.",
+      "category": "electronics",
+      "condition": "fair",
+      "type": "sale",
+      "price": 25,
+      "images": [
+        "https://upload.wikimedia.org/wikipedia/commons/thumb/2/24/OCZ_600W_power_supply_unit.JPG/960px-OCZ_600W_power_supply_unit.JPG"
+      ],
+      "credits": [
+        {
+          "page": "https://commons.wikimedia.org/wiki/File:OCZ_600W_power_supply_unit.JPG",
+          "author": "Danrok",
+          "licence": "CC BY-SA 3.0"
+        }
+      ],
+      "seller": 3,
+      "hoursAgo": 70
+    },
+    {
+      "title": "Sihoo M57 mesh office chair",
+      "description": "Mesh back with a headrest, the height and armrests adjust. Bought it last semester, but I'm moving out. Pick up near AUPP.",
+      "category": "furniture",
+      "condition": "like_new",
+      "type": "sale",
+      "price": 45,
+      "images": [
+        "https://upload.wikimedia.org/wikipedia/commons/thumb/c/cc/Sihoo_M57_mesh_office_chair_03.jpg/960px-Sihoo_M57_mesh_office_chair_03.jpg",
+        "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ea/Sihoo_M57_mesh_office_chair_06.jpg/960px-Sihoo_M57_mesh_office_chair_06.jpg"
+      ],
+      "credits": [
+        {
+          "page": "https://commons.wikimedia.org/wiki/File:Sihoo_M57_mesh_office_chair_03.jpg",
+          "author": "Waldyrious",
+          "licence": "CC BY-SA 4.0"
+        },
+        {
+          "page": "https://commons.wikimedia.org/wiki/File:Sihoo_M57_mesh_office_chair_06.jpg",
+          "author": "Waldyrious",
+          "licence": "CC BY-SA 4.0"
+        }
+      ],
+      "seller": 0,
+      "hoursAgo": 80
+    },
+    {
+      "title": "Arctic Freezer 13 CPU cooler",
+      "description": "Tower cooler, much quieter than a stock one. The photo is from my old build, it comes with its fan and clips. Can meet at AUPP.",
+      "category": "electronics",
+      "condition": "good",
       "type": "sale",
       "price": 10,
       "images": [
-        "https://cdn.dummyjson.com/product-images/sports-accessories/basketball/1.webp"
+        "https://upload.wikimedia.org/wikipedia/commons/thumb/6/61/Arctic_Freezer_13_heatsink.jpg/960px-Arctic_Freezer_13_heatsink.jpg"
       ],
-      "seller": 0,
-      "hoursAgo": 252
-    },
-    {
-      "title": "Football",
-      "description": "The Football, also known as a soccer ball, is the standard ball used in the sport of football (soccer). It is designed for kicking and passing in the game. Shows some signs of use, but works fine.",
-      "category": "other",
-      "condition": "fair",
-      "type": "giveaway",
-      "price": 0,
-      "images": [
-        "https://cdn.dummyjson.com/product-images/sports-accessories/football/1.webp"
+      "credits": [
+        {
+          "page": "https://commons.wikimedia.org/wiki/File:Arctic_Freezer_13_heatsink.jpg",
+          "author": "Blackcat",
+          "licence": "CC BY-SA 4.0"
+        }
       ],
       "seller": 1,
-      "hoursAgo": 259
+      "hoursAgo": 92
     },
     {
-      "title": "Cricket Bat",
-      "description": "The Cricket Bat is an essential piece of cricket equipment used by batsmen to hit the cricket ball. It is made of wood and comes in various sizes and designs. Used, in good working condition.",
-      "category": "other",
+      "title": "Computer desk with drawer and cupboard",
+      "description": "Wooden desk with a keyboard tray, a drawer and a cupboard. Monitor and PC not included. Pick up near AUPP, I can help carry it.",
+      "category": "furniture",
       "condition": "good",
       "type": "sale",
-      "price": 16,
+      "price": 35,
       "images": [
-        "https://cdn.dummyjson.com/product-images/sports-accessories/cricket-bat/1.webp"
+        "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f4/Computer_desk.jpg/960px-Computer_desk.jpg"
       ],
-      "seller": 2,
-      "hoursAgo": 266
-    },
-    {
-      "title": "Tennis Racket",
-      "description": "The Tennis Racket is an essential piece of equipment used in the sport of tennis. It features a frame with strings and a grip, allowing players to hit the tennis ball. Still unopened.",
-      "category": "other",
-      "condition": "new",
-      "type": "sale",
-      "price": 40,
-      "images": [
-        "https://cdn.dummyjson.com/product-images/sports-accessories/tennis-racket/1.webp"
-      ],
-      "seller": 3,
-      "hoursAgo": 273
-    },
-    {
-      "title": "Lunch Box",
-      "description": "The Lunch Box is a convenient and portable container for packing and carrying your meals. With compartments for different foods, it's perfect for on-the-go dining. Used, in good working condition.",
-      "category": "other",
-      "condition": "good",
-      "type": "giveaway",
-      "price": 0,
-      "images": [
-        "https://cdn.dummyjson.com/product-images/kitchen-accessories/lunch-box/1.webp"
+      "credits": [
+        {
+          "page": "https://commons.wikimedia.org/wiki/File:Computer_desk.jpg",
+          "author": "Dhivyabsk",
+          "licence": "CC BY-SA 4.0"
+        }
       ],
       "seller": 4,
-      "hoursAgo": 280
+      "hoursAgo": 105
     },
     {
-      "title": "Carbon Steel Wok",
-      "description": "The Carbon Steel Wok is a versatile cooking pan suitable for stir-frying, sautéing, and deep frying. Its sturdy construction ensures even heat distribution for delicious meals. Used only a few times, works like new.",
-      "category": "other",
-      "condition": "like_new",
-      "type": "sale",
-      "price": 21,
+      "title": "RGB mechanical keyboard (TKL) - trade for a mouse or headset",
+      "description": "Clicky switches and rainbow lighting, but too loud for my dorm. I'd trade it for a wireless mouse or a headset. Can meet at AUPP.",
+      "category": "electronics",
+      "condition": "good",
+      "type": "trade",
+      "price": 0,
       "images": [
-        "https://cdn.dummyjson.com/product-images/kitchen-accessories/carbon-steel-wok/1.webp"
+        "https://upload.wikimedia.org/wikipedia/commons/thumb/6/68/Lingbao_JIGUANSHI_Mechanical_Gaming_Keyboard.jpg/960px-Lingbao_JIGUANSHI_Mechanical_Gaming_Keyboard.jpg"
       ],
-      "seller": 5,
-      "hoursAgo": 287
-    },
-    {
-      "title": "Boxed Blender",
-      "description": "The Boxed Blender is a powerful and compact blender perfect for smoothies, shakes, and more. Its convenient design and multiple functions make it a versatile kitchen appliance. Shows some signs of use, but works fine.",
-      "category": "other",
-      "condition": "fair",
-      "type": "sale",
-      "price": 16,
-      "images": [
-        "https://cdn.dummyjson.com/product-images/kitchen-accessories/boxed-blender/1.webp",
-        "https://cdn.dummyjson.com/product-images/kitchen-accessories/boxed-blender/2.webp",
-        "https://cdn.dummyjson.com/product-images/kitchen-accessories/boxed-blender/3.webp"
+      "credits": [
+        {
+          "page": "https://commons.wikimedia.org/wiki/File:Lingbao_JIGUANSHI_Mechanical_Gaming_Keyboard.jpg",
+          "author": "Morn",
+          "licence": "CC BY-SA 4.0"
+        }
       ],
       "seller": 0,
-      "hoursAgo": 294
+      "hoursAgo": 115
     },
     {
-      "title": "Electric Stove",
-      "description": "The Electric Stove provides a portable and efficient cooking solution. Ideal for small kitchens or as an additional cooking surface for various culinary needs. Used, in good working condition.",
+      "title": "Small rice cooker",
+      "description": "Enough rice for two or three people. The inner pot has no scratches. Can meet at AUPP.",
       "category": "other",
       "condition": "good",
       "type": "sale",
-      "price": 27,
+      "price": 10,
       "images": [
-        "https://cdn.dummyjson.com/product-images/kitchen-accessories/electric-stove/1.webp",
-        "https://cdn.dummyjson.com/product-images/kitchen-accessories/electric-stove/2.webp",
-        "https://cdn.dummyjson.com/product-images/kitchen-accessories/electric-stove/3.webp"
+        "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f0/Rival_Rice_Cooker.jpg/960px-Rival_Rice_Cooker.jpg"
       ],
-      "seller": 1,
-      "hoursAgo": 301
+      "credits": [
+        {
+          "page": "https://commons.wikimedia.org/wiki/File:Rival_Rice_Cooker.jpg",
+          "author": "Jugo Yokomizo",
+          "licence": "CC BY-SA 4.0"
+        }
+      ],
+      "seller": 5,
+      "hoursAgo": 125
     },
     {
-      "title": "Microwave Oven",
-      "description": "The Microwave Oven is a versatile kitchen appliance for quick and efficient cooking, reheating, and defrosting. Its compact size makes it suitable for various kitchen setups. Still unopened.",
-      "category": "other",
-      "condition": "new",
+      "title": "Wired gaming mouse with RGB",
+      "description": "Green lighting, works fine. I switched to a wireless one. Can meet at AUPP.",
+      "category": "electronics",
+      "condition": "good",
       "type": "sale",
-      "price": 72,
+      "price": 8,
       "images": [
-        "https://cdn.dummyjson.com/product-images/kitchen-accessories/microwave-oven/1.webp",
-        "https://cdn.dummyjson.com/product-images/kitchen-accessories/microwave-oven/2.webp",
-        "https://cdn.dummyjson.com/product-images/kitchen-accessories/microwave-oven/3.webp"
+        "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4b/Old_Computer_Mouse.jpg/960px-Old_Computer_Mouse.jpg"
+      ],
+      "credits": [
+        {
+          "page": "https://commons.wikimedia.org/wiki/File:Old_Computer_Mouse.jpg",
+          "author": "Dean M. Campos",
+          "licence": "CC BY-SA 4.0"
+        }
+      ],
+      "seller": 4,
+      "hoursAgo": 135
+    },
+    {
+      "title": "Lenovo ThinkPad T460 (i5, 8GB, 256GB SSD)",
+      "description": "Battery lasts about 4 hours and the keyboard is great for typing essays. Fresh Windows install. Can meet at AUPP.",
+      "category": "electronics",
+      "condition": "good",
+      "type": "sale",
+      "price": 160,
+      "images": [
+        "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e7/T460_angled.jpg/960px-T460_angled.jpg"
+      ],
+      "credits": [
+        {
+          "page": "https://commons.wikimedia.org/wiki/File:T460_angled.jpg",
+          "author": "Albert György",
+          "licence": "CC BY 4.0"
+        }
+      ],
+      "seller": 1,
+      "hoursAgo": 150
+    },
+    {
+      "title": "iPad Pro 12.9 (2020) with Magic Keyboard",
+      "description": "128GB, Wi-Fi. I used it for drawing plans and it always stayed in the keyboard case, so no scratches. Pencil not included. Can meet at AUPP.",
+      "category": "electronics",
+      "condition": "like_new",
+      "type": "sale",
+      "price": 550,
+      "images": [
+        "https://upload.wikimedia.org/wikipedia/commons/thumb/7/77/13_inch_iPad_Pro_2020_on_a_desk.jpg/960px-13_inch_iPad_Pro_2020_on_a_desk.jpg"
+      ],
+      "credits": [
+        {
+          "page": "https://commons.wikimedia.org/wiki/File:13_inch_iPad_Pro_2020_on_a_desk.jpg",
+          "author": "Glide08",
+          "licence": "CC BY-SA 4.0"
+        }
+      ],
+      "seller": 4,
+      "hoursAgo": 170
+    },
+    {
+      "title": "Electric kettle (free)",
+      "description": "I got a new one, so this one is free. Boils fast and doesn't leak. Pick it up at AUPP.",
+      "category": "other",
+      "condition": "good",
+      "type": "giveaway",
+      "price": 0,
+      "images": [
+        "https://upload.wikimedia.org/wikipedia/commons/thumb/0/03/Electric_kettle%2C_Ribnitz-Damgarten_(LRM_20200521_132413-hdr).jpg/960px-Electric_kettle%2C_Ribnitz-Damgarten_(LRM_20200521_132413-hdr).jpg",
+        "https://upload.wikimedia.org/wikipedia/commons/thumb/4/47/Electric_kettle_(LRM_20200521_132339-hdr).jpg/960px-Electric_kettle_(LRM_20200521_132339-hdr).jpg"
+      ],
+      "credits": [
+        {
+          "page": "https://commons.wikimedia.org/wiki/File:Electric_kettle%2C_Ribnitz-Damgarten_(LRM_20200521_132413-hdr).jpg",
+          "author": "Matti Blume",
+          "licence": "CC BY-SA 4.0"
+        },
+        {
+          "page": "https://commons.wikimedia.org/wiki/File:Electric_kettle_(LRM_20200521_132339-hdr).jpg",
+          "author": "Matti Blume",
+          "licence": "CC BY-SA 4.0"
+        }
+      ],
+      "seller": 0,
+      "hoursAgo": 190
+    },
+    {
+      "title": "AirPods 4",
+      "description": "Got them as a gift, but I already had a pair. Used a few times, case and cable included. Can meet at AUPP.",
+      "category": "electronics",
+      "condition": "like_new",
+      "type": "sale",
+      "price": 85,
+      "images": [
+        "https://upload.wikimedia.org/wikipedia/commons/thumb/2/23/Airpods_4.jpg/960px-Airpods_4.jpg"
+      ],
+      "credits": [
+        {
+          "page": "https://commons.wikimedia.org/wiki/File:Airpods_4.jpg",
+          "author": "AppleFans 1",
+          "licence": "CC0"
+        }
+      ],
+      "seller": 5,
+      "hoursAgo": 210
+    },
+    {
+      "title": "Badminton racket with shuttlecock",
+      "description": "Light racket, the strings are still tight. Can meet at AUPP, or at the court if you want to try it.",
+      "category": "other",
+      "condition": "good",
+      "type": "sale",
+      "price": 15,
+      "images": [
+        "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ad/Rachet%C4%83_de_badminton_%C5%9Fi_flutura%C5%9F.jpg/960px-Rachet%C4%83_de_badminton_%C5%9Fi_flutura%C5%9F.jpg"
+      ],
+      "credits": [
+        {
+          "page": "https://commons.wikimedia.org/wiki/File:Rachet%C4%83_de_badminton_%C5%9Fi_flutura%C5%9F.jpg",
+          "author": "Vladimir Maftei",
+          "licence": "CC BY-SA 4.0"
+        }
       ],
       "seller": 2,
-      "hoursAgo": 308
+      "hoursAgo": 230
+    },
+    {
+      "title": "Casio fx-991ES calculator",
+      "description": "Allowed in most math and stats exams. Works perfectly and comes with its cover. Can meet at AUPP.",
+      "category": "electronics",
+      "condition": "good",
+      "type": "sale",
+      "price": 12,
+      "images": [
+        "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3d/Casio_fx-991ES_Calculator.jpg/960px-Casio_fx-991ES_Calculator.jpg"
+      ],
+      "credits": [
+        {
+          "page": "https://commons.wikimedia.org/wiki/File:Casio_fx-991ES_Calculator.jpg",
+          "author": "Stefan-Xp",
+          "licence": "CC BY-SA 3.0"
+        }
+      ],
+      "seller": 2,
+      "hoursAgo": 250
+    },
+    {
+      "title": "Acoustic guitar with bag - trade for a keyboard or ukulele",
+      "description": "Full-size guitar with a soft bag, good for learning. I'd trade for a digital piano or a ukulele, and add up to $20 cash if yours is worth more. Can meet at AUPP.",
+      "category": "other",
+      "condition": "good",
+      "type": "trade",
+      "price": 0,
+      "images": [
+        "https://upload.wikimedia.org/wikipedia/commons/thumb/4/44/Acoustic_Guitar_2.jpg/960px-Acoustic_Guitar_2.jpg"
+      ],
+      "credits": [
+        {
+          "page": "https://commons.wikimedia.org/wiki/File:Acoustic_Guitar_2.jpg",
+          "author": "Johnnydeezwax",
+          "licence": "CC BY-SA 3.0"
+        }
+      ],
+      "seller": 3,
+      "hoursAgo": 270
+    },
+    {
+      "title": "Backpack with lots of pockets",
+      "description": "Padded straps and room for a laptop and books. All the zips work. Can meet at AUPP.",
+      "category": "other",
+      "condition": "good",
+      "type": "sale",
+      "price": 12,
+      "images": [
+        "https://live.staticflickr.com/2628/3770457870_325823e331_b.jpg"
+      ],
+      "credits": [
+        {
+          "page": "https://www.flickr.com/photos/14771153@N04/3770457870",
+          "author": "slgckgc",
+          "licence": "CC BY 2.0"
+        }
+      ],
+      "seller": 5,
+      "hoursAgo": 300
+    },
+    {
+      "title": "Denim jacket (size M)",
+      "description": "Light blue, washed and ready to wear. It's too small for me now. Can meet at AUPP.",
+      "category": "clothing",
+      "condition": "good",
+      "type": "sale",
+      "price": 12,
+      "images": [
+        "https://upload.wikimedia.org/wikipedia/commons/thumb/0/06/Jean_jacket.jpg/960px-Jean_jacket.jpg"
+      ],
+      "credits": [
+        {
+          "page": "https://commons.wikimedia.org/wiki/File:Jean_jacket.jpg",
+          "author": "NikosLikomitros",
+          "licence": "CC0"
+        }
+      ],
+      "seller": 0,
+      "hoursAgo": 335
+    },
+    {
+      "title": "Standing fan",
+      "description": "Three speeds and it still turns side to side. A bit noisy on the top speed. Pick up at AUPP.",
+      "category": "other",
+      "condition": "fair",
+      "type": "sale",
+      "price": 10,
+      "images": [
+        "https://upload.wikimedia.org/wikipedia/commons/thumb/2/27/Floor_fan.jpg/960px-Floor_fan.jpg"
+      ],
+      "credits": [
+        {
+          "page": "https://commons.wikimedia.org/wiki/File:Floor_fan.jpg",
+          "author": "Hans Olav Lien",
+          "licence": "CC BY-SA 3.0"
+        }
+      ],
+      "seller": 3,
+      "hoursAgo": 365
+    },
+    {
+      "title": "North Star sneakers (size 42)",
+      "description": "White with blue stripes, worn twice. Wrong size for me, comes with the box. Can meet at AUPP.",
+      "category": "clothing",
+      "condition": "like_new",
+      "type": "sale",
+      "price": 20,
+      "images": [
+        "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6c/North_Star_sneakers_(1).jpg/960px-North_Star_sneakers_(1).jpg",
+        "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ef/North_Star_sneakers_(2).jpg/960px-North_Star_sneakers_(2).jpg"
+      ],
+      "credits": [
+        {
+          "page": "https://commons.wikimedia.org/wiki/File:North_Star_sneakers_(1).jpg",
+          "author": "Sherwin",
+          "licence": "CC BY-SA 4.0"
+        },
+        {
+          "page": "https://commons.wikimedia.org/wiki/File:North_Star_sneakers_(2).jpg",
+          "author": "Sherwin",
+          "licence": "CC BY-SA 4.0"
+        }
+      ],
+      "seller": 3,
+      "hoursAgo": 400
+    },
+    {
+      "title": "Pink motorbike helmet (size M)",
+      "description": "No cracks in the visor. I got a new one for my birthday. Can meet at AUPP.",
+      "category": "bikes",
+      "condition": "good",
+      "type": "sale",
+      "price": 10,
+      "images": [
+        "https://upload.wikimedia.org/wikipedia/commons/thumb/3/38/Motorcycle_helmet.jpg/960px-Motorcycle_helmet.jpg"
+      ],
+      "credits": [
+        {
+          "page": "https://commons.wikimedia.org/wiki/File:Motorcycle_helmet.jpg",
+          "author": "MediaPhoto.Org",
+          "licence": "CC BY 3.0"
+        }
+      ],
+      "seller": 5,
+      "hoursAgo": 440
     },
     {
       "title": "Calculus",
-      "description": "Calculus by James Stewart (1986). Used, in good working condition.",
+      "description": "Calculus by James Stewart (1986). Some highlighting in the first chapters, otherwise clean. Can meet at AUPP.",
       "category": "textbooks",
       "condition": "good",
       "type": "sale",
@@ -709,12 +708,19 @@
       "images": [
         "https://covers.openlibrary.org/b/id/364094-L.jpg"
       ],
-      "seller": 3,
-      "hoursAgo": 315
+      "credits": [
+        {
+          "page": "https://openlibrary.org/works/OL100903W",
+          "author": "Open Library",
+          "licence": "Open Library Covers API"
+        }
+      ],
+      "seller": 2,
+      "hoursAgo": 262
     },
     {
       "title": "Concepts of physics",
-      "description": "Concepts of physics by Harish Chandra Verma (1993). Used only a few times, works like new.",
+      "description": "Concepts of physics by Harish Chandra Verma (1993). Barely opened, no highlighting. Can meet at AUPP.",
       "category": "textbooks",
       "condition": "like_new",
       "type": "sale",
@@ -722,12 +728,19 @@
       "images": [
         "https://covers.openlibrary.org/b/id/8631889-L.jpg"
       ],
-      "seller": 4,
-      "hoursAgo": 322
+      "credits": [
+        {
+          "page": "https://openlibrary.org/works/OL19836917W",
+          "author": "Open Library",
+          "licence": "Open Library Covers API"
+        }
+      ],
+      "seller": 3,
+      "hoursAgo": 299
     },
     {
       "title": "Operational organic chemistry",
-      "description": "Operational organic chemistry by John W. Lehman (1981). Shows some signs of use, but works fine.",
+      "description": "Operational organic chemistry by John W. Lehman (1981). The cover is worn and some pages have pencil notes, but nothing is missing. Can meet at AUPP.",
       "category": "textbooks",
       "condition": "fair",
       "type": "sale",
@@ -735,12 +748,19 @@
       "images": [
         "https://covers.openlibrary.org/b/id/4128310-L.jpg"
       ],
-      "seller": 5,
-      "hoursAgo": 329
+      "credits": [
+        {
+          "page": "https://openlibrary.org/works/OL1824432W",
+          "author": "Open Library",
+          "licence": "Open Library Covers API"
+        }
+      ],
+      "seller": 4,
+      "hoursAgo": 336
     },
     {
       "title": "Biology",
-      "description": "Biology by Neil Alexander Campbell (1987). Used, in good working condition.",
+      "description": "Biology by Neil Alexander Campbell (1987). Some highlighting in the first chapters, otherwise clean. Can meet at AUPP.",
       "category": "textbooks",
       "condition": "good",
       "type": "sale",
@@ -748,12 +768,19 @@
       "images": [
         "https://covers.openlibrary.org/b/id/581911-L.jpg"
       ],
-      "seller": 0,
-      "hoursAgo": 336
+      "credits": [
+        {
+          "page": "https://openlibrary.org/works/OL1983087W",
+          "author": "Open Library",
+          "licence": "Open Library Covers API"
+        }
+      ],
+      "seller": 5,
+      "hoursAgo": 373
     },
     {
       "title": "Small Is Beautiful",
-      "description": "Small Is Beautiful by E. F. Schumacher (1905). Used, in good working condition.",
+      "description": "Small Is Beautiful by E. F. Schumacher (1905). Some highlighting in the first chapters, otherwise clean. Can meet at AUPP.",
       "category": "textbooks",
       "condition": "good",
       "type": "sale",
@@ -761,12 +788,19 @@
       "images": [
         "https://covers.openlibrary.org/b/id/6738557-L.jpg"
       ],
-      "seller": 1,
-      "hoursAgo": 343
+      "credits": [
+        {
+          "page": "https://openlibrary.org/works/OL1622912W",
+          "author": "Open Library",
+          "licence": "Open Library Covers API"
+        }
+      ],
+      "seller": 0,
+      "hoursAgo": 410
     },
     {
       "title": "Accounting Principles",
-      "description": "Accounting Principles by Jerry J. Weygandt (1987). Used only a few times, works like new.",
+      "description": "Accounting Principles by Jerry J. Weygandt (1987). Barely opened, no highlighting. Can meet at AUPP.",
       "category": "textbooks",
       "condition": "like_new",
       "type": "sale",
@@ -774,12 +808,19 @@
       "images": [
         "https://covers.openlibrary.org/b/id/1241487-L.jpg"
       ],
-      "seller": 2,
-      "hoursAgo": 350
+      "credits": [
+        {
+          "page": "https://openlibrary.org/works/OL1881226W",
+          "author": "Open Library",
+          "licence": "Open Library Covers API"
+        }
+      ],
+      "seller": 1,
+      "hoursAgo": 447
     },
     {
       "title": "Marketing Management",
-      "description": "Marketing Management by Philip Kotler (2016). Shows some signs of use, but works fine.",
+      "description": "Marketing Management by Philip Kotler (2016). The cover is worn and some pages have pencil notes, but nothing is missing. Can meet at AUPP.",
       "category": "textbooks",
       "condition": "fair",
       "type": "sale",
@@ -787,12 +828,19 @@
       "images": [
         "https://covers.openlibrary.org/b/id/14426392-L.jpg"
       ],
-      "seller": 3,
-      "hoursAgo": 357
+      "credits": [
+        {
+          "page": "https://openlibrary.org/works/OL17371073W",
+          "author": "Open Library",
+          "licence": "Open Library Covers API"
+        }
+      ],
+      "seller": 2,
+      "hoursAgo": 484
     },
     {
       "title": "How to Lie with Statistics",
-      "description": "How to Lie with Statistics by Darrell Huff (1954). Used, in good working condition.",
+      "description": "How to Lie with Statistics by Darrell Huff (1954). Some highlighting in the first chapters, otherwise clean. Can meet at AUPP.",
       "category": "textbooks",
       "condition": "good",
       "type": "sale",
@@ -800,12 +848,19 @@
       "images": [
         "https://covers.openlibrary.org/b/id/13115835-L.jpg"
       ],
-      "seller": 4,
-      "hoursAgo": 364
+      "credits": [
+        {
+          "page": "https://openlibrary.org/works/OL2975846W",
+          "author": "Open Library",
+          "licence": "Open Library Covers API"
+        }
+      ],
+      "seller": 3,
+      "hoursAgo": 51
     },
     {
       "title": "Automate the Boring Stuff with Python",
-      "description": "Automate the Boring Stuff with Python by Al Sweigart (2015). Used, in good working condition.",
+      "description": "Automate the Boring Stuff with Python by Al Sweigart (2015). Some highlighting in the first chapters, otherwise clean. Can meet at AUPP.",
       "category": "textbooks",
       "condition": "good",
       "type": "sale",
@@ -813,12 +868,19 @@
       "images": [
         "https://covers.openlibrary.org/b/id/7363640-L.jpg"
       ],
-      "seller": 5,
-      "hoursAgo": 371
+      "credits": [
+        {
+          "page": "https://openlibrary.org/works/OL17192141W",
+          "author": "Open Library",
+          "licence": "Open Library Covers API"
+        }
+      ],
+      "seller": 4,
+      "hoursAgo": 88
     },
     {
       "title": "Atomic Habits",
-      "description": "Atomic Habits by James Clear (2016). Used only a few times, works like new.",
+      "description": "Atomic Habits by James Clear (2016). Barely opened, no highlighting. Can meet at AUPP.",
       "category": "textbooks",
       "condition": "like_new",
       "type": "sale",
@@ -826,12 +888,19 @@
       "images": [
         "https://covers.openlibrary.org/b/id/12539702-L.jpg"
       ],
-      "seller": 0,
-      "hoursAgo": 378
+      "credits": [
+        {
+          "page": "https://openlibrary.org/works/OL17930368W",
+          "author": "Open Library",
+          "licence": "Open Library Covers API"
+        }
+      ],
+      "seller": 5,
+      "hoursAgo": 125
     },
     {
       "title": "Introduction to linear algebra",
-      "description": "Introduction to linear algebra by Gilbert Strang (1998). Shows some signs of use, but works fine.",
+      "description": "Introduction to linear algebra by Gilbert Strang (1998). The cover is worn and some pages have pencil notes, but nothing is missing. Can meet at AUPP.",
       "category": "textbooks",
       "condition": "fair",
       "type": "sale",
@@ -839,12 +908,19 @@
       "images": [
         "https://covers.openlibrary.org/b/id/725050-L.jpg"
       ],
-      "seller": 1,
-      "hoursAgo": 385
+      "credits": [
+        {
+          "page": "https://openlibrary.org/works/OL3285486W",
+          "author": "Open Library",
+          "licence": "Open Library Covers API"
+        }
+      ],
+      "seller": 0,
+      "hoursAgo": 162
     },
     {
       "title": "Thirty Days to Better English",
-      "description": "Thirty Days to Better English by Norman Lewis (1965). Used, in good working condition.",
+      "description": "Thirty Days to Better English by Norman Lewis (1965). Some highlighting in the first chapters, otherwise clean. Can meet at AUPP.",
       "category": "textbooks",
       "condition": "good",
       "type": "sale",
@@ -852,8 +928,15 @@
       "images": [
         "https://covers.openlibrary.org/b/id/6688871-L.jpg"
       ],
-      "seller": 2,
-      "hoursAgo": 392
+      "credits": [
+        {
+          "page": "https://openlibrary.org/works/OL4847873W",
+          "author": "Open Library",
+          "licence": "Open Library Covers API"
+        }
+      ],
+      "seller": 1,
+      "hoursAgo": 199
     },
     {
       "title": "Looking for: Data Structures and Algorithms Made Easy",
@@ -865,8 +948,15 @@
       "images": [
         "https://covers.openlibrary.org/b/id/11067110-L.jpg"
       ],
-      "seller": 3,
-      "hoursAgo": 399
+      "credits": [
+        {
+          "page": "https://openlibrary.org/works/OL24463217W",
+          "author": "Open Library",
+          "licence": "Open Library Covers API"
+        }
+      ],
+      "seller": 2,
+      "hoursAgo": 236
     },
     {
       "title": "Looking for: Macroeconomics",
@@ -878,8 +968,15 @@
       "images": [
         "https://covers.openlibrary.org/b/id/12584771-L.jpg"
       ],
-      "seller": 4,
-      "hoursAgo": 6
+      "credits": [
+        {
+          "page": "https://openlibrary.org/works/OL26727088W",
+          "author": "Open Library",
+          "licence": "Open Library Covers API"
+        }
+      ],
+      "seller": 3,
+      "hoursAgo": 273
     },
     {
       "title": "Looking for: Anatomy",
@@ -891,198 +988,19 @@
       "images": [
         "https://covers.openlibrary.org/b/id/692969-L.jpg"
       ],
-      "seller": 5,
-      "hoursAgo": 13
-    },
-    {
-      "title": "Apple MacBook Pro 14 Inch Space Grey",
-      "description": "The MacBook Pro 14 Inch in Space Grey is a powerful and sleek laptop, featuring Apple's M1 Pro chip for exceptional performance and a stunning Retina display. Used, in good working condition.",
-      "category": "electronics",
-      "condition": "good",
-      "type": "sale",
-      "price": 1100,
-      "images": [
-        "https://cdn.dummyjson.com/product-images/laptops/apple-macbook-pro-14-inch-space-grey/1.webp",
-        "https://cdn.dummyjson.com/product-images/laptops/apple-macbook-pro-14-inch-space-grey/2.webp",
-        "https://cdn.dummyjson.com/product-images/laptops/apple-macbook-pro-14-inch-space-grey/3.webp"
-      ],
-      "seller": 0,
-      "hoursAgo": 20
-    },
-    {
-      "title": "Samsung Galaxy S8",
-      "description": "The Samsung Galaxy S8 is a premium smartphone with an Infinity Display, offering a stunning visual experience. It boasts advanced camera capabilities and cutting-edge technology. Used only a few times, works like new.",
-      "category": "electronics",
-      "condition": "like_new",
-      "type": "sale",
-      "price": 350,
-      "images": [
-        "https://cdn.dummyjson.com/product-images/smartphones/samsung-galaxy-s8/1.webp",
-        "https://cdn.dummyjson.com/product-images/smartphones/samsung-galaxy-s8/2.webp",
-        "https://cdn.dummyjson.com/product-images/smartphones/samsung-galaxy-s8/3.webp"
-      ],
-      "seller": 1,
-      "hoursAgo": 27
-    },
-    {
-      "title": "iPhone X",
-      "description": "The iPhone X is a flagship smartphone featuring a bezel-less OLED display, facial recognition technology (Face ID), and impressive performance. It represents a milestone in iPhone design and innovation. Shows some signs of use, but works fine.",
-      "category": "electronics",
-      "condition": "fair",
-      "type": "sale",
-      "price": 360,
-      "images": [
-        "https://cdn.dummyjson.com/product-images/smartphones/iphone-x/1.webp",
-        "https://cdn.dummyjson.com/product-images/smartphones/iphone-x/2.webp",
-        "https://cdn.dummyjson.com/product-images/smartphones/iphone-x/3.webp"
-      ],
-      "seller": 2,
-      "hoursAgo": 34
-    },
-    {
-      "title": "Beats Flex Wireless Earphones",
-      "description": "The Beats Flex Wireless Earphones offer a comfortable and versatile audio experience. With magnetic earbuds and up to 12 hours of battery life, they are ideal for everyday use. Used, in good working condition.",
-      "category": "electronics",
-      "condition": "good",
-      "type": "sale",
-      "price": 27,
-      "images": [
-        "https://cdn.dummyjson.com/product-images/mobile-accessories/beats-flex-wireless-earphones/1.webp"
-      ],
-      "seller": 3,
-      "hoursAgo": 41
-    },
-    {
-      "title": "Apple MagSafe Battery Pack",
-      "description": "The Apple MagSafe Battery Pack is a portable and convenient way to add extra battery life to your MagSafe-compatible iPhone. Attach it magnetically for a secure connection. Still unopened.",
-      "category": "electronics",
-      "condition": "new",
-      "type": "sale",
-      "price": 80,
-      "images": [
-        "https://cdn.dummyjson.com/product-images/mobile-accessories/apple-magsafe-battery-pack/1.webp",
-        "https://cdn.dummyjson.com/product-images/mobile-accessories/apple-magsafe-battery-pack/2.webp"
+      "credits": [
+        {
+          "page": "https://openlibrary.org/works/OL15399118W",
+          "author": "Open Library",
+          "licence": "Open Library Covers API"
+        }
       ],
       "seller": 4,
-      "hoursAgo": 48
-    },
-    {
-      "title": "Apple Airpods",
-      "description": "The Apple Airpods offer a seamless wireless audio experience. With easy pairing, high-quality sound, and Siri integration, they are perfect for on-the-go listening. Used, in good working condition.",
-      "category": "electronics",
-      "condition": "good",
-      "type": "sale",
-      "price": 71,
-      "images": [
-        "https://cdn.dummyjson.com/product-images/mobile-accessories/apple-airpods/1.webp",
-        "https://cdn.dummyjson.com/product-images/mobile-accessories/apple-airpods/2.webp",
-        "https://cdn.dummyjson.com/product-images/mobile-accessories/apple-airpods/3.webp"
-      ],
-      "seller": 5,
-      "hoursAgo": 55
-    },
-    {
-      "title": "Brown Leather Belt Watch",
-      "description": "The Brown Leather Belt Watch is a stylish timepiece with a classic design. Featuring a genuine leather strap and a sleek dial, it adds a touch of sophistication to your look. Used only a few times, works like new.",
-      "category": "clothing",
-      "condition": "like_new",
-      "type": "sale",
-      "price": 63,
-      "images": [
-        "https://cdn.dummyjson.com/product-images/mens-watches/brown-leather-belt-watch/1.webp",
-        "https://cdn.dummyjson.com/product-images/mens-watches/brown-leather-belt-watch/2.webp",
-        "https://cdn.dummyjson.com/product-images/mens-watches/brown-leather-belt-watch/3.webp"
-      ],
-      "seller": 0,
-      "hoursAgo": 62
-    },
-    {
-      "title": "Women's Wrist Watch",
-      "description": "The Women's Wrist Watch is a versatile and fashionable timepiece for everyday wear. With a comfortable strap and a simple yet elegant design, it complements various styles. Shows some signs of use, but works fine. Open to trades: tell me what you have.",
-      "category": "clothing",
-      "condition": "fair",
-      "type": "trade",
-      "price": 52,
-      "images": [
-        "https://cdn.dummyjson.com/product-images/womens-watches/women's-wrist-watch/1.webp",
-        "https://cdn.dummyjson.com/product-images/womens-watches/women's-wrist-watch/2.webp",
-        "https://cdn.dummyjson.com/product-images/womens-watches/women's-wrist-watch/3.webp"
-      ],
-      "seller": 1,
-      "hoursAgo": 69
-    },
-    {
-      "title": "Classic Sun Glasses",
-      "description": "The Classic Sun Glasses offer a timeless design with a neutral frame and UV-protected lenses. These sunglasses are versatile and suitable for various occasions. Used, in good working condition.",
-      "category": "clothing",
-      "condition": "good",
-      "type": "sale",
-      "price": 14,
-      "images": [
-        "https://cdn.dummyjson.com/product-images/sunglasses/classic-sun-glasses/1.webp",
-        "https://cdn.dummyjson.com/product-images/sunglasses/classic-sun-glasses/2.webp",
-        "https://cdn.dummyjson.com/product-images/sunglasses/classic-sun-glasses/3.webp"
-      ],
-      "seller": 2,
-      "hoursAgo": 76
-    },
-    {
-      "title": "Baseball Glove",
-      "description": "The Baseball Glove is a protective glove worn by baseball players. It is designed to catch and field the baseball, providing players with comfort and control during the game. Still unopened.",
-      "category": "other",
-      "condition": "new",
-      "type": "sale",
-      "price": 20,
-      "images": [
-        "https://cdn.dummyjson.com/product-images/sports-accessories/baseball-glove/1.webp",
-        "https://cdn.dummyjson.com/product-images/sports-accessories/baseball-glove/2.webp",
-        "https://cdn.dummyjson.com/product-images/sports-accessories/baseball-glove/3.webp"
-      ],
-      "seller": 3,
-      "hoursAgo": 83
-    },
-    {
-      "title": "Chopping Board",
-      "description": "The Chopping Board is an essential kitchen accessory for food preparation. Made from durable material, it provides a safe and hygienic surface for cutting and chopping. Used, in good working condition.",
-      "category": "other",
-      "condition": "good",
-      "type": "giveaway",
-      "price": 0,
-      "images": [
-        "https://cdn.dummyjson.com/product-images/kitchen-accessories/chopping-board/1.webp"
-      ],
-      "seller": 4,
-      "hoursAgo": 90
-    },
-    {
-      "title": "Pan",
-      "description": "The Pan is a versatile and essential cookware item for frying, sautéing, and cooking various dishes. Its non-stick coating ensures easy food release and cleanup. Used only a few times, works like new.",
-      "category": "other",
-      "condition": "like_new",
-      "type": "sale",
-      "price": 17,
-      "images": [
-        "https://cdn.dummyjson.com/product-images/kitchen-accessories/pan/1.webp"
-      ],
-      "seller": 5,
-      "hoursAgo": 97
-    },
-    {
-      "title": "Hand Blender",
-      "description": "The Hand Blender is a versatile kitchen appliance for blending, pureeing, and mixing. Its compact design and powerful motor make it a convenient tool for various recipes. Shows some signs of use, but works fine.",
-      "category": "other",
-      "condition": "fair",
-      "type": "sale",
-      "price": 14,
-      "images": [
-        "https://cdn.dummyjson.com/product-images/kitchen-accessories/hand-blender/1.webp"
-      ],
-      "seller": 0,
-      "hoursAgo": 104
+      "hoursAgo": 310
     },
     {
       "title": "Foundations of college chemistry",
-      "description": "Foundations of college chemistry by Morris Hein (1967). Used, in good working condition.",
+      "description": "Foundations of college chemistry by Morris Hein (1967). Some highlighting in the first chapters, otherwise clean. Can meet at AUPP.",
       "category": "textbooks",
       "condition": "good",
       "type": "sale",
@@ -1090,12 +1008,19 @@
       "images": [
         "https://covers.openlibrary.org/b/id/6598795-L.jpg"
       ],
-      "seller": 1,
-      "hoursAgo": 111
+      "credits": [
+        {
+          "page": "https://openlibrary.org/works/OL1993999W",
+          "author": "Open Library",
+          "licence": "Open Library Covers API"
+        }
+      ],
+      "seller": 5,
+      "hoursAgo": 347
     },
     {
       "title": "Human Resource Management",
-      "description": "Human Resource Management by Gary Dessler (1994). Used only a few times, works like new.",
+      "description": "Human Resource Management by Gary Dessler (1994). Barely opened, no highlighting. Can meet at AUPP.",
       "category": "textbooks",
       "condition": "like_new",
       "type": "sale",
@@ -1103,12 +1028,19 @@
       "images": [
         "https://covers.openlibrary.org/b/id/84029-L.jpg"
       ],
-      "seller": 2,
-      "hoursAgo": 118
+      "credits": [
+        {
+          "page": "https://openlibrary.org/works/OL1982791W",
+          "author": "Open Library",
+          "licence": "Open Library Covers API"
+        }
+      ],
+      "seller": 0,
+      "hoursAgo": 384
     },
     {
       "title": "Database Design for Mere Mortals",
-      "description": "Database Design for Mere Mortals by Michael J. Hernandez (1996). Shows some signs of use, but works fine.",
+      "description": "Database Design for Mere Mortals by Michael J. Hernandez (1996). The cover is worn and some pages have pencil notes, but nothing is missing. Can meet at AUPP.",
       "category": "textbooks",
       "condition": "fair",
       "type": "sale",
@@ -1116,12 +1048,19 @@
       "images": [
         "https://covers.openlibrary.org/b/id/135738-L.jpg"
       ],
-      "seller": 3,
-      "hoursAgo": 125
+      "credits": [
+        {
+          "page": "https://openlibrary.org/works/OL2945002W",
+          "author": "Open Library",
+          "licence": "Open Library Covers API"
+        }
+      ],
+      "seller": 1,
+      "hoursAgo": 421
     },
     {
       "title": "Thermodynamics",
-      "description": "Thermodynamics by Yunus A. Çengel (1989). Used, in good working condition.",
+      "description": "Thermodynamics by Yunus A. Çengel (1989). Some highlighting in the first chapters, otherwise clean. Can meet at AUPP.",
       "category": "textbooks",
       "condition": "good",
       "type": "sale",
@@ -1129,12 +1068,19 @@
       "images": [
         "https://covers.openlibrary.org/b/id/62976-L.jpg"
       ],
-      "seller": 4,
-      "hoursAgo": 132
+      "credits": [
+        {
+          "page": "https://openlibrary.org/works/OL2637241W",
+          "author": "Open Library",
+          "licence": "Open Library Covers API"
+        }
+      ],
+      "seller": 2,
+      "hoursAgo": 458
     },
     {
       "title": "Traditions & encounters",
-      "description": "Traditions & encounters by Jerry H. Bentley (1999). Used, in good working condition.",
+      "description": "Traditions & encounters by Jerry H. Bentley (1999). Some highlighting in the first chapters, otherwise clean. Can meet at AUPP.",
       "category": "textbooks",
       "condition": "good",
       "type": "sale",
@@ -1142,12 +1088,19 @@
       "images": [
         "https://covers.openlibrary.org/b/id/65184-L.jpg"
       ],
-      "seller": 5,
-      "hoursAgo": 139
+      "credits": [
+        {
+          "page": "https://openlibrary.org/works/OL4289172W",
+          "author": "Open Library",
+          "licence": "Open Library Covers API"
+        }
+      ],
+      "seller": 3,
+      "hoursAgo": 25
     },
     {
       "title": "The story of art",
-      "description": "The story of art by E. H. Gombrich (1950). Used only a few times, works like new.",
+      "description": "The story of art by E. H. Gombrich (1950). Barely opened, no highlighting. Can meet at AUPP.",
       "category": "textbooks",
       "condition": "like_new",
       "type": "sale",
@@ -1155,12 +1108,19 @@
       "images": [
         "https://covers.openlibrary.org/b/id/538390-L.jpg"
       ],
-      "seller": 0,
-      "hoursAgo": 146
+      "credits": [
+        {
+          "page": "https://openlibrary.org/works/OL686193W",
+          "author": "Open Library",
+          "licence": "Open Library Covers API"
+        }
+      ],
+      "seller": 4,
+      "hoursAgo": 62
     },
     {
       "title": "Rich Dad, Poor Dad",
-      "description": "Rich Dad, Poor Dad by Robert T. Kiyosaki (1990). Shows some signs of use, but works fine.",
+      "description": "Rich Dad, Poor Dad by Robert T. Kiyosaki (1990). The cover is worn and some pages have pencil notes, but nothing is missing. Can meet at AUPP.",
       "category": "textbooks",
       "condition": "fair",
       "type": "sale",
@@ -1168,8 +1128,15 @@
       "images": [
         "https://covers.openlibrary.org/b/id/8315603-L.jpg"
       ],
-      "seller": 1,
-      "hoursAgo": 153
+      "credits": [
+        {
+          "page": "https://openlibrary.org/works/OL2010879W",
+          "author": "Open Library",
+          "licence": "Open Library Covers API"
+        }
+      ],
+      "seller": 5,
+      "hoursAgo": 99
     },
     {
       "title": "Looking for: Discrete mathematics",
@@ -1181,8 +1148,15 @@
       "images": [
         "https://covers.openlibrary.org/b/id/3968622-L.jpg"
       ],
-      "seller": 2,
-      "hoursAgo": 160
+      "credits": [
+        {
+          "page": "https://openlibrary.org/works/OL837648W",
+          "author": "Open Library",
+          "licence": "Open Library Covers API"
+        }
+      ],
+      "seller": 0,
+      "hoursAgo": 136
     }
   ]
 }
