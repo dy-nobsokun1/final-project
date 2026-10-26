@@ -3,7 +3,7 @@ import { MapPin, QrCode, ShieldCheck } from "lucide-react";
 /** The three things a first-time visitor most needs to know: who it is for, how paying works, and where to meet. */
 const POINTS = [
   { icon: ShieldCheck, title: "Verified students only", text: "Join with school email (name@aupp.edu.kh)" },
-  { icon: QrCode, title: "KHQR, card or cash", text: "Pay online in the app, or in cash when you meet." },
+  { icon: QrCode, title: "Flexible payment", text: "KHQR or card online, or cash in person." },
   { icon: MapPin, title: "Meet on campus", text: "Chat in the app, then hand it over at school." },
 ];
 
