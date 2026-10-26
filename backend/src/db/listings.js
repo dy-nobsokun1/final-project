@@ -1,5 +1,6 @@
 import { MAX_BROWSE_LIMIT } from "../utils/validation.js";
 import { query } from "./pool.js";
+import { relatedSearch } from "./relatedWords.js";
 
 // Every listing is returned with the seller's public info, so the UI can render
 // a card without a second request (matches ListingWithSeller in the frontend).
@@ -91,8 +92,21 @@ export function buildBrowseQuery(filters) {
     const pattern = `$${params.length}`;
     // A listing matches if either word test does (see wordMatchSql), or the term is part of a word in
     // its title or description: "mac" finds "MacBook".
-    conditions.push(`(${words.matches} OR l.title ILIKE ${pattern} OR l.description ILIKE ${pattern})`);
-    orderBy = `${words.rank} DESC, l.created_at DESC`;
+    const ownWords = `(${words.matches} OR l.title ILIKE ${pattern} OR l.description ILIKE ${pattern})`;
+    const related = relatedSearch(filters.query);
+    if (related) {
+      // Related words (db/relatedWords.js) find more listings, through full-text only: "gpu" also
+      // finds "RTX 3090". Listings that match the student's own words come first, in the same order
+      // as without related words; the related words' score only orders the listings found through them.
+      params.push(related);
+      const relatedQuery = `websearch_to_tsquery('english', $${params.length})`;
+      conditions.push(`(${ownWords} OR l.search_vector @@ ${relatedQuery})`);
+      const relatedRank = `ts_rank(l.search_vector, ${relatedQuery})`;
+      orderBy = `${ownWords} DESC, CASE WHEN ${ownWords} THEN ${words.rank} ELSE ${relatedRank} END DESC, l.created_at DESC`;
+    } else {
+      conditions.push(ownWords);
+      orderBy = `${words.rank} DESC, l.created_at DESC`;
+    }
   }
 
   // At most `limit` rows (1 to 100, see parseListingFilters); 100 when the caller gives none.

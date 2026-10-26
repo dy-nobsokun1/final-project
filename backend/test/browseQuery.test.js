@@ -5,6 +5,7 @@ import { test } from "node:test";
 process.env.DATABASE_URL ??= "postgres://unused";
 process.env.JWT_SECRET ??= "unused";
 const { buildBrowseQuery, wordMatchSql } = await import("../src/db/listings.js");
+const { relatedSearch } = await import("../src/db/relatedWords.js");
 
 test("without a search term, listings are newest first", () => {
   const { text, params } = buildBrowseQuery({ status: "active" });
@@ -32,7 +33,7 @@ test("a search term is ranked and typo tolerant, and stays a parameter", () => {
 });
 
 test("the limit is a parameter too, 100 unless the caller gives one", () => {
-  const { text, params } = buildBrowseQuery({ status: "active", query: "ram", limit: 5 });
+  const { text, params } = buildBrowseQuery({ status: "active", query: "lamp", limit: 5 });
   assert.equal(params.at(-1), 5);
   assert.match(text, /LIMIT \$4$/);
   assert.doesNotMatch(text, /LIMIT 5/);
@@ -45,6 +46,21 @@ test("the typo test only runs for terms of 4+ characters, checked in SQL on the 
   assert.ok(text.includes("char_length(trim($2)) >= 4"));
   assert.ok(text.includes("AND word_similarity($2, l.title) >= 0.5"));
   assert.doesNotMatch(text, /'ram'/);
+});
+
+test("related words are one more parameter, searched with full-text only and never pasted into the SQL", () => {
+  const { text, params } = buildBrowseQuery({ status: "active", query: "gpu" });
+  assert.deepEqual(params, ["active", "gpu", "%gpu%", relatedSearch("gpu"), 100]);
+  assert.ok(text.includes("l.search_vector @@ websearch_to_tsquery('english', $4)"));
+  assert.doesNotMatch(text, /ILIKE \$4|word_similarity\(\$4/);
+  assert.doesNotMatch(text, /nvidia|rtx|graphics|'gpu'/i);
+  assert.match(text, /LIMIT \$5$/);
+});
+
+test("a term with no related words gives the same query as before", () => {
+  const { text, params } = buildBrowseQuery({ status: "active", query: "lamp" });
+  assert.deepEqual(params, ["active", "lamp", "%lamp%", 100]);
+  assert.doesNotMatch(text, /\$5|CASE WHEN/);
 });
 
 test("% and _ in a search term are literal characters, not wildcards", () => {

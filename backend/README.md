@@ -159,9 +159,14 @@ in [`src/db/listings.js`](src/db/listings.js)):
    ("textbook" finds the textbooks category). Uses a `search_vector` column that PostgreSQL keeps up to date.
 2. **Part of a word:** "mac" finds "MacBook".
 3. **Typos in a title word**, using the `pg_trgm` extension: "frige" finds "fridge".
+4. **Related words** (full-text only), from a hand-written list in
+   [`src/db/relatedWords.js`](src/db/relatedWords.js): "book" also finds the textbooks, "gpu" or
+   "graphics card" the RTX and GTX cards, "memory" the RAM sticks. A word must be a whole word of the
+   search ("ram" is not found in "program"). Wanted-post matching does not use them, so its alerts stay strict.
 
 With a search term, results are sorted best match first, and title matches rank above description matches.
-Without one, they are sorted newest first.
+Without one, they are sorted newest first. Listings found only through a related word come after every
+listing that matches the search's own words, which keep the order they would have without related words.
 
 **Upgrading a database created before search was added?** Either re-run `npm run db:setup` (wipes data),
 or keep your data by running this once in `psql` or the Supabase SQL editor:

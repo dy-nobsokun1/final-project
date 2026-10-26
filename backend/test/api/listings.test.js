@@ -100,6 +100,35 @@ test("a search with a limit returns at most that many, best match first", async 
   assert.equal(ids(limited)[0], best.id);
 });
 
+// Other test files post textbooks and electronics at the same time, so these two tests filter by a
+// price no other test uses.
+test("'book' finds a textbook whose title and description never say book", async () => {
+  const seller = await api.createUser();
+  const calculus = await api.createListing(seller, { title: "Calculus 8th edition", category: "textbooks", price: 913 });
+  for (const search of ["book", "books"]) {
+    const response = await api.request("GET", `/api/listings?query=${search}&minPrice=913&maxPrice=913`);
+    assert.deepEqual(ids(response), [calculus.id], search);
+  }
+});
+
+test("'gpu' and 'graphics card' find an RTX card, after an item that says GPU; wanted matches do not", async () => {
+  const [seller, poster] = await Promise.all([api.createUser(), api.createUser()]);
+  // The GPU item is posted first, so only ranking (not newest first) can put it above the RTX card.
+  const gpu = await api.createListing(seller, { title: "Budget GPU", category: "electronics", price: 917 });
+  const rtx = await api.createListing(seller, { title: "RTX 4060", category: "electronics", price: 917 });
+  const search = (term) => api.request("GET", `/api/listings?query=${encodeURIComponent(term)}&minPrice=917&maxPrice=917`);
+  assert.deepEqual(ids(await search("gpu")), [gpu.id, rtx.id]);
+  assert.ok(ids(await search("graphics card")).includes(rtx.id));
+
+  // Wanted-post matching sends alerts, so it keeps to the post's own words.
+  const post = await api.createListing(poster, {
+    title: "Looking for a GPU", category: "electronics", listingType: "buy_request", price: 0,
+  });
+  const matched = ids(await api.request("GET", `/api/listings/${post.id}/matches`));
+  assert.ok(matched.includes(gpu.id), "the item that says GPU");
+  assert.ok(!matched.includes(rtx.id), "the RTX card");
+});
+
 test("a sold listing leaves the browse page but stays on the seller's profile", async () => {
   const seller = await api.createUser();
   const listing = await api.createListing(seller);
