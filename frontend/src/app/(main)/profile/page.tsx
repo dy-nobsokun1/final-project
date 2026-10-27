@@ -1,18 +1,20 @@
 import { Inbox } from "lucide-react";
 import Link from "next/link";
 import { ListingGrid } from "@/components/listings/ListingGrid";
+import { ProfileDashboard } from "@/components/profile/ProfileDashboard";
 import { ProfileHeader } from "@/components/profile/ProfileHeader";
-import { getConversations, getMyListings, getUserReviews, requireUser } from "@/lib/api";
+import { getConversations, getMyListings, getMyStats, getUserReviews, requireUser } from "@/lib/api";
 
 export const metadata = { title: "My profile | UniSwap" };
 
 /** Profile of the signed-in user. */
 export default async function ProfilePage() {
   const user = await requireUser();
-  const [listings, conversations, { averageRating, reviewCount }] = await Promise.all([
+  const [listings, conversations, { averageRating, reviewCount }, stats] = await Promise.all([
     getMyListings(),
     getConversations(),
     getUserReviews(user.id),
+    getMyStats(),
   ]);
 
   return (
@@ -43,6 +45,9 @@ export default async function ProfilePage() {
           </>
         }
       />
+
+      {/* Only here, never on /profile/[id]: it shows money. */}
+      {stats ? <ProfileDashboard stats={stats} /> : null}
 
       <section className="flex flex-col gap-4">
         <h2 className="font-heading text-2xl tracking-tight">Active listings</h2>

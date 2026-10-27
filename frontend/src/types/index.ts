@@ -124,6 +124,39 @@ export interface ReviewSummary {
   reviewCount: number;
 }
 
+/** How many of someone's deals were in one category, for the profile stats' rings. */
+export interface CategoryCount {
+  category: ListingCategory;
+  count: number;
+}
+
+/**
+ * GET /api/users/me/stats: the signed-in student's own deals (sales, purchases, trades). Only ever
+ * shown to that student, because it has money in it. Amounts are dollars.
+ */
+export interface UserStats {
+  /** True once `deals` reaches `unlockDeals` (3); until then the profile shows a progress card. */
+  unlocked: boolean;
+  unlockDeals: number;
+  deals: number;
+  sales: number;
+  purchases: number;
+  trades: number;
+  /** From their own listings, a trade's cash top-up included. */
+  earned: number;
+  spent: number;
+  activeListings: number;
+  /** Their own listings that were sold or traded. */
+  soldListings: number;
+  averageRating: number | null;
+  reviewCount: number;
+  /** The last 6 months, oldest first. `month` is "YYYY-MM". */
+  months: Array<{ month: string; earned: number; spent: number }>;
+  /** Most first. */
+  soldByCategory: CategoryCount[];
+  boughtByCategory: CategoryCount[];
+}
+
 /** A listing joined with the fields a card needs, so the UI does not re-look-up the seller. */
 export interface ListingWithSeller extends Listing {
   /** `acceptsKhqr`: the seller has added a Bakong account, so buyers can pay them by KHQR. */

@@ -14,6 +14,7 @@ import type {
   Review,
   ReviewSummary,
   User,
+  UserStats,
 } from "@/types";
 
 /**
@@ -221,6 +222,12 @@ export async function getUserReviews(userId: string): Promise<ReviewSummary> {
     apiFetch<ReviewSummary>(`/api/users/${encodeURIComponent(userId)}/reviews`),
   );
   return result ?? { reviews: [], averageRating: null, reviewCount: 0 };
+}
+
+/** Your own deal stats for /profile (money included, so never someone else's). Signed-in pages only. */
+export async function getMyStats(): Promise<UserStats | null> {
+  const result = await orNull(apiFetch<{ stats: UserStats }>("/api/users/me/stats"));
+  return result?.stats ?? null;
 }
 
 /** The reviews about one listing's deal: at most one per person. */
