@@ -73,6 +73,27 @@ a warning is printed. Once email is configured it is never printed, not even whe
 Check the settings with `npm run email:test -- you@university.edu.kh`. It logs in, sends one test
 email, and prints the mail server's reply if something is refused.
 
+### Links through a free tunnel (optional)
+
+Emailed and Telegram links start with `FRONTEND_ORIGIN`. To let friends open them from outside your
+network with a free `cloudflared` tunnel (whose address changes every time it starts), start it with
+a metrics address and tell the API where to ask:
+
+```bash
+cloudflared tunnel --url http://localhost:3000 --metrics 127.0.0.1:20241
+```
+
+```
+TUNNEL_METRICS_URL=http://127.0.0.1:20241
+```
+
+The API then reads the tunnel's current `https://….trycloudflare.com` from `/quicktunnel` at start-up
+and every 15 seconds (`services/tunnel.js`, `siteOrigin()`), prints one `[tunnel]` line whenever the
+address changes, and uses it for every link it builds. Without `TUNNEL_METRICS_URL`, or while
+cloudflared does not answer, links use `FRONTEND_ORIGIN`. Card checkout sends the buyer back to the
+address they paid from (`returnOrigin`), but only if it is `FRONTEND_ORIGIN` or the tunnel's address.
+CORS stays on `FRONTEND_ORIGIN`, because only the Next.js server calls the API.
+
 ## Folder layout
 
 ```
@@ -503,7 +524,7 @@ service's web API with `fetch`.
     Settings" help. Group chats are ignored, so nobody's saved items or inbox show in a group.
   - **Code.** `utils/telegramScreens.js` builds each screen's text and buttons (no database),
     `db/telegram.js` holds the bot's queries, and only `services/telegram.js` calls the Bot API.
-    "Open on UniSwap" and "Open inbox" links show only when `FRONTEND_ORIGIN` is a public https site.
+    "Open on UniSwap" and "Open inbox" links show only when the site address (`FRONTEND_ORIGIN`, or the tunnel's, see below) is a public https site.
     The last list each chat saw is kept in memory, so after a restart "More ▸" asks to search again.
 - **Ask UniSwap, the shopping assistant** (`utils/assistant.js`, `routes/assistant.js`, and one
   adapter per model in `services/`: `groq.js`, `gemini.js`, chosen by `assistantModel.js`).
@@ -629,7 +650,7 @@ A token issued before the account's last password change or reset is refused (40
 | DELETE 🔒 | `/api/listings/:id/save` | Unsave → `204`, also if it was not saved |
 | GET | `/api/users/:id/reviews` | `{ reviews, averageRating, reviewCount }`: reviews the user received, newest first |
 | GET | `/api/payments/config` | `{ enabled, khqr }`: whether card and KHQR payments are switched on |
-| POST 🔒 | `/api/payments/checkout` | `{ listingId }` → `{ url }` of Stripe's payment page |
+| POST 🔒 | `/api/payments/checkout` | `{ listingId, returnOrigin? }` → `{ url }` of Stripe's payment page. Stripe sends the buyer back to `returnOrigin` only if it is `FRONTEND_ORIGIN` or the tunnel's current address, else to `FRONTEND_ORIGIN` |
 | POST 🔒 | `/api/payments/confirm` | `{ sessionId }` → `{ status: "paid" \| "pending" \| "refund_due" }`, checked with Stripe; "paid" may add `card: { brand, last4 }` (shown, never stored) |
 | POST | `/api/payments/webhook` | Called by Stripe only, with a signature check |
 | POST 🔒 | `/api/payments/khqr` | `{ listingId }` → `{ paymentId, qr, amount, expiresAt }`. Asking again within 30 minutes returns the same QR, as long as it still pays the seller's current Bakong account. First records any earlier QR for the item that was paid but not yet confirmed: `409` if it was this buyer's. `400` if the seller has no Bakong account. `403` if the item is reserved for another buyer; for the buyer it is reserved for, the amount is the agreed price (or the asking price, if lower). `503` if Bakong cannot be reached right now (no QR is shown that could not be confirmed) |
@@ -665,7 +686,7 @@ Errors always look like `{ "error": "message", "details": { "field": "message" }
 - `npm test` runs the unit tests in `test/*.test.js`: validation, the search query builder, the
   payment amount rules, the Stripe and Cloudinary helpers, the KHQR builder and Bakong answers, and
   the shopping assistant's tool loop (with a scripted fake model) and its Groq and Gemini adapters
-  (with `fetch` replaced). No database or network needed.
+  (with `fetch` replaced), and the tunnel address watcher. No database or network needed.
 - `npm run test:api` runs the API tests in `test/api/`. Each file starts the real app on a free port
   and sends it real HTTP requests, so routes, SQL and database rules are tested together: sign-up and
   verification, password reset and change, owner-only changes, messaging, bidding (including five

@@ -1,7 +1,7 @@
-import { config } from "../config.js";
 import { findWantedForItem } from "../db/matches.js";
 import { query } from "../db/pool.js";
 import { isTelegramConfigured, sendTelegramMessage } from "../services/telegram.js";
+import { siteOrigin } from "../services/tunnel.js";
 import { escapeHtml, isEmailConfigured, sendEmail } from "./email.js";
 
 // Notifications by email, and by Telegram for users who connected it in Settings.
@@ -12,7 +12,7 @@ const PREVIEW_LENGTH = 200;
 
 /** Builds a link into the web app, e.g. appLink("/listings/abc"). */
 function appLink(path) {
-  return `${config.frontendOrigin}${path}`;
+  return `${siteOrigin()}${path}`;
 }
 
 /** The thread URL the frontend uses: /messages/<listingId>_<otherPersonId>. */

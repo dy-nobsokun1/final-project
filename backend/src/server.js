@@ -7,6 +7,7 @@ import { isBakongConfigured, isKhqrPaid } from "./services/bakong.js";
 import { isCloudinaryConfigured } from "./services/cloudinary.js";
 import { isStripeConfigured } from "./services/stripe.js";
 import { isTelegramConfigured, startTelegramPolling } from "./services/telegram.js";
+import { startTunnelWatch } from "./services/tunnel.js";
 import { isEmailConfigured } from "./utils/email.js";
 import { notifyAuctionClosed } from "./utils/notify.js";
 import { handleBotUpdate, setUpBotCommands } from "./utils/telegramBot.js";
@@ -19,6 +20,9 @@ app.listen(config.port, () => {
     + ` · card payments ${onOff(isStripeConfigured)} · KHQR ${onOff(isBakongConfigured)}`
     + ` · Telegram ${onOff(isTelegramConfigured)} · assistant ${assistantModel?.name ?? "off"}`);
 });
+
+// With TUNNEL_METRICS_URL set, follow the cloudflared tunnel's current address for emailed and Telegram links.
+startTunnelWatch();
 
 // Telegram: the bot's menu (utils/telegramBot.js), and "/start <code>" messages that link accounts.
 // Only one running copy of the API may poll per bot token, so do not run it locally and on Render

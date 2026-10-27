@@ -1,7 +1,7 @@
 "use server";
 
 import { refresh } from "next/cache";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { ApiError, apiFetch, TOKEN_COOKIE } from "@/lib/api/http";
 import { getKhqrStatus, verifyEmail } from "@/lib/api";
 import type {
@@ -369,12 +369,19 @@ export async function submitReview(
   return {};
 }
 
-/** Starts a Stripe Checkout (test mode) for a listing. Returns the Stripe page to send the buyer to. */
+/**
+ * Starts a Stripe Checkout (test mode) for a listing. Returns the Stripe page to send the buyer to.
+ * `returnOrigin` is the address the buyer is on (localhost, or the tunnel), so Stripe sends them back
+ * where their sign-in cookie lives. The API only accepts its own known addresses.
+ */
 export async function startCheckout(listingId: string): Promise<ActionResult & { url?: string }> {
   try {
+    const requestHeaders = await headers();
+    const host = requestHeaders.get("x-forwarded-host") ?? requestHeaders.get("host");
+    const returnOrigin = host ? `${requestHeaders.get("x-forwarded-proto") ?? "http"}://${host}` : undefined;
     const { url } = await apiFetch<{ url: string }>("/api/payments/checkout", {
       method: "POST",
-      body: JSON.stringify({ listingId }),
+      body: JSON.stringify({ listingId, returnOrigin }),
     });
     return { url };
   } catch (error) {

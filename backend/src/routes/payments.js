@@ -11,7 +11,9 @@ import {
   paidCard,
   retrieveCheckoutSession,
 } from "../services/stripe.js";
+import { siteOrigin } from "../services/tunnel.js";
 import { HttpError } from "../utils/httpError.js";
+import { checkoutReturnOrigin } from "../utils/payments.js";
 
 // Online card payments with Stripe Checkout (test mode). The buyer is sent to a page hosted by
 // Stripe, so card numbers never touch our servers.
@@ -22,7 +24,9 @@ paymentsRouter.get("/config", (req, res) => {
   res.json({ enabled: isStripeConfigured, khqr: isBakongConfigured });
 });
 
-// POST /api/payments/checkout  { listingId }  (logged in) -> { url } of Stripe's payment page
+// POST /api/payments/checkout  { listingId, returnOrigin? }  (logged in) -> { url } of Stripe's payment page
+// returnOrigin is the address the buyer is on (the Next server reads it from the request); it is used
+// only if it is FRONTEND_ORIGIN or the tunnel's current address, see checkoutReturnOrigin.
 paymentsRouter.post("/checkout", requireAuth, async (req, res) => {
   if (!isStripeConfigured) throw new HttpError(503, "Online payment is not set up yet.");
   // An earlier KHQR for this item may have been paid without being confirmed yet: record it first,
@@ -39,7 +43,8 @@ paymentsRouter.post("/checkout", requireAuth, async (req, res) => {
     // req.body is undefined when no JSON body was sent; lockListingForPayment then answers 404.
     const { listing, amount } = await lockListingForPayment(client, req.body?.listingId, req.userId);
 
-    const page = `${config.frontendOrigin}/listings/${listing.id}`;
+    const origin = checkoutReturnOrigin(req.body?.returnOrigin, [config.frontendOrigin, siteOrigin()], config.frontendOrigin);
+    const page = `${origin}/listings/${listing.id}`;
     const session = await createCheckoutSession({
       title: listing.title,
       amountCents: Math.round(amount * 100),

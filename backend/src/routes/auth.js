@@ -3,6 +3,7 @@ import { Router } from "express";
 import { config } from "../config.js";
 import { query } from "../db/pool.js";
 import { requireAuth } from "../middleware/auth.js";
+import { siteOrigin } from "../services/tunnel.js";
 import { isEmailConfigured, sendPasswordResetEmail, sendVerificationEmail } from "../utils/email.js";
 import { HttpError } from "../utils/httpError.js";
 import { notifyPasswordChanged } from "../utils/notify.js";
@@ -38,7 +39,7 @@ function hashResetToken(token) {
 
 /** Emails a password-reset link. Never throws: the request has already been answered. */
 async function deliverResetLink(user, token) {
-  const link = `${config.frontendOrigin}/reset-password?token=${token}`;
+  const link = `${siteOrigin()}/reset-password?token=${token}`;
   if (!isEmailConfigured) {
     // Whenever SMTP is not configured, the link is printed instead, so a developer can still reset by
     // hand. Never in production (render.yaml sets NODE_ENV), and never once email is set up, not even

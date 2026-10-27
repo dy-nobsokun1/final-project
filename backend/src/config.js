@@ -12,6 +12,8 @@ export const config = {
   databaseUrl: required("DATABASE_URL"),
   jwtSecret: required("JWT_SECRET"),
   frontendOrigin: process.env.FRONTEND_ORIGIN ?? "http://localhost:3000",
+  // Optional: where cloudflared reports its current address (see services/tunnel.js and .env.example).
+  tunnelMetricsUrl: process.env.TUNNEL_METRICS_URL || undefined,
   // Optional: the email account that sends verification links (see .env.example).
   // Without it, the links are printed to the server log instead.
   smtp: {

@@ -1,4 +1,3 @@
-import { config } from "../config.js";
 import { findListingById } from "../db/listings.js";
 import { saveListing, unsaveListing } from "../db/saved.js";
 import {
@@ -8,6 +7,7 @@ import {
   answerTelegramButton, deleteTelegramMessage, editTelegramButtons, editTelegramMessage,
   sendTelegramMessage, sendTelegramPhoto, setTelegramCommands,
 } from "../services/telegram.js";
+import { siteOrigin } from "../services/tunnel.js";
 import {
   expiredSearchScreen, goneScreen, helpScreen, inboxScreen, itemButtons, itemScreen, menuScreen,
   myListingsScreen, newestScreen, NOT_LINKED_TEXT, notLinkedScreen, publicSiteUrl, resultsScreen,
@@ -48,8 +48,11 @@ const liveTelegram = {
   setCommands: setTelegramCommands,
 };
 
-/** Where "Open on UniSwap" and "Open inbox" link to, or null while the website runs on localhost. */
-const SITE_URL = publicSiteUrl(config.frontendOrigin);
+/**
+ * Where "Open on UniSwap" and "Open inbox" link to, or null while the website runs on localhost.
+ * Asked each time: a tunnel's address changes while the API runs (services/tunnel.js).
+ */
+const siteUrl = () => publicSiteUrl(siteOrigin());
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const MAX_SEARCH_LENGTH = 100;
 
@@ -150,7 +153,7 @@ async function searchScreen(chat, text, page) {
 /** The screen a menu button or command opens. An unknown name shows the menu. */
 async function screenFor(chat, name) {
   if (name === "search") return searchPromptScreen();
-  if (name === "inbox") return inboxScreen(await unreadConversations(chat.user.id), SITE_URL);
+  if (name === "inbox") return inboxScreen(await unreadConversations(chat.user.id), siteUrl());
   if (name === "help") return helpScreen();
   if (name === "newest" || name === "saved" || name === "mine") {
     lastLists.set(chat.id, { kind: name });
@@ -163,7 +166,7 @@ async function screenFor(chat, name) {
 
 /** What an item card needs besides the listing: "⬅ Back" returns to the chat's last list. */
 function cardOptions(chat, { isSaved, isOwn }) {
-  return { isSaved, isOwn, backTo: lastLists.get(chat.id)?.kind ?? null, siteUrl: SITE_URL };
+  return { isSaved, isOwn, backTo: lastLists.get(chat.id)?.kind ?? null, siteUrl: siteUrl() };
 }
 
 async function showItem(chat, listingId) {

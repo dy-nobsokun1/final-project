@@ -32,3 +32,14 @@ export function amountToPay(listing, buyerId) {
   }
   throw new HttpError(400, "Only items for sale and won auctions can be paid online.");
 }
+
+/**
+ * Where Stripe sends the buyer back to: the address they started paying from, so their sign-in
+ * cookie (which belongs to that address) still applies. The presenter may pay on localhost:3000
+ * while someone else pays through the tunnel. Only the two addresses the API itself would use
+ * are accepted; anything else, including a missing value, gets `fallback`, so this can never
+ * become an open redirect.
+ */
+export function checkoutReturnOrigin(requested, allowedOrigins, fallback) {
+  return allowedOrigins.includes(requested) ? requested : fallback;
+}
