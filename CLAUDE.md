@@ -117,7 +117,10 @@ when `uniswap` has none, so an older `uniswap` database needs the upgrade SQL (b
 - **Optional services** (`backend/src/services/`, plain `fetch`, no packages), each off until its env
   keys are set: Stripe Checkout **test mode only** (`routes/payments.js`; `markPaid` is idempotent and
   marks the item sold; the webhook needs the raw body, so it is mounted before `express.json` in
-  `app.js`), Cloudinary uploads, and a Telegram bot (long polling, linked through a one-time `/start`
+  `app.js`; Checkout shows `custom_text.submit` "UniSwap demo: no real money is charged." by Stripe's
+  Pay button; `/confirm` expands `payment_intent.payment_method` and answers "paid" with `card { brand,
+  last4 }` (`paidCard`, buyer only, never stored) for the banner's "Paid with Mastercard •••• 4444";
+  the presenter types 5555 5555 5555 4444, see the root README's "Demo payments"), Cloudinary uploads, and a Telegram bot (long polling, linked through a one-time `/start`
   code). `notify.js` sends to Telegram as well as email. The public `GET /api/telegram` answers
   `{ enabled, botUrl }` for the home page's strip (`TelegramPromo`): "Sign in to connect" when signed
   out, "Connect Telegram" when not linked, "Open Telegram" (the bot chat) when linked. It is in the first
@@ -237,7 +240,12 @@ Done (week 6, 26–27 Oct):
 - **Home page polish:**
   - The hero says who UniSwap is for and how paying works ("Made for AUPP students", plus three points in `HeroPoints`).
   - The Telegram strip shows for everyone.
-  - Wanted posts get their own dark, dashed card (`WantedCard`), and `HeroPhotos` skips them.
+  - Wanted posts get their own dark, dashed card (`WantedCard`), and `HeroPhotos` skips them. It shows
+    a large category icon (`CATEGORIES[].icon`) where the photo would be, a rose WANTED tag
+    (`--brand-wanted`, the only rose), "Budget: up to $X" / "Budget: any" (`formatListingPrice`, so
+    everywhere), and an "I have this →" pill (a span inside the card's link, hidden on your own posts).
+- **Card payment polish:** the pay button says "Secure checkout by Stripe. Demo mode: no real money is
+  charged." (no test card numbers on screen), and a returning buyer sees which card they paid with.
 - **Realistic sample data:** PC parts and everyday student items, with real photos.
 - **Inbox and listing pages:**
   - Chat rows show the listing's photo and the last message.
@@ -250,7 +258,7 @@ deployment, Cloudinary photos, Stripe test payments, Telegram bot.
 ### Picking up on another machine
 
 Everything above is pushed to `implement_backend`. Last full check (27 Oct):
-- `npm test` (57) and `npm run test:api` (105) pass.
+- `npm test` (59) and `npm run test:api` (105) pass.
 - The frontend's lint and `tsc --noEmit` are clean.
 - `next build` passes (run on 27 Oct, at 55c169a, with no warnings).
 After `git pull origin implement_backend`:
@@ -285,7 +293,7 @@ After `git pull origin implement_backend`:
    - Phone sizes, paused until after the demo:
      - the navbar is too wide at about 768 px;
      - the hero fills the first screen, so no items show without scrolling;
-     - the Wanted card's "Have one? Message them →" wraps at 375 px.
+     - the redesigned Wanted card (27 Oct) has not been checked at 375 px.
 6. Later ideas (after the demo):
    - real-time chat;
    - safe meetup spots;
