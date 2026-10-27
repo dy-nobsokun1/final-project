@@ -52,9 +52,6 @@ const STATUS_LABELS: Record<ListingStatus, string> = {
   traded: "Traded",
 };
 
-export const PRICE_MIN = 0;
-export const PRICE_MAX = 1000;
-
 /** Most photos a listing can have; the first is the cover. Matches MAX_PHOTOS in backend/src/utils/validation.js. */
 export const MAX_LISTING_PHOTOS = 6;
 /**
