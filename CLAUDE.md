@@ -49,7 +49,7 @@ npm test             # unit tests (node --test)
 npm run test:api     # API tests: real HTTP against TEST_DATABASE_URL (a separate DB they wipe)
 npm run db:setup     # recreate tables: WIPES ALL DATA
 npm run db:seed      # demo data
-npm run db:samples   # +55 sample items: hand-written with Commons/Flickr photos (credits in the JSON), plus Open Library textbooks (-- --remove to undo)
+npm run db:samples   # +60 sample items: hand-written with Commons/Flickr photos (credits in the JSON), Open Library textbooks, and five $1–$5 items for trying payments (-- --remove to undo)
 npm run db:demo-deals # 9 finished deals for chanrithorn, for the profile stats (-- --remove to undo)
 npm run email:test -- someone@aupp.edu.kh
 
@@ -290,8 +290,10 @@ After `git pull origin implement_backend`:
   data. The test database needs nothing: `npm run test:api` rebuilds it from `schema.sql`.
   The 27 Oct block adds `listings.sold_at`; the API needs it before it starts.
 - For the profile stats demo, run `npm run db:demo-deals` (after `db:seed` and `db:samples`).
-- To swap in the new sample items, run `npm run db:samples -- --remove && npm run db:samples`. It only
-  touches the `@demo.edu.kh` sellers.
+- To add new sample items, run plain `npm run db:samples`: it skips items already there and keeps the
+  sellers. `-- --remove` deletes the `@demo.edu.kh` sellers and everything hanging off them, including
+  their Bakong IDs and the demo deals, so only use it to start the samples over (then set the Bakong
+  IDs and run `db:demo-deals` again).
 
 ### Next steps
 
