@@ -78,6 +78,12 @@ when `uniswap` has none, so an older `uniswap` database needs the upgrade SQL (b
   unverified email replaces that account; a verified one gets 409. Login is blocked (403) until
   verified. `resend-verification` takes `{ email, password }`. `requireAuth` re-checks in the
   database that the account exists and is verified.
+  - **Confirm button:** `/verify-email?token=…` only shows a "Confirm my email" button
+    (`ConfirmEmailForm`, Server Action `confirmEmail`). Opening the page uses nothing up, because school
+    Outlook's Safe Links opens every link to scan it and would spend the single-use token. Reset-password
+    works the same way.
+  - **Shared links:** `FRONTEND_ORIGIN` builds every emailed link. A free `cloudflared` tunnel gets a
+    new address on every restart, so update it in `backend/.env` each time, or the links point nowhere.
 - **Passwords:** `forgot-password` answers 200 `{ requested: true }` for every `.edu.kh` email and
   stores only a SHA-256 hash of the emailed token (`users.password_reset_hash`; 1 hour, single use,
   one email per account per 2 minutes while that link is unused). `reset-password` also verifies the
