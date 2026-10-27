@@ -90,7 +90,11 @@ when `uniswap` has none, so an older `uniswap` database needs the upgrade SQL (b
   (App Password, `smtp.gmail.com:465`) or Brevo; the recipients can still be `.edu.kh`. If sending
   fails, the verification link is printed in the API log.
 - **Search:** full-text (`search_vector` generated column + GIN index), partial words (ILIKE with
-  `%`/`_` escaped), and title typos (`pg_trgm`, `word_similarity >= 0.5`). Ranked best match first.
+  `%`/`_` escaped), and title typos (`pg_trgm`, `word_similarity >= 0.5`). Ranked title matches first
+  (`inTitle` in `wordMatchSql`, plus title ILIKE or a related word on the title), then matches only in
+  the description or category; within each, own words before related words only, then the score, then
+  newest. So "laptop" lists the laptop RAM, then the ThinkPad and MacBook, then items that only mention
+  a laptop. Wanted matching uses `matches`, never the title test.
   The typo test applies only to terms of 4+ characters (`TYPO_MIN_LENGTH`), so "ram" no longer finds
   "racket". Wanted matches share the rule. The two GPU samples' titles end in "graphics card" and their
   descriptions say "GPU", so "gpu" and "grafics card" find them.
@@ -98,7 +102,7 @@ when `uniswap` has none, so an older `uniswap` database needs the upgrade SQL (b
   phrase (whole words, plural "s" ignored) also searches the group's words, through full-text only, as
   one extra `$n` (`relatedSearch`). So "book" finds the textbooks, and "gpu", "nvidia" or "video card"
   the RTX and GTX cards. `broad` words ("book", "laptop") bring a group in but are not added for its other
-  words. Listings matching the student's own words rank first. Only in `buildBrowseQuery` (browse, the
+  words. Only in `buildBrowseQuery` (browse, the
   suggestions and Ask UniSwap), never in wanted matches, which send alerts and stay strict.
   `GET /api/listings` also takes `limit` (1–100, default 100). The navbar's suggestions (`components/layout/SearchBox.tsx`,
   `SearchSuggestions.tsx`, `hooks/use-search-suggestions.ts`) call the Next Route Handler
@@ -219,6 +223,8 @@ when `uniswap` has none, so an older `uniswap` database needs the upgrade SQL (b
     goes back to active or reserved; other edits keep it). Months are in Phnom Penh time, last 6.
   - Unlocks at 3 deals (`UNLOCK_DEALS`); badges at 5 ("Active trader") and 10 ("Top seller").
   - `ProfileDashboard` and the `Stats*` components draw bars and a conic-gradient ring, no chart package.
+    The ring's six colours (three brand, three chart-only `--chart-*` tokens in `globals.css`, each
+    ≥3:1 on the card) are ordered so touching slices differ, also for red-green colour blindness.
   - `npm run db:demo-deals` (`-- --remove` undoes it) gives chanrithorn 9 deals over Aug–Oct for the demo.
 - **Messaging:** there is no conversations table. A thread is all messages between two users about
   one listing (this follows the ER diagram).
@@ -272,7 +278,7 @@ deployment, Cloudinary photos, Stripe test payments, Telegram bot.
 ### Picking up on another machine
 
 Everything above is pushed to `implement_backend`. Last full check (27 Oct):
-- `npm test` (59) and `npm run test:api` (110) pass.
+- `npm test` (60) and `npm run test:api` (111) pass.
 - The frontend's lint and `tsc --noEmit` are clean.
 - `next build` passes (run on 27 Oct, at 835bd15, with no warnings).
 After `git pull origin implement_backend`:
@@ -291,6 +297,9 @@ After `git pull origin implement_backend`:
 1. **Try KHQR with real money, in Cambodia.** Put the team's `BAKONG_TOKEN` in `backend/.env` only
    (never in a committed file or a cloud environment). Add a Bakong account in Settings, pay a small
    amount from a second account, and check the item becomes sold.
+   - On Long's machine the six `@demo.edu.kh` sample sellers have Long's own Bakong ID, set by SQL in
+     the local database only (never in the repo), so their items show "Pay with KHQR". Paying one sends
+     real money to Long and marks it sold: demo it with a cheap item.
 2. **Open the PR** from `implement_backend` into `dy-nobsokun1/final-project` `main` (only when asked).
 3. **Deploy** by following `DEPLOY.md`. Set up Cloudinary before Render, because Render wipes uploaded
    photos. A new Supabase database is built from `schema.sql`, so it needs no upgrade blocks.
