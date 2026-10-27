@@ -17,6 +17,23 @@ export default async function ProfilePage() {
     getMyStats(),
   ]);
 
+  // Only here, never on /profile/[id]: it shows money.
+  const dashboard = stats ? <ProfileDashboard stats={stats} /> : null;
+  const activeListings = (
+    <section className="flex flex-col gap-4">
+      <h2 className="font-heading text-2xl tracking-tight">Active listings</h2>
+      <ListingGrid
+        listings={listings.filter((listing) => listing.status === "active")}
+        emptyTitle="No active listings"
+        emptyDescription="List something to start selling."
+        emptyAction={{ href: "/listings/new", label: "Create a listing" }}
+      />
+    </section>
+  );
+  // Until the first deal the stats are all zeros, so a new student's own listings come first and stay
+  // on screen. From the first deal, or when the stats could not be loaded, the stats come first.
+  const listingsFirst = stats?.deals === 0;
+
   return (
     <div className="flex flex-col gap-6">
       <ProfileHeader
@@ -46,18 +63,8 @@ export default async function ProfilePage() {
         }
       />
 
-      {/* Only here, never on /profile/[id]: it shows money. */}
-      {stats ? <ProfileDashboard stats={stats} /> : null}
-
-      <section className="flex flex-col gap-4">
-        <h2 className="font-heading text-2xl tracking-tight">Active listings</h2>
-        <ListingGrid
-          listings={listings.filter((listing) => listing.status === "active")}
-          emptyTitle="No active listings"
-          emptyDescription="List something to start selling."
-          emptyAction={{ href: "/listings/new", label: "Create a listing" }}
-        />
-      </section>
+      {listingsFirst ? activeListings : dashboard}
+      {listingsFirst ? dashboard : activeListings}
     </div>
   );
 }
