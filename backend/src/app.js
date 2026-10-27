@@ -15,6 +15,7 @@ import { listingSaveRouter, mySavedRouter } from "./routes/saved.js";
 import { telegramRouter, telegramStatusRouter } from "./routes/telegram.js";
 import { UPLOAD_DIR, uploadsRouter } from "./routes/uploads.js";
 import { usersRouter } from "./routes/users.js";
+import { voiceRouter } from "./routes/voice.js";
 
 // Builds the Express app. Kept separate from server.js so tests can import it without listening.
 export const app = express();
@@ -45,6 +46,7 @@ app.use("/api/users", usersRouter);
 app.use("/api/messages", messagesRouter);
 app.use("/api/offers", offersRouter);
 app.use("/api/uploads", uploadsRouter);
+app.use("/api/voice", voiceRouter);
 app.use("/api/payments/khqr", khqrRouter);
 app.use("/api/payments", paymentsRouter);
 

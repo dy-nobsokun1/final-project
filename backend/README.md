@@ -84,7 +84,7 @@ backend/
 │   ├── config.js       reads environment variables
 │   ├── db/             schema.sql, connection pool, shared listing query, wanted-post matching, offer helpers
 │   ├── middleware/     requireAuth (JWT), CORS, error handler
-│   ├── routes/         auth, listings, bids, offers, reviews, saved, users, messages, payments, telegram, uploads, assistant
+│   ├── routes/         auth, listings, bids, offers, reviews, saved, users, messages, payments, telegram, uploads, voice, assistant
 │   └── utils/          validation, password hashing, tokens, JSON serializers, email
 └── test/               unit tests; test/api/ holds the API tests (see Testing)
 ```
@@ -649,6 +649,7 @@ A token issued before the account's last password change or reset is refused (40
 | POST 🔒 | `/api/messages` | `{ listingId, receiverId, body }` |
 | PATCH 🔒 | `/api/messages/read` | `{ listingId, withUserId }` → mark a thread read |
 | POST 🔒 | `/api/uploads` | One photo per request: raw image bytes with `Content-Type: image/jpeg`, `png`, `webp` or `gif` (max 5 MB) → `{ url }` |
+| POST 🔒 | `/api/voice/transcribe` | Raw audio bytes with `Content-Type: audio/webm`, `ogg`, `mp4`, `mpeg` or `wav` (max 2 MB, about 60 s) → `{ text }` from Groq's Whisper (`GROQ_API_KEY`). Nothing is stored or logged. `415` wrong type, `503` while off or while Groq's free limit is used up, `502` if Groq fails |
 | GET | `/api/assistant/config` | `{ enabled }`: whether the shopping assistant is switched on (`GROQ_API_KEY` or `GEMINI_API_KEY` set) |
 | POST 🔒 | `/api/assistant` | `{ messages: [{ role: "user" \| "assistant", text }] }`, oldest first, at most 20, each 1 to 1000 characters, the last one the student's → `{ reply, listings, wantedDraft }`. `listings`: up to 4 full listings to show as cards. `wantedDraft`: `null` or `{ title, description, category, budget }` to fill in the new-listing form. `503` while switched off, `429` while the model's free limit for the minute or the day is used up, `502` if the model fails (see Ask UniSwap above) |
 
