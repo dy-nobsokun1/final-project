@@ -130,6 +130,22 @@ when `uniswap` has none, so an older `uniswap` database needs the upgrade SQL (b
   `{ enabled, botUrl }` for the home page's strip (`TelegramPromo`): "Sign in to connect" when signed
   out, "Connect Telegram" when not linked, "Open Telegram" (the bot chat) when linked. It is in the first
   HTML, and its X hides it only until the next page load. Deploy guide: `DEPLOY.md`; Render blueprint: `render.yaml`.
+- **Telegram bot menu:** `utils/telegramBot.js` (handlers; Telegram calls are injected, so tests pass a
+  fake to `handleBotUpdate`), `utils/telegramScreens.js` (pure: each screen's text and buttons, plain
+  text, no `parse_mode`), `db/telegram.js` (its queries) and `db/saved.js` (save rules shared with
+  `routes/saved.js`). `services/telegram.js` is still the only file calling the Bot API.
+  - A linked private chat gets six buttons that edit the same message: Search (`buildBrowseQuery`, 5 a
+    page, "More ▸"; any typed text searches), Newest, Saved, My listings (saves, waiting offers),
+    Inbox (read-only: never marks messages read) and Help. Also `/menu /search /new /saved /mylistings
+    /inbox /help` (`setMyCommands` at start-up). An item card has its photo when the cover is https, and
+    Save / Unsave.
+  - The student always comes from `telegram_chat_id` (`findChatUser`, verified accounts only), never
+    from button data (at most 64 bytes: `item:<id>`, `save:`, `page:n`…). Group chats are ignored.
+  - One chat, one account: `linkChat` clears the chat from every other account, so linking a demo
+    account in your own Telegram disconnects your real account until you connect it again.
+  - The last list per chat is a Map in memory ("More ▸" expires on restart). "Open on UniSwap" /
+    "Open inbox" link buttons show only when `FRONTEND_ORIGIN` is public https.
+  - Only one process may poll per bot token: never start a second API with the same `.env`.
 - **KHQR (Bakong), real money:** the buyer pays the seller's own Bakong account (`users.bakong_account_id`,
   set in Settings); UniSwap never holds money. `utils/khqr.js` builds the QR text by hand (no package;
   matches NBC's `bakong-khqr` library exactly, see `test/khqr.test.js`). `services/bakong.js` checks
@@ -263,6 +279,8 @@ Done (week 6, 26–27 Oct):
 - **Price filter:** type any min and max (`PriceRangeFilter`, still the `minPrice` / `maxPrice` URL params).
   It applies on Enter or when focus leaves both boxes, swaps min and max if needed, and Max 0 shows only
   $0 listings.
+- **Telegram bot menu:** search, newest, saved, my listings and a read-only inbox, with buttons and
+  Telegram's Menu commands.
 - **Home page polish:**
   - The hero says who UniSwap is for and how paying works ("Made for AUPP students", plus three points in `HeroPoints`).
   - The Telegram strip shows for everyone.
@@ -286,7 +304,7 @@ deployment, Cloudinary photos, Stripe test payments, Telegram bot.
 ### Picking up on another machine
 
 Everything above is pushed to `implement_backend`. Last full check (27 Oct):
-- `npm test` (60) and `npm run test:api` (111) pass.
+- `npm test` (70) and `npm run test:api` (119) pass.
 - The frontend's lint and `tsc --noEmit` are clean.
 - `next build` passes (run on 27 Oct, at 835bd15, with no warnings).
 After `git pull origin implement_backend`:
