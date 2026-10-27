@@ -79,7 +79,8 @@ export function useVoiceInput({ onText, onEnd }: VoiceInputOptions) {
     instance.interimResults = true;
     instance.continuous = false;
     instance.maxAlternatives = 1;
-    const prefix = baseText ? `${baseText} ` : "";
+    const trimmed = baseText.trimEnd();
+    const prefix = trimmed ? `${trimmed} ` : "";
     instance.onresult = (event) => {
       let transcript = "";
       for (let i = 0; i < event.results.length; i++) transcript += event.results[i][0].transcript;

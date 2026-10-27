@@ -96,7 +96,10 @@ export function SearchBox() {
           setActiveIndex(-1);
         }}
         onKeyDown={handleKeyDown}
-        onBlur={close}
+        onBlur={() => {
+          close();
+          voice.clearError();
+        }}
         placeholder="Search listings"
         aria-label="Search listings"
         role="combobox"
