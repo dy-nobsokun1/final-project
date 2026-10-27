@@ -39,6 +39,8 @@ export function startRecorder({ onLevel, onClip, onError }: RecorderHandlers) {
     }
 
     const context = new AudioContext();
+    // Made after an await, outside the click, so some browsers leave it suspended (flat, silent readings).
+    void context.resume();
     const analyser = context.createAnalyser();
     analyser.fftSize = 512;
     context.createMediaStreamSource(stream).connect(analyser);
@@ -69,9 +71,11 @@ export function startRecorder({ onLevel, onClip, onError }: RecorderHandlers) {
       cancelAnimationFrame(frame);
       clearTimeout(timer);
       stream.getTracks().forEach((track) => track.stop());
+      const wasRunning = context.state === "running";
       void context.close();
       if (aborted) return;
-      onClip(peak < SILENCE_LEVEL ? null : new Blob(chunks, { type: recorder.mimeType || type || "audio/webm" }));
+      // Only a context that was running could hear silence; otherwise send the clip anyway.
+      onClip(wasRunning && peak < SILENCE_LEVEL ? null : new Blob(chunks, { type: recorder.mimeType || type || "audio/webm" }));
     };
     finish = () => {
       if (recorder.state !== "inactive") recorder.stop();

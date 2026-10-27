@@ -26,7 +26,8 @@ export function SearchBox() {
   // Spoken words fill the box and open the suggestions; the student still presses Enter to search.
   const voice = useVoiceInput({
     onText: (text) => {
-      setQuery(text);
+      // Whisper ends sentences with punctuation; a search does not want it.
+      setQuery(text.replace(/[.!?]+$/, ""));
       setIsOpen(true);
       setActiveIndex(-1);
     },
