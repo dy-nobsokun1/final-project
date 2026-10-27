@@ -29,7 +29,25 @@ test("a search term is ranked and typo tolerant, and stays a parameter", () => {
   assert.doesNotMatch(text, /OR 1=1/);
   assert.match(text, /websearch_to_tsquery\('english', \$2\)/);
   assert.match(text, /word_similarity\(\$2, l\.title\)/);
-  assert.match(text, /ORDER BY ts_rank/);
+  assert.match(text, /\) DESC, ts_rank\(l\.search_vector/);
+});
+
+// LISTING_SELECT has an ORDER BY of its own (the highest bid), so look at the last one.
+const orderByOf = (text) => text.slice(text.lastIndexOf("ORDER BY"));
+
+test("search ranks title matches first, testing the title with the same parameters", () => {
+  const { text, params } = buildBrowseQuery({ status: "active", query: "lamp" });
+  assert.deepEqual(params, ["active", "lamp", "%lamp%", 100]);
+  assert.ok(orderByOf(text).startsWith(
+    "ORDER BY ((to_tsvector('english', l.title) @@ websearch_to_tsquery('english', $2) OR (char_length(trim($2)) >= 4",
+  ));
+  assert.ok(orderByOf(text).includes("OR l.title ILIKE $3) DESC, ts_rank("));
+  assert.doesNotMatch(text, /'lamp'/);
+
+  // With related words, a related word in the title counts too, through its own parameter.
+  const gpu = orderByOf(buildBrowseQuery({ status: "active", query: "gpu" }).text);
+  assert.ok(gpu.startsWith("ORDER BY (((to_tsvector('english', l.title) @@ websearch_to_tsquery('english', $2)"));
+  assert.ok(gpu.includes("OR to_tsvector('english', l.title) @@ websearch_to_tsquery('english', $4)) DESC, "));
 });
 
 test("the limit is a parameter too, 100 unless the caller gives one", () => {
@@ -57,7 +75,7 @@ test("related words are one more parameter, searched with full-text only and nev
   assert.match(text, /LIMIT \$5$/);
 });
 
-test("a term with no related words gives the same query as before", () => {
+test("a term with no related words adds no parameter or ordering for them", () => {
   const { text, params } = buildBrowseQuery({ status: "active", query: "lamp" });
   assert.deepEqual(params, ["active", "lamp", "%lamp%", 100]);
   assert.doesNotMatch(text, /\$5|CASE WHEN/);
@@ -71,6 +89,7 @@ test("% and _ in a search term are literal characters, not wildcards", () => {
 test("wanted-post matching uses search's full-text and typo tests, but not part-of-a-word", () => {
   const { matches, rank } = wordMatchSql("n", "t.term");
   assert.ok(matches.includes("n.search_vector @@ websearch_to_tsquery('english', t.term)"));
+  assert.doesNotMatch(matches, /to_tsvector/); // the title-only test is for ranking the search box's results
   assert.ok(matches.includes("word_similarity(t.term, n.title) >= 0.5"));
   assert.doesNotMatch(matches, /ILIKE/);
   assert.ok(rank.startsWith("ts_rank(n.search_vector"));

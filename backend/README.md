@@ -177,9 +177,11 @@ in [`src/db/listings.js`](src/db/listings.js)):
    "graphics card" the RTX and GTX cards, "memory" the RAM sticks. A word must be a whole word of the
    search ("ram" is not found in "program"). Wanted-post matching does not use them, so its alerts stay strict.
 
-With a search term, results are sorted best match first, and title matches rank above description matches.
-Without one, they are sorted newest first. Listings found only through a related word come after every
-listing that matches the search's own words, which keep the order they would have without related words.
+With a search term, listings whose **title** matches come first (by the search's own words, a typo of
+them, part of a word, or a related word), then listings that match only in the description or category.
+Within each group, the search's own words come before related words only, then the best match, then the
+newest. "laptop" lists the laptop RAM, then the ThinkPad and the MacBook, then the items that only
+mention a laptop in their description. Without a search term, listings are sorted newest first.
 
 **Upgrading a database created before search was added?** Either re-run `npm run db:setup` (wipes data),
 or keep your data by running this once in `psql` or the Supabase SQL editor:

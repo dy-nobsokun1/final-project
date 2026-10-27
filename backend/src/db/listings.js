@@ -48,12 +48,16 @@ function escapeLike(value) {
  *  - a typo of a title word: "calculs" finds "Calculus" (pg_trgm). Only for terms of 4+ characters
  *    (TYPO_MIN_LENGTH), checked in SQL, so the term stays a parameter. Wanted matches follow it too.
  * `rank` scores a match: the full-text score (title words count more) plus how closely the title matches.
+ * `inTitle` is the same two tests on the title alone, for ranking title matches first (buildBrowseQuery).
  */
 export function wordMatchSql(alias, term) {
+  // The typo test only ever looks at the title, so `matches` and `inTitle` share it.
+  const typo = `(char_length(trim(${term})) >= ${TYPO_MIN_LENGTH}
+          AND word_similarity(${term}, ${alias}.title) >= ${TYPO_THRESHOLD})`;
   return {
     matches: `(${alias}.search_vector @@ websearch_to_tsquery('english', ${term})
-      OR (char_length(trim(${term})) >= ${TYPO_MIN_LENGTH}
-          AND word_similarity(${term}, ${alias}.title) >= ${TYPO_THRESHOLD}))`,
+      OR ${typo})`,
+    inTitle: `(to_tsvector('english', ${alias}.title) @@ websearch_to_tsquery('english', ${term}) OR ${typo})`,
     rank: `ts_rank(${alias}.search_vector, websearch_to_tsquery('english', ${term}))
                + word_similarity(${term}, ${alias}.title)`,
   };
@@ -93,19 +97,27 @@ export function buildBrowseQuery(filters) {
     // A listing matches if either word test does (see wordMatchSql), or the term is part of a word in
     // its title or description: "mac" finds "MacBook".
     const ownWords = `(${words.matches} OR l.title ILIKE ${pattern} OR l.description ILIKE ${pattern})`;
+    // The same tests on the title alone.
+    const ownTitle = `(${words.inTitle} OR l.title ILIKE ${pattern})`;
     const related = relatedSearch(filters.query);
     if (related) {
       // Related words (db/relatedWords.js) find more listings, through full-text only: "gpu" also
-      // finds "RTX 3090". Listings that match the student's own words come first, in the same order
-      // as without related words; the related words' score only orders the listings found through them.
+      // finds "RTX 3090".
       params.push(related);
       const relatedQuery = `websearch_to_tsquery('english', $${params.length})`;
       conditions.push(`(${ownWords} OR l.search_vector @@ ${relatedQuery})`);
+      const inTitle = `(${ownTitle} OR to_tsvector('english', l.title) @@ ${relatedQuery})`;
       const relatedRank = `ts_rank(l.search_vector, ${relatedQuery})`;
-      orderBy = `${ownWords} DESC, CASE WHEN ${ownWords} THEN ${words.rank} ELSE ${relatedRank} END DESC, l.created_at DESC`;
+      // First the listings whose title matches, by the student's own words or a related word; then
+      // those that match only in the description or category. Within each: the student's own words
+      // before related words only, then the best score (the related words' score for those found
+      // only through them), then the newest.
+      orderBy = `${inTitle} DESC, ${ownWords} DESC, CASE WHEN ${ownWords} THEN ${words.rank} ELSE ${relatedRank} END DESC, l.created_at DESC`;
     } else {
       conditions.push(ownWords);
-      orderBy = `${words.rank} DESC, l.created_at DESC`;
+      // First the listings whose title matches, then those that match only in the description or
+      // category. Within each: the best score, then the newest.
+      orderBy = `${ownTitle} DESC, ${words.rank} DESC, l.created_at DESC`;
     }
   }
 

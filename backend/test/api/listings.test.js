@@ -129,6 +129,18 @@ test("'gpu' and 'graphics card' find an RTX card, after an item that says GPU; w
   assert.ok(!matched.includes(rtx.id), "the RTX card");
 });
 
+test("title matches come first: own word, then related word, then a description that mentions it", async () => {
+  const seller = await api.createUser();
+  // Posted in the opposite order to the expected one, so only ranking (not newest first) explains it.
+  const own = await api.createListing(seller, { title: "Dell laptop", category: "electronics", price: 919 });
+  const related = await api.createListing(seller, { title: "ThinkPad X1", category: "electronics", price: 919 });
+  const described = await api.createListing(seller, {
+    title: "Padded sleeve", description: "Fits a 14-inch laptop.", category: "other", price: 919,
+  });
+  const response = await api.request("GET", "/api/listings?query=laptop&minPrice=919&maxPrice=919");
+  assert.deepEqual(ids(response), [own.id, related.id, described.id]);
+});
+
 test("a sold listing leaves the browse page but stays on the seller's profile", async () => {
   const seller = await api.createUser();
   const listing = await api.createListing(seller);
