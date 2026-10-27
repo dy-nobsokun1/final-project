@@ -479,7 +479,32 @@ service's web API with `fetch`.
 - **Cloudinary** (`services/cloudinary.js`): signed uploads. Without it, photos go to `backend/uploads/`.
 - **Telegram** (`services/telegram.js`, `routes/telegram.js`, `utils/telegramBot.js`). Settings gives
   a one-time `t.me/<bot>?start=<code>` link. The bot (long polling, so no public URL is needed)
-  links the chat. After that, every notification goes to Telegram as well as email.
+  links the chat. After that, every notification goes to Telegram as well as email. A chat belongs
+  to one account: linking it to another account disconnects it from the first.
+  - **The menu.** A linked chat gets a menu of buttons; tapping one changes that same message, and
+    every screen has "⬅ Menu". The same screens are commands under Telegram's Menu button (set at
+    start-up with `setMyCommands`):
+
+    | Command | Shows |
+    |---|---|
+    | `/menu` (or `/start`) | The six menu buttons |
+    | `/search lamp` | Search, like the website's (5 per page, then "More ▸"). Typing any word does the same |
+    | `/new` | The 5 newest items |
+    | `/saved` | Your 10 newest saved items, with their status |
+    | `/mylistings` | Your available and reserved listings, with saves and waiting offers |
+    | `/inbox` | Your unread messages per conversation. Read-only: they stay unread on the website |
+    | `/help` | What the bot can do |
+
+    Tapping an item opens its card: price, type, condition, category, seller and the start of the
+    description, with the photo when it is a public https one. It has Save / Unsave (the same rules
+    as `routes/saved.js`, through `db/saved.js`) and "⬅ Back" to the list it came from.
+  - **Who sees what.** The account always comes from the chat (`telegram_chat_id`, looked up on
+    every message and button press), never from a button. An unlinked chat only gets the "connect in
+    Settings" help. Group chats are ignored, so nobody's saved items or inbox show in a group.
+  - **Code.** `utils/telegramScreens.js` builds each screen's text and buttons (no database),
+    `db/telegram.js` holds the bot's queries, and only `services/telegram.js` calls the Bot API.
+    "Open on UniSwap" and "Open inbox" links show only when `FRONTEND_ORIGIN` is a public https site.
+    The last list each chat saw is kept in memory, so after a restart "More ▸" asks to search again.
 - **Ask UniSwap, the shopping assistant** (`utils/assistant.js`, `routes/assistant.js`, and one
   adapter per model in `services/`: `groq.js`, `gemini.js`, chosen by `assistantModel.js`).
   A student asks in their own words ("a cheap calculator for my exam"). The model answers by calling

@@ -9,7 +9,7 @@ import { isStripeConfigured } from "./services/stripe.js";
 import { isTelegramConfigured, startTelegramPolling } from "./services/telegram.js";
 import { isEmailConfigured } from "./utils/email.js";
 import { notifyAuctionClosed } from "./utils/notify.js";
-import { handleBotMessage } from "./utils/telegramBot.js";
+import { handleBotUpdate, setUpBotCommands } from "./utils/telegramBot.js";
 
 app.listen(config.port, () => {
   console.log(`UniSwap API running on http://localhost:${config.port}`);
@@ -20,9 +20,13 @@ app.listen(config.port, () => {
     + ` · Telegram ${onOff(isTelegramConfigured)} · assistant ${assistantModel?.name ?? "off"}`);
 });
 
-// Telegram: listen for "/start <code>" messages that link accounts. Only one running copy of the
-// API may poll per bot token, so do not run it locally and on Render with the same token.
-if (isTelegramConfigured) void startTelegramPolling(handleBotMessage);
+// Telegram: the bot's menu (utils/telegramBot.js), and "/start <code>" messages that link accounts.
+// Only one running copy of the API may poll per bot token, so do not run it locally and on Render
+// with the same token.
+if (isTelegramConfigured) {
+  void setUpBotCommands();
+  void startTelegramPolling(handleBotUpdate);
+}
 
 // Once a minute, hand each ended auction to its highest bidder. Bids are already refused the
 // moment an auction ends; this only flips the listing's status to "reserved".

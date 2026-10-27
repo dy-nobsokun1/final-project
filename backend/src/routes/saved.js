@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { LISTING_SELECT } from "../db/listings.js";
 import { query } from "../db/pool.js";
+import { saveListing, unsaveListing } from "../db/saved.js";
 import { requireAuth } from "../middleware/auth.js";
 import { HttpError } from "../utils/httpError.js";
 import { toListing } from "../utils/serializers.js";
@@ -19,24 +20,17 @@ export const mySavedRouter = Router();
 mySavedRouter.use(requireAuth);
 
 // POST /api/listings/:id/save -> { saved: true }. 200, not 201: saving again creates nothing.
+// The rules live in db/saved.js, which the Telegram bot's Save button uses too.
 listingSaveRouter.post("/", async (req, res) => {
-  const { rows: [listing] } = await query("SELECT user_id FROM listings WHERE id = $1", [req.params.id]);
-  if (!listing) throw new HttpError(404, "Listing not found.");
-  if (listing.user_id === req.userId) throw new HttpError(400, "You cannot save your own listing.");
-  // ON CONFLICT keeps the first save (and its time). INSERT ... SELECT inserts nothing, instead of
-  // a foreign-key error, if the listing was deleted a moment ago.
-  await query(
-    `INSERT INTO saved_listings (user_id, listing_id)
-     SELECT $1, id FROM listings WHERE id = $2
-     ON CONFLICT (user_id, listing_id) DO NOTHING`,
-    [req.userId, req.params.id],
-  );
+  const result = await saveListing(req.userId, req.params.id);
+  if (result === "not_found") throw new HttpError(404, "Listing not found.");
+  if (result === "own") throw new HttpError(400, "You cannot save your own listing.");
   res.json({ saved: true });
 });
 
 // DELETE /api/listings/:id/save -> 204, also if it was not saved
 listingSaveRouter.delete("/", async (req, res) => {
-  await query("DELETE FROM saved_listings WHERE user_id = $1 AND listing_id = $2", [req.userId, req.params.id]);
+  await unsaveListing(req.userId, req.params.id);
   res.status(204).end();
 });
 

@@ -27,22 +27,65 @@ export function botStartLink(code) {
   return `https://t.me/${botUsername}?start=${code}`;
 }
 
-export function sendTelegramMessage(chatId, text) {
-  return telegram("sendMessage", { chat_id: chatId, text, disable_web_page_preview: true });
+/**
+ * Buttons under a message: rows of { text, callback_data } (sent back to the bot when tapped) or
+ * { text, url } (opens a link). No buttons means none are shown, also when editing a message.
+ */
+function withButtons(buttons) {
+  return buttons?.length ? { reply_markup: { inline_keyboard: buttons } } : {};
+}
+
+/** Sends plain text. `buttons` is optional: notifications (utils/notify.js) have none. */
+export function sendTelegramMessage(chatId, text, buttons) {
+  return telegram("sendMessage", { chat_id: chatId, text, disable_web_page_preview: true, ...withButtons(buttons) });
+}
+
+/** Sends a photo from a public https URL (Telegram downloads it itself), with the text as its caption. */
+export function sendTelegramPhoto(chatId, photoUrl, caption, buttons) {
+  return telegram("sendPhoto", { chat_id: chatId, photo: photoUrl, caption, ...withButtons(buttons) });
+}
+
+/** Changes a text message's text and buttons. A photo message cannot be changed into text. */
+export function editTelegramMessage(chatId, messageId, text, buttons) {
+  return telegram("editMessageText", {
+    chat_id: chatId, message_id: messageId, text, disable_web_page_preview: true, ...withButtons(buttons),
+  });
+}
+
+/** Changes only a message's buttons (also under a photo). */
+export function editTelegramButtons(chatId, messageId, buttons) {
+  return telegram("editMessageReplyMarkup", { chat_id: chatId, message_id: messageId, ...withButtons(buttons) });
+}
+
+export function deleteTelegramMessage(chatId, messageId) {
+  return telegram("deleteMessage", { chat_id: chatId, message_id: messageId });
+}
+
+/** Stops a tapped button's loading spinner, optionally with a short pop-up text. */
+export function answerTelegramButton(callbackQueryId, text) {
+  return telegram("answerCallbackQuery", { callback_query_id: callbackQueryId, text });
+}
+
+/** The commands listed under Telegram's "Menu" button in the bot's chat. */
+export function setTelegramCommands(commands) {
+  return telegram("setMyCommands", { commands });
 }
 
 /**
- * Long polling: asks Telegram for new messages to the bot, waiting up to 25 seconds each time,
- * and passes each one to `onMessage`. Works locally and on Render without a public webhook URL.
+ * Long polling: asks Telegram for new messages and button presses for the bot, waiting up to 25
+ * seconds each time, and passes each update to `onUpdate`. Works locally and on Render without a
+ * public webhook URL.
  */
-export async function startTelegramPolling(onMessage) {
+export async function startTelegramPolling(onUpdate) {
   let offset = 0;
   for (;;) {
     try {
-      const updates = await telegram("getUpdates", { offset, timeout: 25, allowed_updates: ["message"] });
+      const updates = await telegram("getUpdates", {
+        offset, timeout: 25, allowed_updates: ["message", "callback_query"],
+      });
       for (const update of updates) {
         offset = update.update_id + 1;
-        if (update.message) await onMessage(update.message);
+        await onUpdate(update);
       }
     } catch (error) {
       console.error("[telegram] polling error:", error.message);
