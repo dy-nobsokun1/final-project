@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { LISTING_SELECT } from "../db/listings.js";
 import { query } from "../db/pool.js";
+import { getUserStats } from "../db/stats.js";
 import { requireAuth } from "../middleware/auth.js";
 import { HttpError } from "../utils/httpError.js";
 import { toListing, toUser } from "../utils/serializers.js";
@@ -38,6 +39,12 @@ usersRouter.patch("/me", requireAuth, async (req, res) => {
       bakongAccountId !== undefined, bakongAccountId ?? null],
   );
   res.json({ user: toUser(rows[0], { includePrivate: true }) });
+});
+
+// GET /api/users/me/stats  (logged in) -> { stats }: deals, money and charts for your own profile only.
+// Declared before "/:id" too. See db/stats.js for what counts as a deal.
+usersRouter.get("/me/stats", requireAuth, async (req, res) => {
+  res.json({ stats: await getUserStats(req.userId) });
 });
 
 // GET /api/users/:id  -> public profile (no email)

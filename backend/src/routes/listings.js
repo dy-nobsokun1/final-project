@@ -156,8 +156,16 @@ listingsRouter.patch("/:id", requireAuth, async (req, res) => {
     if (current.listing_type === "sale" && changes.listingType !== undefined && changes.listingType !== "sale") {
       declined.push(...(await declinePendingOffers(client, current.id)));
     }
+    // sold_at: set when it becomes sold or traded, cleared when it goes back to active or reserved,
+    // and kept on any other edit (a new title on a sold item is not a new sale).
+    let soldAtSql = "";
+    if (changes.status === "sold" || changes.status === "traded") {
+      if (current.status !== changes.status) soldAtSql = ", sold_at = now()";
+    } else if (changes.status !== undefined) {
+      soldAtSql = ", sold_at = NULL";
+    }
     await client.query(
-      `UPDATE listings SET ${setSql}, updated_at = now() WHERE id = $1`,
+      `UPDATE listings SET ${setSql}, updated_at = now()${soldAtSql} WHERE id = $1`,
       [listing.id, ...fields.map((field) => changes[field])],
     );
     return { cancelled, declined };

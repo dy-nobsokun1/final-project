@@ -67,6 +67,9 @@ CREATE TABLE listings (
   reserved_for UUID REFERENCES users(id) ON DELETE SET NULL,
   created_at   TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at   TIMESTAMPTZ NOT NULL DEFAULT now(),
+  -- When it became sold or traded; cleared if it goes back to active or reserved. Every edit moves
+  -- updated_at, so profile stats date a deal by this when nothing was paid online (db/stats.js).
+  sold_at      TIMESTAMPTZ,
   -- Full-text search words, kept up to date by PostgreSQL itself. Title words weigh most ('A'),
   -- then description ('B'), then category ('C'), so title matches rank highest.
   search_vector TSVECTOR GENERATED ALWAYS AS (

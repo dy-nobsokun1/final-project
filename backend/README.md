@@ -14,6 +14,7 @@ cp .env.example .env      # then edit DATABASE_URL and JWT_SECRET
 npm run db:setup          # creates the tables (drops existing data!)
 npm run db:seed           # optional demo data; every demo user's password is "password123"
 npm run db:samples        # optional: 55 more realistic items (see "Sample listings" below)
+npm run db:demo-deals     # optional, after the two above: 9 finished deals for the profile stats demo
 npm run dev               # http://localhost:4000, restarts on file changes
 npm test                  # unit tests (Node's built-in test runner)
 npm run test:api          # API tests against a separate test database (see Testing below)
@@ -42,6 +43,16 @@ They are saved in `scripts/sample-listings.json`, so loading needs no internet, 
 Photos stay on those sites (the listings store their URLs), so no third-party images are copied into
 this repository. The seed listings (`npm run db:seed`) use photos in `frontend/public/listings/` and
 two from Commons, credited in `scripts/db-seed.js`.
+
+### Demo deals
+
+`npm run db:demo-deals` gives `chanrithorn@aupp.edu.kh` 9 finished deals over the last 11 weeks, so
+the [profile stats](#profile-stats) have something to show: 6 of their own items sold or traded
+(card payments, an auction, an accepted offer, an in-person sale and a trade with a cash top-up) and
+3 items bought from the `@demo.edu.kh` students. It needs `db:seed` and `db:samples` first, writes
+straight to the database (no Stripe, Bakong, email or Telegram), and skips deals it added before.
+`npm run db:demo-deals -- --remove` deletes exactly those 9 listings, with their bids, offers and
+payments.
 
 ### Verification emails (optional)
 
@@ -90,6 +101,8 @@ works, and each one is safe to re-run:
    it browsing and every listing page fail.
 3. [Offers](#offers): every listing query also reads `offers` and `listings.reserved_for`, and
    `markPaid` reads `reserved_for`, so without it listing pages fail and no payment can be recorded.
+4. [Profile stats](#profile-stats): changing a listing's status and recording a payment write
+   `listings.sold_at`, so without it nothing can be marked sold and no payment can be recorded.
 
 Also recommended: [Photos](#photos), which adds the database's own limit of 6 photos per listing. The
 API already enforces that limit, so the new API starts without it.
@@ -351,6 +364,32 @@ other: 1 to 5 whole stars and an optional comment of up to 1000 characters.
 - A profile lists every review the user received, with their average rounded to one decimal place.
 - The `reviews` table was already in the ER diagram, so existing databases need no upgrade.
 
+### Profile stats
+
+A student's own profile shows their deals: money earned and spent per month, and items by category
+(`GET /api/users/me/stats`, `src/db/stats.js`). They unlock after 3 completed deals (`UNLOCK_DEALS`).
+
+- **A deal** is a listing now `sold` or `traded` (wanted posts never count), on either side:
+  - a **sale** or **trade**: your own listing;
+  - a **purchase**: someone else's listing you got as Reviews above decides, minus the chat rule:
+    you paid online, won the auction, or had your offer accepted. Only chatting does not count,
+    because UniSwap cannot know who bought it.
+- **The amount:** what was paid online, else the winning bid, else the agreed price (or the asking
+  price, if lower), else the asking price. A giveaway is $0. A trade counts only its cash top-up,
+  as the owner's earnings.
+- **The date:** when it was paid online, else `listings.sold_at`: when it became sold or traded.
+  `updated_at` cannot be used, because every edit moves it. Months are counted in Cambodian time.
+- Only the signed-in owner gets these numbers. Public profiles show nothing new.
+
+**Upgrading a database created before profile stats?** Run this once **before** starting the new API
+(changing a listing's status and recording a payment now write `sold_at`). It keeps your data and is
+safe to re-run; items already sold or traded get their last-edit time as a best guess:
+
+```sql
+ALTER TABLE listings ADD COLUMN IF NOT EXISTS sold_at TIMESTAMPTZ;
+UPDATE listings SET sold_at = updated_at WHERE status IN ('sold', 'traded') AND sold_at IS NULL;
+```
+
 ### Saved listings
 
 The heart on a listing saves it to the student's Saved page (`src/routes/saved.js`).
@@ -571,6 +610,7 @@ A token issued before the account's last password change or reset is refused (40
 | DELETE 🔒 | `/api/users/me/telegram` | Disconnect Telegram |
 | GET 🔒 | `/api/users/me/saved` | `{ listings }`: my saved listings, most recently saved first, in any status (a sold one shows as sold) |
 | GET 🔒 | `/api/users/me/saved/ids` | `{ listingIds }`: which listings I saved, so a page can fill in the hearts on its cards |
+| GET 🔒 | `/api/users/me/stats` | `{ stats }`: your own deals (see Profile stats above): `unlocked` (3+ deals), `deals`, `sales`, `purchases`, `trades`, `earned`, `spent`, `activeListings`, `soldListings`, `averageRating`, `reviewCount`, `months` (the last 6, oldest first: `{ month: "YYYY-MM", earned, spent }`), `soldByCategory` and `boughtByCategory` (`{ category, count }`, the most first) |
 | GET | `/api/users/:id` | Public profile (email hidden) |
 | GET | `/api/users/:id/listings` | All listings by a user |
 | PATCH 🔒 | `/api/users/me` | `{ name?, major?, graduationYear?, bio?, avatarUrl?, bakongAccountId? }`. `bakongAccountId` is `name@bank`; `""` or `null` removes it |

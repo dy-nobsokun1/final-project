@@ -11,6 +11,7 @@
     "db:setup": "node --env-file=.env scripts/db-setup.js",
     "db:seed": "node --env-file=.env scripts/db-seed.js",
     "db:samples": "node --env-file=.env scripts/db-samples.js",
+    "db:demo-deals": "node --env-file=.env scripts/db-demo-deals.js",
     "email:test": "node --env-file=.env scripts/check-email.js",
     "test": "node --test test/*.test.js",
     "test:api": "node --env-file=.env test/api/reset-db.js && node --env-file=.env --test test/api/*.test.js"

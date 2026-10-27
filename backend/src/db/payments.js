@@ -76,7 +76,7 @@ export async function markPaid(paymentId) {
     if (!rows[0]) return null; // another call recorded it while this one waited for the lock
     let declinedOffers = [];
     if (!isLate) {
-      await client.query("UPDATE listings SET status = 'sold', updated_at = now() WHERE id = $1", [rows[0].listing_id]);
+      await client.query("UPDATE listings SET status = 'sold', updated_at = now(), sold_at = now() WHERE id = $1", [rows[0].listing_id]);
       declinedOffers = await declinePendingOffers(client, rows[0].listing_id); // sold: waiting offers can no longer be accepted
     }
     return { payment: rows[0], declinedOffers };
