@@ -221,7 +221,8 @@ when `uniswap` has none, so an older `uniswap` database needs the upgrade SQL (b
     else the asking price. A giveaway is $0; a trade counts only its cash top-up, for the owner.
   - Date: `paid_at`, else `listings.sold_at` (PATCH and `markPaid` set it; PATCH clears it when the item
     goes back to active or reserved; other edits keep it). Months are in Phnom Penh time, last 6.
-  - Unlocks at 3 deals (`UNLOCK_DEALS`); badges at 5 ("Active trader") and 10 ("Top seller").
+  - Shows from the start: zeros, flat bars, and "No sales yet" / "No purchases yet" in place of a ring
+    until the first deal. Badges at 5 deals ("Active trader") and 10 ("Top seller").
   - `ProfileDashboard` and the `Stats*` components draw bars and a conic-gradient ring, no chart package.
     The ring's six colours (three brand, three chart-only `--chart-*` tokens in `globals.css`, each
     ≥3:1 on the card) are ordered so touching slices differ, also for red-green colour blindness.
@@ -264,8 +265,8 @@ Done (week 6, 26–27 Oct):
     everywhere), and an "I have this →" pill (a span inside the card's link, hidden on your own posts).
 - **Card payment polish:** the pay button says "Secure checkout by Stripe. Demo mode: no real money is
   charged." (no test card numbers on screen), and a returning buyer sees which card they paid with.
-- **Profile stats dashboard:** after 3 deals, your own profile shows what you earned and spent per
-  month and by category; before that, a progress card.
+- **Profile stats dashboard:** your own profile always shows what you earned and spent per month and
+  by category (zeros until the first deal).
 - **Realistic sample data:** PC parts and everyday student items, with real photos.
 - **Inbox and listing pages:**
   - Chat rows show the listing's photo and the last message.
