@@ -1,6 +1,5 @@
 import { createHash, randomBytes } from "node:crypto";
 import { Router } from "express";
-import { config } from "../config.js";
 import { query } from "../db/pool.js";
 import { requireAuth } from "../middleware/auth.js";
 import { siteOrigin } from "../services/tunnel.js";
@@ -11,22 +10,25 @@ import { hashPassword, verifyPassword } from "../utils/password.js";
 import { toUser } from "../utils/serializers.js";
 import { signToken } from "../utils/token.js";
 import { isCampusEmail, passwordError, validateRegistration } from "../utils/validation.js";
+import {
+  CODE_MINUTES, hashVerificationCode, isCodeFormat, MAX_ATTEMPTS, newVerificationCode,
+} from "../utils/verificationCode.js";
 
 export const authRouter = Router();
 
 /**
- * Emails the account's verification link. Returns false instead of throwing when email is not
- * set up or the mail server refuses, and then prints the link to the server log instead, so a
- * developer can still finish verification by hand.
+ * Emails the account's 6-digit verification code. Returns false instead of throwing when email is
+ * not set up or the mail server refuses, and then prints the code to the server log instead, so a
+ * developer can still finish verification by hand. Never in production (render.yaml sets
+ * NODE_ENV): a code in the server log lets anyone who reads the log take over the sign-up.
  */
-async function deliverVerificationLink(user) {
-  const link = `${config.frontendOrigin}/verify-email?token=${user.verification_token}`;
+async function deliverVerificationCode(user, code) {
   try {
-    await sendVerificationEmail({ to: user.email, name: user.name, link });
+    await sendVerificationEmail({ to: user.email, name: user.name, code });
     return true;
   } catch (error) {
     console.error(`[verify-email] could not email ${user.email}: ${error.response ?? error.message}`);
-    console.log(`[verify-email] ${user.email}: ${link}`);
+    if (process.env.NODE_ENV !== "production") console.log(`[verify-email] ${user.email}: code ${code}`);
     return false;
   }
 }
@@ -71,59 +73,96 @@ async function findUserByCredentials(body) {
 }
 
 // POST /api/auth/register  { name, email, password, major?, graduationYear? }
-// Creates a locked account: nobody is signed in until the emailed link proves they own the address.
+// Creates a locked account: nobody is signed in until the emailed code proves they own the address.
 authRouter.post("/register", async (req, res) => {
   const errors = validateRegistration(req.body);
   if (Object.keys(errors).length) throw new HttpError(400, "Please fix the highlighted fields.", errors);
 
   const b = req.body;
+  const code = newVerificationCode();
   // If someone registered this email but never verified it (a typo, or a stranger using your
-  // address), the new sign-up replaces that account. A verified account is never touched:
-  // the WHERE makes the upsert return no row, which we report as "already exists".
+  // address), the new sign-up replaces that account, and its code with it: the stranger's code stops
+  // working. A verified account is never touched: the WHERE makes the upsert return no row, which we
+  // report as "already exists".
   const { rows } = await query(
-    `INSERT INTO users (name, email, password_hash, major, graduation_year, verification_token)
-     VALUES ($1, $2, $3, $4, $5, $6)
+    `INSERT INTO users (name, email, password_hash, major, graduation_year,
+       verification_code_hash, verification_code_expires_at)
+     VALUES ($1, $2, $3, $4, $5, $6, now() + make_interval(mins => $7))
      ON CONFLICT (email) DO UPDATE SET
        name = EXCLUDED.name,
        password_hash = EXCLUDED.password_hash,
        major = EXCLUDED.major,
        graduation_year = EXCLUDED.graduation_year,
-       verification_token = EXCLUDED.verification_token
+       verification_code_hash = EXCLUDED.verification_code_hash,
+       verification_code_expires_at = EXCLUDED.verification_code_expires_at,
+       verification_attempts = 0
      WHERE NOT users.is_verified
      RETURNING *`,
     [b.name.trim(), b.email.trim().toLowerCase(), await hashPassword(b.password),
-      b.major ?? "", b.graduationYear ?? null, randomBytes(32).toString("hex")],
+      b.major ?? "", b.graduationYear ?? null, hashVerificationCode(code), CODE_MINUTES],
   );
   if (!rows[0]) throw new HttpError(409, "An account with this email already exists.");
 
   // Not awaited: sending can take a few seconds, and registration should not fail because of email.
-  void deliverVerificationLink(rows[0]);
+  void deliverVerificationCode(rows[0], code);
 
   res.status(201).json({ email: rows[0].email, verificationRequired: true });
 });
 
-// POST /api/auth/verify-email  { token }  -> unlocks the account so its owner can sign in
+const WRONG_CODE = "That code is not right.";
+const EXPIRED_CODE = "This code has expired. Sign in to get a new one.";
+
+// POST /api/auth/verify-email  { email, code }  -> unlocks the account so its owner can sign in
+// One UPDATE counts the try AND decides whether the code was right, so guesses sent at the same
+// moment cannot get more than MAX_ATTEMPTS tries: each one needs its own row update, and once the
+// count reaches the limit the WHERE no longer matches. The right code uses a try too, and can be
+// the last one. On a right code the code columns are cleared and the count reset, so it works once.
 authRouter.post("/verify-email", async (req, res) => {
+  const email = String(req.body?.email ?? "").trim().toLowerCase();
+  const code = String(req.body?.code ?? "").trim();
+  // Not six digits can never be right, so it is refused without using up a try.
+  if (!isCodeFormat(code)) throw new HttpError(400, WRONG_CODE);
+
   const { rows } = await query(
-    `UPDATE users SET is_verified = true, verification_token = NULL
-     WHERE verification_token = $1 RETURNING *`,
-    [String(req.body.token ?? "")],
+    `UPDATE users SET
+       verification_attempts = CASE WHEN verification_code_hash = $2 THEN 0 ELSE verification_attempts + 1 END,
+       is_verified = (verification_code_hash = $2),
+       verification_code_hash = CASE WHEN verification_code_hash = $2 THEN NULL ELSE verification_code_hash END,
+       verification_code_expires_at = CASE WHEN verification_code_hash = $2 THEN NULL ELSE verification_code_expires_at END
+     WHERE email = $1 AND NOT is_verified AND verification_code_hash IS NOT NULL
+       AND verification_code_expires_at > now() AND verification_attempts < $3
+     RETURNING *`,
+    [email, hashVerificationCode(code), MAX_ATTEMPTS],
   );
-  if (!rows[0]) throw new HttpError(400, "This verification link is invalid or already used.");
-  res.json({ user: toUser(rows[0], { includePrivate: true }) });
+
+  if (rows[0]?.is_verified) {
+    return res.json({ user: toUser(rows[0], { includePrivate: true }) });
+  }
+  if (rows[0]) {
+    // A wrong code. The last allowed try says so now, instead of on the next one.
+    throw new HttpError(400, rows[0].verification_attempts >= MAX_ATTEMPTS ? EXPIRED_CODE : WRONG_CODE);
+  }
+
+  // No row changed: an unknown or verified account, an expired code, or all tries used. Only an
+  // unverified account that holds a code is told "expired"; everything else gets the plain answer.
+  const { rows: pending } = await query(
+    "SELECT 1 FROM users WHERE email = $1 AND NOT is_verified AND verification_code_hash IS NOT NULL", [email]);
+  throw new HttpError(400, pending[0] ? EXPIRED_CODE : WRONG_CODE);
 });
 
-// POST /api/auth/resend-verification  { email, password } -> emails a fresh link; the old one stops working
+// POST /api/auth/resend-verification  { email, password } -> emails a fresh code; the old one stops working
 // Asks for the password too, so a stranger cannot use this to flood someone's inbox.
 authRouter.post("/resend-verification", async (req, res) => {
   const user = await findUserByCredentials(req.body);
+  const code = newVerificationCode();
   const { rows } = await query(
-    `UPDATE users SET verification_token = $2
+    `UPDATE users SET verification_code_hash = $2, verification_code_expires_at = now() + make_interval(mins => $3),
+       verification_attempts = 0
      WHERE id = $1 AND NOT is_verified RETURNING *`,
-    [user.id, randomBytes(32).toString("hex")],
+    [user.id, hashVerificationCode(code), CODE_MINUTES],
   );
   if (!rows[0]) throw new HttpError(400, "This account is already verified.");
-  if (!(await deliverVerificationLink(rows[0]))) {
+  if (!(await deliverVerificationCode(rows[0], code))) {
     throw new HttpError(502, "Could not send the email right now. Please try again later.");
   }
   res.json({ sent: true });
@@ -172,8 +211,8 @@ authRouter.post("/reset-password", async (req, res) => {
   // is cancelled too: a stolen session may have asked for one to use later (routes/telegram.js).
   const { rows } = await query(
     `UPDATE users SET password_hash = $2, password_changed_at = $3, password_reset_hash = NULL,
-       password_reset_expires_at = NULL, is_verified = true, verification_token = NULL,
-       telegram_link_code = NULL
+       password_reset_expires_at = NULL, is_verified = true, verification_code_hash = NULL,
+       verification_code_expires_at = NULL, verification_attempts = 0, telegram_link_code = NULL
      WHERE password_reset_hash = $1 AND password_reset_expires_at > now()
      RETURNING id`,
     [hashResetToken(String(token ?? "")), await hashPassword(password), new Date()],
@@ -216,7 +255,7 @@ authRouter.post("/login", async (req, res) => {
   const user = await findUserByCredentials(req.body);
   // Checked after the password, so only the person who registered learns the account is unverified.
   if (!user.is_verified) {
-    throw new HttpError(403, "Verify your email before signing in. We sent you a link when you registered.");
+    throw new HttpError(403, "Verify your email before signing in. Enter the 6-digit code we emailed you when you registered.");
   }
   res.json({ user: toUser(user, { includePrivate: true }), token: signToken(user.id) });
 });

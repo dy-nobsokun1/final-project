@@ -60,11 +60,13 @@ payments.
 ### Verification emails (optional)
 
 Set `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER` and `SMTP_PASS` in `.env` (see `.env.example`) to email
-the verification link when someone registers. Until then, the link is printed in the server log.
+the 6-digit verification code when someone registers. The email has no link or web address in it,
+because a link to a free tunnel domain sent it to school Outlook's Junk folder. Whenever sending
+fails or email is off, the code is printed in the server log (`[verify-email] <email>: code 123456`),
+except when `NODE_ENV=production` (`render.yaml` sets it), where only a warning is printed.
 Password-reset links use the same settings. Whenever SMTP is not configured, the reset link is
-printed in the server log too, except when `NODE_ENV=production` (`render.yaml` sets it), where only
-a warning is printed. Once email is configured it is never printed, not even when sending fails
-(anyone who reads the log could otherwise take over the account).
+printed in the server log too, with the same production rule. Once email is configured it is never
+printed, not even when sending fails (anyone who reads the log could otherwise take over the account).
 
 - **School Outlook / Microsoft 365:** `smtp.office365.com`, port `587`, your normal password. Only
   works if the school allows "SMTP AUTH" for your mailbox; Microsoft is phasing it out.
@@ -128,6 +130,10 @@ works, and each one is safe to re-run:
 4. [Profile stats](#profile-stats): changing a listing's status and recording a payment write
    `listings.sold_at`, so without it nothing can be marked sold and no payment can be recorded.
 
+5. [Sign-up codes](#sign-up-codes): sign-up, verification and password reset read and write the
+   `verification_code_*` columns, so without them none of them works. Drop `verification_token` after
+   the new API is running (the block says when).
+
 Also recommended: [Photos](#photos), which adds the database's own limit of 6 photos per listing. The
 API already enforces that limit, so the new API starts without it.
 
@@ -186,6 +192,33 @@ ALTER TABLE users ADD COLUMN IF NOT EXISTS password_reset_sent_at TIMESTAMPTZ;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS password_changed_at TIMESTAMPTZ;
 CREATE UNIQUE INDEX IF NOT EXISTS users_password_reset_hash_idx ON users (password_reset_hash);
 ```
+
+### Sign-up codes
+
+Sign-up sends a 6-digit code instead of a link (`utils/verificationCode.js`, typed on `/verify-email`).
+
+- Only an HMAC of the code, keyed with `JWT_SECRET`, is stored (`users.verification_code_hash`). A
+  plain SHA-256 of six digits could be reversed by trying all million, so a leaked database would
+  show every pending code.
+- It works for 30 minutes (`verification_code_expires_at`) and allows 5 tries
+  (`verification_attempts`). One `UPDATE` counts the try and checks the code together, so guesses
+  sent at the same moment cannot get more than 5. A new code (signing up again, or resend) resets both.
+- Something that is not six digits is refused without using a try.
+
+**Upgrading a database created before sign-up codes?** Run this once **before** starting the new API
+(it reads and writes these columns). Run the three steps in this order if the old API is still
+running: add the columns, switch to the new API, then drop the old column. It is safe to re-run:
+
+```sql
+ALTER TABLE users ADD COLUMN IF NOT EXISTS verification_code_hash TEXT;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS verification_code_expires_at TIMESTAMPTZ;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS verification_attempts INTEGER NOT NULL DEFAULT 0;
+-- once the new API is running:
+ALTER TABLE users DROP COLUMN IF EXISTS verification_token;
+```
+
+Accounts that signed up before the upgrade but never verified have no code: they sign in, are told
+to verify, and the resend button emails one.
 
 ### Search
 
@@ -621,10 +654,10 @@ A token issued before the account's last password change or reset is refused (40
 | Method | Path | Description |
 |---|---|---|
 | GET | `/api/health` | API + database health check |
-| POST | `/api/auth/register` | `{ name, email, password, major?, graduationYear? }`. Only `.edu.kh` emails. Emails a verification link; nobody is signed in yet |
+| POST | `/api/auth/register` | `{ name, email, password, major?, graduationYear? }`. Only `.edu.kh` emails. Emails a 6-digit code; nobody is signed in yet |
 | POST | `/api/auth/login` | `{ email, password }` → `{ user, token }`. `403` until the email is verified |
-| POST | `/api/auth/verify-email` | `{ token }` → verifies the email, which unlocks signing in |
-| POST | `/api/auth/resend-verification` | `{ email, password }` → emails a new verification link (the old one stops working) |
+| POST | `/api/auth/verify-email` | `{ email, code }` → `{ user }` and verifies the email, which unlocks signing in. The code works for 30 minutes and 5 tries (each try counts, the right one too); a wrong one answers 400 "That code is not right.", an expired one or the 5th failed try 400 "This code has expired. Sign in to get a new one." |
+| POST | `/api/auth/resend-verification` | `{ email, password }` → emails a new code (the old one stops working, and the 5 tries start again) |
 | POST | `/api/auth/forgot-password` | `{ email }` → always `{ requested: true }`, whether or not the account exists. Emails a `/reset-password?token=` link that works once, for 1 hour; at most one email per account every 2 minutes while its link is unused. `400` if not a `.edu.kh` email |
 | POST | `/api/auth/reset-password` | `{ token, password }` → `{ reset: true }`. 8+ characters. Signs out every session and verifies the email. `400` if the link is invalid, used or expired |
 | POST 🔒 | `/api/auth/change-password` | `{ currentPassword, newPassword }` → `{ token }` for this device; every other session is signed out. `400` if the current password is wrong |
@@ -705,8 +738,9 @@ docker exec <container> createdb -U <user> uniswap_test    # PostgreSQL in Docke
 
 The tests refuse to run if `TEST_DATABASE_URL` is the same database as `DATABASE_URL`. They switch
 off email, Stripe, Bakong, Telegram, Cloudinary, Groq and Gemini, so a test run never sends anything.
-While email is off the API prints verification and reset links in its log; `test/api/helpers.js`
-hides those lines and keeps them (`loggedLinks`), so a test opens a reset link the way a person would.
+While email is off the API prints sign-up codes and reset links in its log; `test/api/helpers.js`
+hides those lines and keeps them (`loggedCode`, `loggedLinks`), so a test types a code or opens a
+reset link the way a person would.
 It keeps the "email not configured, skipped" lines of notifications too (`skippedEmails`), so a test
 can check who would have been emailed, waiting with `waitFor` because notifications are sent in the background.
 

@@ -1,5 +1,6 @@
 import nodemailer from "nodemailer";
 import { config } from "../config.js";
+import { CODE_MINUTES } from "./verificationCode.js";
 
 // Sends email through the SMTP account set in .env: school Outlook (Microsoft 365) or Gmail.
 const { host, port, user, pass, from } = config.smtp;
@@ -30,17 +31,23 @@ export function escapeHtml(value) {
   return value.replace(/[&<>"']/g, (char) => `&#${char.charCodeAt(0)};`);
 }
 
-export function sendVerificationEmail({ to, name, link }) {
+// The sign-up email has no link and no web address anywhere, not even as plain text: a link to a
+// free tunnel domain sent it to school Outlook's Junk folder, and Outlook turns plain-text addresses
+// into links too. The code is typed on the page that asked for it.
+export function sendVerificationEmail({ to, name, code }) {
+  const intro = "Your UniSwap verification code is:";
+  const outro = `Type it on the UniSwap page that asked for it. It works for ${CODE_MINUTES} minutes.`;
+  const ignore = "If you did not sign up for UniSwap, you can ignore this email.";
   return sendEmail({
     to,
-    subject: "Verify your UniSwap account",
+    subject: `${code} is your UniSwap code`,
     // Plain-text version for mail apps that do not show HTML.
-    text: `Hi ${name},\n\nConfirm your campus email to get the verified student badge on UniSwap:\n${link}\n\n`
-      + "If you did not create this account, you can ignore this email.",
+    text: `Hi ${name},\n\n${intro} ${code}\n\n${outro}\n\n${ignore}`,
     html: `<p>Hi ${escapeHtml(name)},</p>
-<p>Confirm your campus email to get the verified student badge on UniSwap:</p>
-<p><a href="${link}">Verify my email</a></p>
-<p>If you did not create this account, you can ignore this email.</p>`,
+<p>${intro}</p>
+<p style="font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 32px; font-weight: bold; letter-spacing: 6px; margin: 16px 0;">${code}</p>
+<p>${outro}</p>
+<p>${ignore}</p>`,
   });
 }
 

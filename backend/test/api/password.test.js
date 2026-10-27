@@ -187,9 +187,9 @@ test("resetting an unverified account's password also verifies it", async () => 
   assert.notEqual(token, null);
   assert.equal((await reset(token, "a-new-password")).status, 200);
   assert.equal((await login(email, "a-new-password")).status, 200);
-  const [row] = await api.sql("SELECT is_verified, verification_token FROM users WHERE email = $1", [email]);
+  const [row] = await api.sql("SELECT is_verified, verification_code_hash FROM users WHERE email = $1", [email]);
   assert.equal(row.is_verified, true);
-  assert.equal(row.verification_token, null);
+  assert.equal(row.verification_code_hash, null);
 });
 
 test("changing the password needs the current one, keeps this device signed in and signs out the others", async () => {

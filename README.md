@@ -15,8 +15,8 @@ Putting it online (Supabase, Render, Vercel, Cloudinary, Stripe, Telegram): [`DE
 
 ### Built
 
-- **Accounts:** sign-up with a `.edu.kh` email only, and nobody can sign in until the emailed
-  verification link is opened. Profiles are public; email addresses never are. Forgot your
+- **Accounts:** sign-up with a `.edu.kh` email only, and nobody can sign in until the 6-digit
+  code emailed to them is typed on the site (30 minutes, 5 tries). Profiles are public; email addresses never are. Forgot your
   password? A one-hour, single-use link is emailed to your campus address, and you can change your
   password in Settings. Either one signs out every other device.
 - **Listings:** sell, ask for something ("wanted"), trade (with a cash top-up for uneven trades),
@@ -145,10 +145,10 @@ different address, set `API_URL` in `frontend/.env.local`.
 
 Demo accounts (created by `npm run db:seed`, password `password123` for all):
 `sokunth@aupp.edu.kh`, `chanrithorn@aupp.edu.kh`, and `dara@aupp.edu.kh` (unverified on purpose, to
-show that sign-in is refused). New accounts need a `.edu.kh` email and cannot sign in until its
-verification link is opened; the link is printed in the API's log until email sending is set up.
+show that sign-in is refused). New accounts need a `.edu.kh` email and cannot sign in until the 6-digit
+code emailed to it is typed on the site; the code is printed in the API's log until email sending is set up.
 The same goes for the link that "Forgot your password?" sends, except in production
-(`NODE_ENV=production`), where a reset link is never printed.
+(`NODE_ENV=production`), where neither is ever printed.
 
 ### Demo payments
 

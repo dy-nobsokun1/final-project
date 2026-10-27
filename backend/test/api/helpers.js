@@ -72,6 +72,7 @@ export async function waitFor(check, ms = 2000) {
  * baseUrl, for requests request() cannot make, like raw image uploads,
  * createUser() and createListing() for test data, sql() to set up cases the API does not allow
  * (like an auction that already ended), loggedLinks() to open a link the app would have emailed,
+ * loggedCode() to read the sign-up code it would have emailed,
  * skippedEmails() to see which notifications it would have emailed (wait for them with waitFor,
  * since they are sent in the background), and close() to stop everything afterwards.
  * Each test file runs in its own process, but the other tests in the same file add log lines too,
@@ -106,10 +107,10 @@ export async function startApi({ env = {} } = {}) {
     const email = uniqueEmail();
     const password = "password123";
     assert.equal((await request("POST", "/api/auth/register", { body: { name, email, password } })).status, 201);
-    // The real link arrives by email; the tests read its token from the database instead.
-    const [{ id, verification_token: token }] = await sql(
-      "SELECT id, verification_token FROM users WHERE email = $1", [email]);
-    assert.equal((await request("POST", "/api/auth/verify-email", { body: { token } })).status, 200);
+    // The real code arrives by email; with email off, the app prints it in its log instead.
+    const [{ id }] = await sql("SELECT id FROM users WHERE email = $1", [email]);
+    const code = await loggedCode(email);
+    assert.equal((await request("POST", "/api/auth/verify-email", { body: { email, code } })).status, 200);
     const login = await request("POST", "/api/auth/login", { body: { email, password } });
     assert.equal(login.status, 200);
     return { id, name, email, token: login.body.token };
@@ -133,6 +134,18 @@ export async function startApi({ env = {} } = {}) {
   }
 
   /**
+   * The nth (1 = first) sign-up code the app printed for `email`. Registering sends it in the
+   * background, so this waits for it to appear.
+   */
+  async function loggedCode(email, nth = 1) {
+    const codes = () => hiddenLogLines
+      .filter((line) => line.startsWith(`[verify-email] ${email}: code `))
+      .map((line) => line.slice(line.lastIndexOf(" ") + 1));
+    await waitFor(() => codes().length >= nth);
+    return codes()[nth - 1];
+  }
+
+  /**
    * What notify.js would have emailed so far in this test file, as its log lines:
    * [notify] email not configured, skipped "<subject>" to <email>
    */
@@ -145,5 +158,5 @@ export async function startApi({ env = {} } = {}) {
     await pool.end();
   }
 
-  return { baseUrl, request, sql, createUser, createListing, loggedLinks, skippedEmails, close };
+  return { baseUrl, request, sql, createUser, createListing, loggedLinks, loggedCode, skippedEmails, close };
 }

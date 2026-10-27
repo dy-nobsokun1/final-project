@@ -14,7 +14,11 @@ CREATE TABLE users (
   email              TEXT NOT NULL UNIQUE CHECK (email = lower(email) AND email LIKE '%.edu.kh'),
   password_hash      TEXT NOT NULL,
   is_verified        BOOLEAN NOT NULL DEFAULT false,
-  verification_token TEXT,
+  -- Sign-up code: only an HMAC of the emailed 6-digit code is kept (utils/verificationCode.js). It works
+  -- until verification_code_expires_at (30 minutes) and for at most 5 tries (verification_attempts).
+  verification_code_hash       TEXT,
+  verification_code_expires_at TIMESTAMPTZ,
+  verification_attempts        INTEGER NOT NULL DEFAULT 0,
   avatar_url         TEXT,
   major              TEXT NOT NULL DEFAULT '',
   graduation_year    INTEGER,
