@@ -38,7 +38,7 @@ export function PayButton({ listingId, priceLabel }: PayButtonProps) {
         {isBusy ? "Opening checkout..." : `Pay ${priceLabel} with card`}
       </Button>
       <p className="text-xs text-muted-foreground">
-        Test mode: use card 4242 4242 4242 4242, any future date and any CVC. No real money moves.
+        Secure checkout by Stripe. Demo mode: no real money is charged.
       </p>
       {error ? (
         <p role="alert" className="text-sm text-foreground">

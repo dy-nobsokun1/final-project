@@ -8,6 +8,7 @@ import {
   createCheckoutSession,
   isStripeConfigured,
   isValidWebhookSignature,
+  paidCard,
   retrieveCheckoutSession,
 } from "../services/stripe.js";
 import { HttpError } from "../utils/httpError.js";
@@ -58,13 +59,22 @@ paymentsRouter.post("/checkout", requireAuth, async (req, res) => {
   res.status(201).json({ url });
 });
 
-// POST /api/payments/confirm  { sessionId }  (logged in) -> { status: "paid" | "pending" | "refund_due" }
+// POST /api/payments/confirm  { sessionId }  (logged in) -> { status: "paid" | "pending" | "refund_due", card? }
 // Called when the buyer comes back from Stripe. We ask Stripe directly instead of trusting the URL.
+// A "paid" answer also has `card` ({ brand, last4 }, see paidCard) when Stripe gives it, so the page
+// can say "Paid with Mastercard •••• 4444". It is never stored.
 paymentsRouter.post("/confirm", requireAuth, async (req, res) => {
   const sessionId = String(req.body?.sessionId ?? "");
   const { rows } = await query("SELECT id, buyer_id, status FROM payments WHERE stripe_session_id = $1", [sessionId]);
   if (!rows[0] || rows[0].buyer_id !== req.userId) throw new HttpError(404, "Payment not found.");
-  if (rows[0].status !== "pending") return res.json({ status: rows[0].status });
+  if (rows[0].status !== "pending") {
+    // Already recorded (by the webhook, or an earlier visit). The card is only a nicety: if Stripe
+    // does not answer, the buyer is still told the payment went through.
+    const card = rows[0].status === "paid" && isStripeConfigured
+      ? await retrieveCheckoutSession(sessionId).then(paidCard, () => null)
+      : null;
+    return res.json({ status: rows[0].status, ...(card && { card }) });
+  }
 
   const session = await retrieveCheckoutSession(sessionId);
   if (session.payment_status !== "paid") return res.json({ status: "pending" });
@@ -72,7 +82,8 @@ paymentsRouter.post("/confirm", requireAuth, async (req, res) => {
   const payment = await markPaid(rows[0].id)
     ?? (await query("SELECT status FROM payments WHERE id = $1", [rows[0].id])).rows[0];
   if (!payment) throw new HttpError(404, "Payment not found."); // its listing was deleted meanwhile
-  res.json({ status: payment.status });
+  const card = payment.status === "paid" ? paidCard(session) : null;
+  res.json({ status: payment.status, ...(card && { card }) });
 });
 
 /**

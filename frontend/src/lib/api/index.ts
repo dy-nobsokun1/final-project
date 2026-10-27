@@ -4,6 +4,7 @@ import { cache } from "react";
 import { ApiError, apiFetch, TOKEN_COOKIE } from "@/lib/api/http";
 import type {
   Bid,
+  CardPaymentResult,
   Conversation,
   KhqrStatus,
   ListingFilters,
@@ -107,14 +108,13 @@ export async function getKhqrStatus(paymentId: string): Promise<KhqrStatus | nul
  * Called when a buyer returns from Stripe with ?session_id=. The API asks Stripe itself whether
  * the payment went through, so a hand-typed URL cannot mark anything paid.
  */
-export async function confirmPayment(sessionId: string): Promise<"paid" | "pending" | "refund_due" | null> {
-  const result = await orNull(
-    apiFetch<{ status: "paid" | "pending" | "refund_due" }>("/api/payments/confirm", {
+export async function confirmPayment(sessionId: string): Promise<CardPaymentResult | null> {
+  return orNull(
+    apiFetch<CardPaymentResult>("/api/payments/confirm", {
       method: "POST",
       body: JSON.stringify({ sessionId }),
     }),
   );
-  return result?.status ?? null;
 }
 
 /**

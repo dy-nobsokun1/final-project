@@ -45,10 +45,13 @@ export default async function ListingDetailPage({ params, searchParams }: PagePr
   const user = await getCurrentUser();
   // Back from Stripe (?session_id=) or from a paid KHQR (?khqr=): confirm with the API first, so the
   // listing below already shows as sold. The API checks with Stripe or Bakong, never trusting the URL.
+  const cardResult = user && typeof sessionId === "string" ? await paymentBannerStatus(confirmPayment(sessionId)) : null;
   const payment = !user ? null
-    : typeof sessionId === "string" ? await paymentBannerStatus(confirmPayment(sessionId))
+    : typeof sessionId === "string" ? (cardResult === "unconfirmed" ? cardResult : cardResult?.status ?? null)
     : typeof khqrPaymentId === "string" ? await paymentBannerStatus(getKhqrStatus(khqrPaymentId))
     : null;
+  // For "Paid with Mastercard •••• 4444" under the banner. Stripe tells the API; nothing is stored.
+  const paidCard = cardResult !== "unconfirmed" && cardResult?.status === "paid" ? cardResult.card : undefined;
   const [listing, paymentOptions] = await Promise.all([getListingById(id), getPaymentOptions()]);
 
   if (!listing) notFound();
@@ -82,6 +85,12 @@ export default async function ListingDetailPage({ params, searchParams }: PagePr
       {payment && payment in PAYMENT_BANNERS ? (
         <p role="status" className="light-surface rounded-xl border border-border bg-card p-3 text-sm font-medium text-foreground">
           {PAYMENT_BANNERS[payment as keyof typeof PAYMENT_BANNERS]}
+          {paidCard ? (
+            <span className="mt-1 block font-normal text-muted-foreground">
+              Paid with {paidCard.brand} <span aria-hidden="true">••••</span>
+              <span className="sr-only">ending in</span> {paidCard.last4}
+            </span>
+          ) : null}
         </p>
       ) : null}
 

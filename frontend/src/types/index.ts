@@ -167,6 +167,15 @@ export interface KhqrPayment {
  */
 export type KhqrStatus = "paid" | "pending" | "expired" | "refund_due" | "unavailable";
 
+/**
+ * What the API says when a buyer comes back from Stripe. A paid one may name the card, for
+ * "Paid with Mastercard •••• 4444" (`brand` is already a display name, or "card").
+ */
+export interface CardPaymentResult {
+  status: "paid" | "pending" | "refund_due";
+  card?: { brand: string; last4: string };
+}
+
 export interface ListingFilters {
   query?: string;
   listingType?: ListingType | "all";

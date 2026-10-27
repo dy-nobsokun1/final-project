@@ -149,3 +149,11 @@ show that sign-in is refused). New accounts need a `.edu.kh` email and cannot si
 verification link is opened; the link is printed in the API's log until email sending is set up.
 The same goes for the link that "Forgot your password?" sends, except in production
 (`NODE_ENV=production`), where a reset link is never printed.
+
+### Demo payments
+
+Card payments run in Stripe's test mode, so no real money moves. To show one, click **Pay with card**
+and type a Mastercard test number live on Stripe's page: `5555 5555 5555 4444`, any future date
+(e.g. 12/34), any CVC and any name. Back on UniSwap, the listing says "Paid with Mastercard •••• 4444"
+and shows as sold. Stripe's page keeps its own "Sandbox" (or "Test mode") badge at the top: it cannot
+be removed in test mode.

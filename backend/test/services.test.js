@@ -6,7 +6,9 @@ import { test } from "node:test";
 process.env.DATABASE_URL ??= "postgres://unused";
 process.env.JWT_SECRET ??= "unused";
 const { signParams } = await import("../src/services/cloudinary.js");
-const { isValidWebhookSignature, toFormBody } = await import("../src/services/stripe.js");
+const {
+  createCheckoutSession, isValidWebhookSignature, paidCard, retrieveCheckoutSession, toFormBody,
+} = await import("../src/services/stripe.js");
 const { amountToPay } = await import("../src/utils/payments.js");
 
 test("Cloudinary signature matches the example in Cloudinary's documentation", () => {
@@ -37,6 +39,39 @@ test("Stripe webhook signature: valid, tampered, wrong secret, and too old", () 
   assert.equal(isValidWebhookSignature(body, sign(body, secret, t - 600), secret, 300, now), false);
   assert.equal(isValidWebhookSignature(body, "garbage", secret, 300, now), false);
   assert.equal(isValidWebhookSignature(body, undefined, secret, 300, now), false);
+});
+
+test("Stripe Checkout gets the demo note by its Pay button, and the return check asks for the card", async () => {
+  // A fake fetch records what would be sent to Stripe.
+  const calls = [];
+  const realFetch = globalThis.fetch;
+  globalThis.fetch = async (url, init) => {
+    calls.push({ url, init });
+    return new Response(JSON.stringify({ id: "cs_test_1" }));
+  };
+  try {
+    await createCheckoutSession({
+      title: "Desk", amountCents: 1500, listingId: "l1", buyerId: "b1", successUrl: "https://a/s", cancelUrl: "https://a/c",
+    });
+    await retrieveCheckoutSession("cs_test_1");
+  } finally {
+    globalThis.fetch = realFetch;
+  }
+  const sent = new URLSearchParams(calls[0].init.body);
+  assert.equal(sent.get("custom_text[submit][message]"), "UniSwap demo: no real money is charged.");
+  assert.equal(sent.get("line_items[0][price_data][unit_amount]"), "1500");
+  assert.equal(calls[1].init.method, "GET");
+  assert.equal(calls[1].url, "https://api.stripe.com/v1/checkout/sessions/cs_test_1?expand[]=payment_intent.payment_method");
+});
+
+test("the paid card shows its brand's usual name and last 4 digits, and only for a card", () => {
+  const paidWith = (card) => paidCard({ payment_intent: { payment_method: { type: "card", card } } });
+  assert.deepEqual(paidWith({ brand: "mastercard", last4: "4444" }), { brand: "Mastercard", last4: "4444" });
+  assert.deepEqual(paidWith({ brand: "amex", last4: "8431" }), { brand: "American Express", last4: "8431" });
+  assert.deepEqual(paidWith({ brand: "unknown", last4: "0005" }), { brand: "card", last4: "0005" });
+  assert.equal(paidWith(undefined), null);
+  assert.equal(paidCard({ payment_intent: "pi_123" }), null); // not expanded
+  assert.equal(paidCard({ payment_intent: null }), null);
 });
 
 test("only items for sale and won auctions can be paid, and never by the seller", () => {

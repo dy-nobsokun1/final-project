@@ -51,11 +51,29 @@ export function createCheckoutSession({ title, amountCents, listingId, buyerId, 
     metadata: { listing_id: listingId, buyer_id: buyerId },
     // Stripe's shortest allowed lifetime. Meanwhile, other buyers are told someone is paying.
     expires_at: Math.floor(Date.now() / 1000) + 30 * 60,
+    // Shown beside Stripe's Pay button.
+    custom_text: { submit: { message: "UniSwap demo: no real money is charged." } },
   });
 }
 
+/** Reads a session, with the card it was paid with (see paidCard). */
 export function retrieveCheckoutSession(sessionId) {
-  return stripeRequest("GET", `/checkout/sessions/${encodeURIComponent(sessionId)}`);
+  return stripeRequest("GET", `/checkout/sessions/${encodeURIComponent(sessionId)}?expand[]=payment_intent.payment_method`);
+}
+
+// Stripe's card brand codes, written the way people know them. Other brands show as "card".
+const CARD_BRANDS = {
+  amex: "American Express", discover: "Discover", jcb: "JCB", mastercard: "Mastercard", unionpay: "UnionPay", visa: "Visa",
+};
+
+/**
+ * The card a session from retrieveCheckoutSession was paid with, as { brand: "Mastercard", last4: "4444" },
+ * or null when it was not paid by card. Only shown to the buyer when they come back; never stored.
+ */
+export function paidCard(session) {
+  const card = session?.payment_intent?.payment_method?.card;
+  if (!card?.last4) return null;
+  return { brand: CARD_BRANDS[card.brand] ?? "card", last4: card.last4 };
 }
 
 /**
