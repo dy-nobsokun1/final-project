@@ -7,8 +7,8 @@ import { ResetPasswordForm } from "@/components/forms/ResetPasswordForm";
 export const metadata: Metadata = { title: "Choose a new password | UniSwap", referrer: "no-referrer" };
 
 /**
- * The emailed reset link opens this page with `?token=...`. Unlike verify-email, it deliberately
- * makes no API call when it loads, so mail scanners that open links in advance cannot use up the
+ * The emailed reset link opens this page with `?token=...`. It deliberately makes no API call
+ * when it loads, so mail scanners that open links in advance cannot use up the
  * token: only submitting the form does.
  */
 export default async function ResetPasswordPage({ searchParams }: PageProps<"/reset-password">) {

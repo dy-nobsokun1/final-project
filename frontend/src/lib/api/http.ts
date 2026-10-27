@@ -8,6 +8,8 @@ export const API_URL = process.env.API_URL ?? "http://localhost:4000";
 
 /** Name of the httpOnly cookie that holds the login token (a JWT issued by the API). */
 export const TOKEN_COOKIE = "uniswap_token";
+/** The email a sign-up code was sent to, so the verify page can prefill it. Holds no code or password. */
+export const VERIFY_EMAIL_COOKIE = "uniswap_verify_email";
 
 /** An error response from the API, which always looks like `{ error, details }`. */
 export class ApiError extends Error {

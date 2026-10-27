@@ -15,8 +15,8 @@ import {
 import { register } from "@/lib/api/actions";
 
 /**
- * Registration form. Creates the account through the API, which emails a verification link,
- * then shows the "check your email" step. Nobody is signed in until that link is opened.
+ * Registration form. Creates the account through the API, which emails a 6-digit code,
+ * then shows the "check your email" step. Nobody is signed in until that code is entered.
  */
 export function RegisterForm() {
   const router = useRouter();

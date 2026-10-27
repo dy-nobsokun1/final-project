@@ -296,14 +296,3 @@ export async function markThreadRead(listingId: string, partnerId: string): Prom
     body: JSON.stringify({ listingId, withUserId: partnerId }),
   });
 }
-
-/** Confirms the token from an email-verification link. False if it is invalid or already used. */
-export async function verifyEmail(token: string): Promise<boolean> {
-  try {
-    await apiFetch("/api/auth/verify-email", { method: "POST", body: JSON.stringify({ token }) });
-    return true;
-  } catch (error) {
-    if (error instanceof ApiError && error.status === 400) return false;
-    throw error;
-  }
-}

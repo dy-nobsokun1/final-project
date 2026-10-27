@@ -2,8 +2,8 @@
 
 import { refresh } from "next/cache";
 import { cookies, headers } from "next/headers";
-import { ApiError, apiFetch, TOKEN_COOKIE } from "@/lib/api/http";
-import { getKhqrStatus, verifyEmail } from "@/lib/api";
+import { ApiError, apiFetch, TOKEN_COOKIE, VERIFY_EMAIL_COOKIE } from "@/lib/api/http";
+import { getKhqrStatus } from "@/lib/api";
 import type {
   AssistantAnswer,
   AssistantMessage,
@@ -36,6 +36,19 @@ async function saveSession(token: string) {
     secure: process.env.NODE_ENV === "production",
     path: "/",
     maxAge: SESSION_SECONDS,
+  });
+}
+
+/** Same lifetime as a sign-up code (30 minutes). */
+const VERIFY_EMAIL_SECONDS = 60 * 30;
+
+async function rememberEmailToVerify(email: string) {
+  (await cookies()).set(VERIFY_EMAIL_COOKIE, email, {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    maxAge: VERIFY_EMAIL_SECONDS,
   });
 }
 
@@ -72,8 +85,9 @@ export async function register(values: {
   graduationYear: number;
 }): Promise<ActionResult> {
   try {
-    // No session is created here: the account stays locked until its email link is opened.
+    // No session is created here: the account stays locked until the emailed code is entered.
     await apiFetch("/api/auth/register", { method: "POST", body: JSON.stringify(values) });
+    await rememberEmailToVerify(values.email);
     return {};
   } catch (error) {
     return toActionError(error);
@@ -84,13 +98,14 @@ export async function signOut(): Promise<void> {
   (await cookies()).delete(TOKEN_COOKIE);
 }
 
-/** Emails a fresh verification link. The password proves the request comes from whoever registered. */
+/** Emails a fresh sign-up code. The password proves the request comes from whoever registered. */
 export async function resendVerification(email: string, password: string): Promise<ActionResult> {
   try {
     await apiFetch("/api/auth/resend-verification", {
       method: "POST",
       body: JSON.stringify({ email, password }),
     });
+    await rememberEmailToVerify(email);
     return {};
   } catch (error) {
     return toActionError(error);
@@ -107,10 +122,12 @@ export async function requestPasswordReset(email: string): Promise<ActionResult>
   }
 }
 
-/** Confirms an email on the button press, never on page load. `error` is set only if the API is unreachable. */
-export async function confirmEmail(token: string): Promise<ActionResult & { verified?: boolean }> {
+/** Checks the 6-digit sign-up code. A wrong or expired code comes back as the API's own message. */
+export async function verifyEmail(email: string, code: string): Promise<ActionResult & { verified?: boolean }> {
   try {
-    return { verified: await verifyEmail(token) };
+    await apiFetch("/api/auth/verify-email", { method: "POST", body: JSON.stringify({ email, code }) });
+    (await cookies()).delete(VERIFY_EMAIL_COOKIE);
+    return { verified: true };
   } catch (error) {
     return toActionError(error);
   }
