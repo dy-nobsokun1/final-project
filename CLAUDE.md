@@ -229,6 +229,11 @@ when `uniswap` has none, so an older `uniswap` database needs the upgrade SQL (b
     with a question). That keeps Groq's per-minute token limit for new questions.
 
   A draft opens `/listings/new?type=buy_request&title=…`, which fills in `NewListingForm`.
+- **Voice input:** `hooks/use-voice-input.ts` wraps the browser's own speech recognition (no package, no
+  backend). It works in Chrome, Edge and Safari and is hidden in Firefox; Brave and the Claude browser pane
+  offer it but fail, so they show "Try Chrome, Edge or Safari". `forms/VoiceInputButton.tsx` is the mic in
+  `SearchBox`, `AssistantQuestionBox` and `MessageComposer`. Speech is added to the end of the box
+  (`start(baseText)`) and never sends or searches by itself. `en-US` only.
 - **Profile stats:** `GET /api/users/me/stats` (`db/stats.js`), for your own profile only; `/profile/[id]`
   shows nothing new. A deal is a listing now sold or traded, never a wanted post.
   - Your own listing is a sale (or trade). Someone else's is a purchase if you paid online, won the
@@ -297,6 +302,7 @@ Done (week 6, 26–27 Oct):
   - Chat rows show the listing's photo and the last message.
   - The listing page has a phone buy bar.
   - The sell form picks the type with tiles.
+- **Voice input:** a mic in the navbar search, Ask UniSwap and chat fills the box as you speak.
 
 Built but needs the team's own accounts/keys (see `DEPLOY.md`): Supabase database, Render + Vercel
 deployment, Cloudinary photos, Stripe test payments, Telegram bot.
@@ -336,6 +342,7 @@ After `git pull origin implement_backend`:
 4. **Demo: desktop first.** The demo is shown from a laptop on a projector whose size is unknown.
    - Check pages at 1280×800 and 1024×768 (older projectors, or 1280 zoomed to 125%).
    - Phone-only work is paused until after the demo.
+   - Show voice input from Chrome (Firefox hides the mic), and allow the microphone before presenting.
    - Before the demo, try the room: the screen size macOS picks, the HDMI adapter, and how the pale greens look on the projector.
 5. **Frontend follow-ups for Dy** (found in browser testing, not fixed yet):
    - a heart tapped while signed out should return to the listing after login;
