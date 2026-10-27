@@ -12,7 +12,7 @@ export const LISTING_TYPE_TAGS: Record<Exclude<ListingType, "sale">, { label: st
   // The light ring keeps the dark pill visible on the dark listing page.
   auction: { label: "Auction", icon: Gavel, colours: "bg-brand-deep text-brand-50 ring-brand-50/30" },
   trade: { label: "Trade", icon: ArrowLeftRight, colours: "bg-brand-400 text-brand-ink" },
-  // The one warm colour (the filter dropdowns use it too), so free items are the ones that pop.
+  // The dark warm red (the filter dropdowns use it too), so free items pop.
   giveaway: { label: "Free", icon: Gift, colours: "bg-brand-danger text-brand-50" },
   // Rose, the complement of the greens: a wanted card has no photo, so its tag has to catch the eye.
   buy_request: { label: "Wanted", icon: Search, colours: "bg-brand-wanted text-brand-ink" },
