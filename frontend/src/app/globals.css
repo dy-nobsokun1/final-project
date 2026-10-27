@@ -20,6 +20,7 @@
   --color-brand-900: var(--brand-900);
   --color-brand-ink: var(--brand-ink);
   --color-brand-danger: var(--brand-danger);
+  --color-brand-wanted: var(--brand-wanted);
   --color-brand-deep: var(--brand-deep);
   --color-brand-deep-2: var(--brand-deep-2);
   --color-sidebar-ring: var(--sidebar-ring);
@@ -73,6 +74,8 @@
   --brand-900: #1b3022;
   --brand-ink: #000000;
   --brand-danger: #4b0c11;
+  /* Rose, the complement of the greens, kept for the Wanted tag only. Black on it is 9.8:1. */
+  --brand-wanted: #ff8fae;
   /* The dark page field. */
   --brand-deep: #22312d;
   /* A shade above the page, for inputs, hovers and inset panels. */

@@ -192,7 +192,7 @@ export interface SearchSuggestion {
   id: string;
   title: string;
   listingType: ListingType;
-  /** formatListingPrice's text, e.g. "$12", "Free" or "Up to $50". */
+  /** formatListingPrice's text, e.g. "$12", "Free" or "Budget: up to $50". */
   priceText: string;
   imageUrl: string | null;
 }

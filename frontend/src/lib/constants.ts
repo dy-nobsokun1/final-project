@@ -1,3 +1,4 @@
+import { Armchair, Bike, BookOpen, MonitorSmartphone, Package, Shirt, type LucideIcon } from "lucide-react";
 import type { ListingCategory, ListingCondition, ListingStatus, ListingType } from "@/types";
 
 export const APP_NAME = "UniSwap";
@@ -18,13 +19,15 @@ export const CATEGORIES: Array<{
   /** Tailwind-safe class list for the category chip. Each one has to stay
    *  legible and distinct against the #B1D3B9 card it sits on. */
   accent: string;
+  /** Drawn large where a wanted post's card would have its photo (WantedCard). */
+  icon: LucideIcon;
 }> = [
-  { value: "textbooks", label: "Textbooks", accent: "bg-brand-50 text-brand-ink" },
-  { value: "electronics", label: "Electronics", accent: "bg-brand-600 text-brand-ink" },
-  { value: "furniture", label: "Furniture", accent: "border border-brand-ink/40 text-brand-ink" },
-  { value: "clothing", label: "Clothing", accent: "bg-brand-900 text-brand-50" },
-  { value: "bikes", label: "Bikes", accent: "bg-brand-400 text-brand-ink" },
-  { value: "other", label: "Other", accent: "bg-brand-50 text-brand-ink" },
+  { value: "textbooks", label: "Textbooks", accent: "bg-brand-50 text-brand-ink", icon: BookOpen },
+  { value: "electronics", label: "Electronics", accent: "bg-brand-600 text-brand-ink", icon: MonitorSmartphone },
+  { value: "furniture", label: "Furniture", accent: "border border-brand-ink/40 text-brand-ink", icon: Armchair },
+  { value: "clothing", label: "Clothing", accent: "bg-brand-900 text-brand-50", icon: Shirt },
+  { value: "bikes", label: "Bikes", accent: "bg-brand-400 text-brand-ink", icon: Bike },
+  { value: "other", label: "Other", accent: "bg-brand-50 text-brand-ink", icon: Package },
 ];
 
 export const CONDITIONS: Array<{ value: ListingCondition; label: string }> = [

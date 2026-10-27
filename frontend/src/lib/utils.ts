@@ -20,7 +20,7 @@ export function formatPrice(amount: number): string {
 export function formatListingPrice(listing: Pick<Listing, "listingType" | "price" | "auction">): string {
   if (listing.listingType === "giveaway") return "Free";
   // A wanted post's price is its budget (matching only suggests items within it); 0 means any price.
-  if (listing.listingType === "buy_request") return listing.price > 0 ? `Up to ${formatPrice(listing.price)}` : "Any price";
+  if (listing.listingType === "buy_request") return listing.price > 0 ? `Budget: up to ${formatPrice(listing.price)}` : "Budget: any";
   if (listing.auction) return formatPrice(listing.auction.highestBid ?? listing.price);
   if (listing.listingType === "trade" && listing.price === 0) return "Trade";
   return formatPrice(listing.price);

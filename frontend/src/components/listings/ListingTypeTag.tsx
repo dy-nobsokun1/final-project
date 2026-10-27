@@ -4,8 +4,8 @@ import { cn } from "@/lib/utils";
 import type { ListingType } from "@/types";
 
 /**
- * One look per type, all from the brand ramp. Sale has none: it is the default, and a tag on
- * every card would only be noise. Text contrast: 11.7, 9.9, 13.3 and 18.1 to 1.
+ * One look per type, from the brand ramp, plus rose for Wanted. Sale has none: it is the default,
+ * and a tag on every card would only be noise. Text contrast: 11.7, 9.9, 13.3 and 9.8 to 1.
  * Exported so the listing form's type tiles (ListingTypeTiles) look the same.
  */
 export const LISTING_TYPE_TAGS: Record<Exclude<ListingType, "sale">, { label: string; icon: LucideIcon; colours: string }> = {
@@ -14,7 +14,8 @@ export const LISTING_TYPE_TAGS: Record<Exclude<ListingType, "sale">, { label: st
   trade: { label: "Trade", icon: ArrowLeftRight, colours: "bg-brand-400 text-brand-ink" },
   // The one warm colour (the filter dropdowns use it too), so free items are the ones that pop.
   giveaway: { label: "Free", icon: Gift, colours: "bg-brand-danger text-brand-50" },
-  buy_request: { label: "Wanted", icon: Search, colours: "bg-brand-50 text-brand-ink" },
+  // Rose, the complement of the greens: a wanted card has no photo, so its tag has to catch the eye.
+  buy_request: { label: "Wanted", icon: Search, colours: "bg-brand-wanted text-brand-ink" },
 };
 
 interface ListingTypeTagProps {
