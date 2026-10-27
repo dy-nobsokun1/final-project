@@ -93,6 +93,12 @@ when `uniswap` has none, so an older `uniswap` database needs the upgrade SQL (b
   The typo test applies only to terms of 4+ characters (`TYPO_MIN_LENGTH`), so "ram" no longer finds
   "racket". Wanted matches share the rule. The two GPU samples' titles end in "graphics card" and their
   descriptions say "GPU", so "gpu" and "grafics card" find them.
+  **Related words** (`db/relatedWords.js`, 14 hand-written groups): a term containing a group's word or
+  phrase (whole words, plural "s" ignored) also searches the group's words, through full-text only, as
+  one extra `$n` (`relatedSearch`). So "book" finds the textbooks, and "gpu", "nvidia" or "video card"
+  the RTX and GTX cards. `broad` words ("book", "laptop") bring a group in but are not added for its other
+  words. Listings matching the student's own words rank first. Only in `buildBrowseQuery` (browse, the
+  suggestions and Ask UniSwap), never in wanted matches, which send alerts and stay strict.
   `GET /api/listings` also takes `limit` (1–100, default 100). The navbar's suggestions (`components/layout/SearchBox.tsx`,
   `SearchSuggestions.tsx`, `hooks/use-search-suggestions.ts`) call the Next Route Handler
   `app/api/search-suggestions`: 5 results, asked 250 ms after typing pauses, older requests aborted, and
@@ -244,9 +250,9 @@ deployment, Cloudinary photos, Stripe test payments, Telegram bot.
 ### Picking up on another machine
 
 Everything above is pushed to `implement_backend`. Last full check (27 Oct):
-- `npm test` (48) and `npm run test:api` (103) pass.
+- `npm test` (57) and `npm run test:api` (105) pass.
 - The frontend's lint and `tsc --noEmit` are clean.
-- `next build` was last run before the 26 Oct UI work.
+- `next build` passes (run on 27 Oct, at 55c169a, with no warnings).
 After `git pull origin implement_backend`:
 
 - No packages were added, but run `npm install` in `backend/` and `frontend/` if they are stale.
