@@ -256,6 +256,9 @@ Done (week 6, 26–27 Oct):
   - It drafts a wanted post only after the student says yes, using only what they said.
   - It keeps the chat until the tab closes, and has a "New chat" button.
 - **Search suggestions:** typing in the navbar search box lists up to 5 matching items, with photos and prices.
+- **Price filter:** type any min and max (`PriceRangeFilter`, still the `minPrice` / `maxPrice` URL params).
+  It applies on Enter or when focus leaves both boxes, swaps min and max if needed, and Max 0 shows only
+  $0 listings.
 - **Home page polish:**
   - The hero says who UniSwap is for and how paying works ("Made for AUPP students", plus three points in `HeroPoints`).
   - The Telegram strip shows for everyone.
