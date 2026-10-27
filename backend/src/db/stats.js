@@ -8,40 +8,50 @@ const CHART_MONTHS = 6;
 const TIME_ZONE = "Asia/Phnom_Penh";
 
 /**
- * The user's completed deals, one row each: listings now sold or traded (wanted posts never count),
- * where the user is the owner or the buyer. The buyer is picked like findDealPartner in
- * routes/reviews.js: whoever paid online first, else the auction's winner, else the buyer whose offer
- * was accepted. Reviews also accept "chatted both ways", but that is too loose for money totals.
- *
- * - role: "sale" or "purchase", or "trade" on either side; isOwner: it was the user's own listing.
+ * The inner part of a `closed` CTE, shared with db/purchases.js: every listing now sold or traded
+ * (wanted posts never count) that $1 owns, paid for, bid on or has reserved. Each row is the full
+ * LISTING_SELECT row plus:
+ * - buyer_id: the buyer, picked like findDealPartner in routes/reviews.js: whoever paid online
+ *   first, else the auction's winner, else the buyer whose offer was accepted. Reviews also accept
+ *   "chatted both ways", but that is too loose for money totals.
  * - amount: the paid amount, else the winning bid, else the agreed price (or the asking price if
  *   lower), else the asking price. A giveaway is $0. A trade counts only its cash top-up (the cash
- *   asked on top of the swapped item, as utils/assistant.js describes it), and only for the owner.
- * - month: when it happened (paid_at, else sold_at), as "YYYY-MM" in Cambodian time.
+ *   asked on top of the swapped item, as utils/assistant.js describes it).
+ * - deal_at: when it happened (paid_at, else sold_at).
+ * - paid_method: "stripe" or "khqr" when paid online, else NULL.
+ */
+export const CLOSED_DEALS_SQL = `
+  SELECT l.*,
+         COALESCE(paid.buyer_id,
+                  CASE WHEN l.listing_type = 'auction' THEN l.leading_bidder_id ELSE l.reserved_for END) AS buyer_id,
+         CASE WHEN l.status = 'traded' THEN COALESCE(l.cash_topup, 0)
+              WHEN l.listing_type = 'giveaway' THEN 0
+              ELSE COALESCE(paid.amount,
+                            CASE WHEN l.listing_type = 'auction' THEN l.highest_bid END,
+                            LEAST(l.agreed_price, l.price)) -- LEAST skips a NULL agreed_price
+         END AS amount,
+         COALESCE(paid.paid_at, l.sold_at) AS deal_at,
+         paid.method AS paid_method
+  FROM (${LISTING_SELECT}
+        WHERE l.status IN ('sold', 'traded') AND l.listing_type <> 'buy_request'
+          AND (l.user_id = $1 OR l.reserved_for = $1
+               OR EXISTS (SELECT 1 FROM payments p WHERE p.listing_id = l.id AND p.buyer_id = $1)
+               OR EXISTS (SELECT 1 FROM bids b WHERE b.listing_id = l.id AND b.bidder_id = $1))) l
+  LEFT JOIN LATERAL (
+    SELECT buyer_id, amount, paid_at, method FROM payments
+    WHERE listing_id = l.id AND status = 'paid' ORDER BY paid_at LIMIT 1
+  ) paid ON true`;
+
+/**
+ * The user's completed deals (see CLOSED_DEALS_SQL), one row each, where the user is the owner or the buyer.
+ *
+ * - role: "sale" or "purchase", or "trade" on either side; isOwner: it was the user's own listing.
+ *   A trade counts its cash top-up only for the owner.
+ * - month: when it happened, as "YYYY-MM" in Cambodian time.
  */
 async function findDeals(userId) {
   const { rows } = await query(
-    `WITH closed AS (
-       SELECT l.user_id, l.category, l.status,
-              COALESCE(paid.buyer_id,
-                       CASE WHEN l.listing_type = 'auction' THEN l.leading_bidder_id ELSE l.reserved_for END) AS buyer_id,
-              CASE WHEN l.status = 'traded' THEN COALESCE(l.cash_topup, 0)
-                   WHEN l.listing_type = 'giveaway' THEN 0
-                   ELSE COALESCE(paid.amount,
-                                 CASE WHEN l.listing_type = 'auction' THEN l.highest_bid END,
-                                 LEAST(l.agreed_price, l.price)) -- LEAST skips a NULL agreed_price
-              END AS amount,
-              COALESCE(paid.paid_at, l.sold_at) AS deal_at
-       FROM (${LISTING_SELECT}
-             WHERE l.status IN ('sold', 'traded') AND l.listing_type <> 'buy_request'
-               AND (l.user_id = $1 OR l.reserved_for = $1
-                    OR EXISTS (SELECT 1 FROM payments p WHERE p.listing_id = l.id AND p.buyer_id = $1)
-                    OR EXISTS (SELECT 1 FROM bids b WHERE b.listing_id = l.id AND b.bidder_id = $1))) l
-       LEFT JOIN LATERAL (
-         SELECT buyer_id, amount, paid_at FROM payments
-         WHERE listing_id = l.id AND status = 'paid' ORDER BY paid_at LIMIT 1
-       ) paid ON true
-     )
+    `WITH closed AS (${CLOSED_DEALS_SQL})
      SELECT category, user_id = $1 AS is_owner,
             CASE WHEN status = 'traded' THEN 'trade' WHEN user_id = $1 THEN 'sale' ELSE 'purchase' END AS role,
             CASE WHEN status = 'traded' AND user_id <> $1 THEN 0 ELSE amount END AS amount,

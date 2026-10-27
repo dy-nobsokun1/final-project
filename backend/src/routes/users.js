@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { LISTING_SELECT } from "../db/listings.js";
 import { query } from "../db/pool.js";
+import { findPurchases } from "../db/purchases.js";
 import { getUserStats } from "../db/stats.js";
 import { requireAuth } from "../middleware/auth.js";
 import { HttpError } from "../utils/httpError.js";
@@ -45,6 +46,13 @@ usersRouter.patch("/me", requireAuth, async (req, res) => {
 // Declared before "/:id" too. See db/stats.js for what counts as a deal.
 usersRouter.get("/me/stats", requireAuth, async (req, res) => {
   res.json({ stats: await getUserStats(req.userId) });
+});
+
+// GET /api/users/me/purchases?limit=20  (logged in) -> { purchases: [{ listing, amount, at, how, myRating }] }
+// What you bought, newest first (limit 1-50). Same buyer rule as the stats, see db/purchases.js.
+usersRouter.get("/me/purchases", requireAuth, async (req, res) => {
+  const limit = Math.min(Math.max(Math.trunc(Number(req.query.limit)) || 20, 1), 50);
+  res.json({ purchases: await findPurchases(req.userId, limit) });
 });
 
 // GET /api/users/:id  -> public profile (no email)
