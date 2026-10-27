@@ -36,10 +36,22 @@ export function amountToPay(listing, buyerId) {
 /**
  * Where Stripe sends the buyer back to: the address they started paying from, so their sign-in
  * cookie (which belongs to that address) still applies. The presenter may pay on localhost:3000
- * while someone else pays through the tunnel. Only the two addresses the API itself would use
+ * while someone else pays through the tunnel. Only the addresses from `checkoutReturnOrigins`
  * are accepted; anything else, including a missing value, gets `fallback`, so this can never
  * become an open redirect.
  */
 export function checkoutReturnOrigin(requested, allowedOrigins, fallback) {
   return allowedOrigins.includes(requested) ? requested : fallback;
+}
+
+/**
+ * The addresses a buyer may be sent back to: FRONTEND_ORIGIN, the quick tunnel's current address,
+ * and http://localhost:3000. With a fixed public FRONTEND_ORIGIN (a Tailscale Funnel), a presenter
+ * paying on localhost would otherwise land on the public address and lose their sign-in cookie.
+ * Localhost is safe to allow: the Next server only ever sends the address the buyer is on, and a
+ * localhost address can only send that buyer's own browser back to their own machine, never to
+ * another site.
+ */
+export function checkoutReturnOrigins(frontendOrigin, tunnelOrigin) {
+  return [frontendOrigin, tunnelOrigin, "http://localhost:3000"];
 }

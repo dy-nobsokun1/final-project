@@ -93,7 +93,7 @@ The API then reads the tunnel's current `https://….trycloudflare.com` from `/q
 and every 15 seconds (`services/tunnel.js`, `siteOrigin()`), prints one `[tunnel]` line whenever the
 address changes, and uses it for every link it builds. Without `TUNNEL_METRICS_URL`, or while
 cloudflared does not answer, links use `FRONTEND_ORIGIN`. Card checkout sends the buyer back to the
-address they paid from (`returnOrigin`), but only if it is `FRONTEND_ORIGIN` or the tunnel's address.
+address they paid from (`returnOrigin`), but only if it is `FRONTEND_ORIGIN`, the tunnel's address or `http://localhost:3000`.
 CORS stays on `FRONTEND_ORIGIN`, because only the Next.js server calls the API.
 
 ## Folder layout
@@ -683,7 +683,7 @@ A token issued before the account's last password change or reset is refused (40
 | DELETE 🔒 | `/api/listings/:id/save` | Unsave → `204`, also if it was not saved |
 | GET | `/api/users/:id/reviews` | `{ reviews, averageRating, reviewCount }`: reviews the user received, newest first |
 | GET | `/api/payments/config` | `{ enabled, khqr }`: whether card and KHQR payments are switched on |
-| POST 🔒 | `/api/payments/checkout` | `{ listingId, returnOrigin? }` → `{ url }` of Stripe's payment page. Stripe sends the buyer back to `returnOrigin` only if it is `FRONTEND_ORIGIN` or the tunnel's current address, else to `FRONTEND_ORIGIN` |
+| POST 🔒 | `/api/payments/checkout` | `{ listingId, returnOrigin? }` → `{ url }` of Stripe's payment page. Stripe sends the buyer back to `returnOrigin` only if it is `FRONTEND_ORIGIN`, the tunnel's current address or `http://localhost:3000`, else to `FRONTEND_ORIGIN` |
 | POST 🔒 | `/api/payments/confirm` | `{ sessionId }` → `{ status: "paid" \| "pending" \| "refund_due" }`, checked with Stripe; "paid" may add `card: { brand, last4 }` (shown, never stored) |
 | POST | `/api/payments/webhook` | Called by Stripe only, with a signature check |
 | POST 🔒 | `/api/payments/khqr` | `{ listingId }` → `{ paymentId, qr, amount, expiresAt }`. Asking again within 30 minutes returns the same QR, as long as it still pays the seller's current Bakong account. First records any earlier QR for the item that was paid but not yet confirmed: `409` if it was this buyer's. `400` if the seller has no Bakong account. `403` if the item is reserved for another buyer; for the buyer it is reserved for, the amount is the agreed price (or the asking price, if lower). `503` if Bakong cannot be reached right now (no QR is shown that could not be confirmed) |

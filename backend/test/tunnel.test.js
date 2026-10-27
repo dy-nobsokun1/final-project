@@ -5,7 +5,7 @@ import { test } from "node:test";
 process.env.DATABASE_URL ??= "postgres://unused";
 process.env.JWT_SECRET ??= "unused";
 const { createTunnelWatcher } = await import("../src/services/tunnel.js");
-const { checkoutReturnOrigin } = await import("../src/utils/payments.js");
+const { checkoutReturnOrigin, checkoutReturnOrigins } = await import("../src/utils/payments.js");
 
 const FALLBACK = "http://localhost:3000";
 
@@ -71,5 +71,16 @@ test("card checkout returns the buyer only to an address the API knows", () => {
   // Anything else is not trusted: another host, a look-alike, a path, or nothing at all.
   for (const other of ["https://evil.example", "https://abc.trycloudflare.com.evil.example", `${FALLBACK}/x`, undefined, 42]) {
     assert.equal(checkoutReturnOrigin(other, known, FALLBACK), FALLBACK);
+  }
+});
+
+test("with a fixed public FRONTEND_ORIGIN, a buyer on localhost still returns to localhost", () => {
+  const funnel = "https://laptop.tail1234.ts.net";
+  const known = checkoutReturnOrigins(funnel, funnel); // no quick tunnel: siteOrigin() is FRONTEND_ORIGIN
+  assert.equal(checkoutReturnOrigin("http://localhost:3000", known, funnel), "http://localhost:3000");
+  assert.equal(checkoutReturnOrigin(funnel, known, funnel), funnel);
+  // Localhost on another port, or a look-alike, is still not trusted.
+  for (const other of ["http://localhost:3001", "http://localhost.evil.example", "https://localhost:3000"]) {
+    assert.equal(checkoutReturnOrigin(other, known, funnel), funnel);
   }
 });
