@@ -250,6 +250,14 @@ when `uniswap` has none, so an older `uniswap` database needs the upgrade SQL (b
     - Tap to start and tap to stop, or hold for 300 ms or more and release to stop.
   - **Speech is added to the end of the box** (`start(baseText)`, `trimEnd`) and never sends or
     searches by itself. The search box drops Whisper's trailing `.`, `!` or `?`.
+- **Recent purchases:** `GET /api/users/me/purchases` (`db/purchases.js`), shown on your own `/profile`
+  as `RecentPurchases` + `PurchaseCard` (hidden until the first purchase).
+  - **Who bought it:** it shares `CLOSED_DEALS_SQL` with the stats below, so the two always agree: the
+    buyer, the amount and the date (`paid_at`, else `sold_at`).
+  - **Each purchase:** `how` is card / khqr / auction / offer / trade / free, and `myRating` is your
+    review, else null.
+  - **The card:** "Review seller" opens the existing `ReviewForm` inline; its `refresh()` then shows
+    "You rated". "More from <seller>" links to `/profile/<sellerId>`.
 - **Profile stats:** `GET /api/users/me/stats` (`db/stats.js`), for your own profile only; `/profile/[id]`
   shows nothing new. A deal is a listing now sold or traded, never a wanted post.
   - Your own listing is a sale (or trade). Someone else's is a purchase if you paid online, won the
@@ -321,6 +329,8 @@ Done (week 6, 26–27 Oct):
 - **Voice input:** a mic in the navbar search, Ask UniSwap and chat fills the box as you speak, in
   every browser. Chrome, Edge and Safari show words live; Firefox, Opera and Brave record and use Groq's
   Whisper. Tap or hold to talk.
+- **Recent purchases (28 Oct):** your profile lists what you bought, with Review seller and More from
+  that seller.
 
 Built but needs the team's own accounts/keys (see `DEPLOY.md`): Supabase database, Render + Vercel
 deployment, Cloudinary photos, Stripe test payments, Telegram bot.
@@ -328,7 +338,7 @@ deployment, Cloudinary photos, Stripe test payments, Telegram bot.
 ### Picking up on another machine
 
 Everything above is pushed to `implement_backend`. Last full check (27 Oct):
-- `npm test` (70) and `npm run test:api` (122, with voice on 27 Oct) pass.
+- `npm test` (70) and `npm run test:api` (125, with purchases on 28 Oct) pass.
 - The frontend's lint and `tsc --noEmit` are clean.
 - `next build` passes (run on 27 Oct, at 835bd15, with no warnings).
 After `git pull origin implement_backend`:
