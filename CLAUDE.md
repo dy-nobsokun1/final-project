@@ -221,8 +221,9 @@ when `uniswap` has none, so an older `uniswap` database needs the upgrade SQL (b
     else the asking price. A giveaway is $0; a trade counts only its cash top-up, for the owner.
   - Date: `paid_at`, else `listings.sold_at` (PATCH and `markPaid` set it; PATCH clears it when the item
     goes back to active or reserved; other edits keep it). Months are in Phnom Penh time, last 6.
-  - Shows from the start: zeros, flat bars, and "No sales yet" / "No purchases yet" in place of a ring
-    until the first deal. Badges at 5 deals ("Active trader") and 10 ("Top seller").
+  - Shows from the start. A side with no deals shows only its totals and "No sales yet" / "No purchases
+    yet", without its bars and ring (`StatsSection`, when its category list is empty). Badges at 5
+    deals ("Active trader") and 10 ("Top seller").
   - `ProfileDashboard` and the `Stats*` components draw bars and a conic-gradient ring, no chart package.
     The ring's six colours (three brand, three chart-only `--chart-*` tokens in `globals.css`, each
     ≥3:1 on the card) are ordered so touching slices differ, also for red-green colour blindness.
