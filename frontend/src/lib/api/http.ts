@@ -4,7 +4,7 @@ import { cookies } from "next/headers";
  * Where the Express API runs (see backend/README.md). Only the Next.js server calls it,
  * never the browser, so this is a plain server variable and not NEXT_PUBLIC_.
  */
-const API_URL = process.env.API_URL ?? "http://localhost:4000";
+export const API_URL = process.env.API_URL ?? "http://localhost:4000";
 
 /** Name of the httpOnly cookie that holds the login token (a JWT issued by the API). */
 export const TOKEN_COOKIE = "uniswap_token";

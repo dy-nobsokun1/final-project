@@ -58,8 +58,10 @@ export function MessageComposer({ listingId, receiverId }: MessageComposerProps)
         />
         {voice.isSupported ? (
           <VoiceInputButton
-            isListening={voice.isListening}
-            onClick={() => (voice.isListening ? voice.stop() : voice.start(draft))}
+            status={voice.status}
+            level={voice.level}
+            onStart={() => voice.start(draft)}
+            onStop={voice.stop}
             className="size-10 rounded-lg border border-input bg-card text-foreground hover:bg-muted"
           />
         ) : null}

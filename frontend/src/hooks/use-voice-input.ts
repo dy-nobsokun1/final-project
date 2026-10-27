@@ -1,66 +1,46 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { canUseLiveRecognition, startLiveRecognition } from "@/lib/voice/live-recognition";
+import { canRecord, startRecorder, transcribeClip, VoiceError } from "@/lib/voice/recorder";
 
-// The few parts of the browser's speech recognition we use (TypeScript has no built-in types).
-interface RecognitionResultEvent {
-  results: ArrayLike<ArrayLike<{ transcript: string }>>;
-}
-interface Recognition {
-  lang: string;
-  interimResults: boolean;
-  continuous: boolean;
-  maxAlternatives: number;
-  onresult: ((event: RecognitionResultEvent) => void) | null;
-  onerror: ((event: { error: string }) => void) | null;
-  onend: (() => void) | null;
-  start(): void;
-  stop(): void;
-  abort(): void;
-}
-type RecognitionConstructor = new () => Recognition;
+export type VoiceStatus = "idle" | "listening" | "transcribing";
 
-const BROWSER_ERROR = "Voice input doesn't work in this browser. Try Chrome, Edge or Safari.";
-const ERRORS: Record<string, string> = {
+const BROWSER_ERROR = "Voice input doesn't work in this browser.";
+const NO_SPEECH = "Didn't catch that. Press the mic and try again.";
+const LIVE_ERRORS: Record<string, string> = {
   "not-allowed": "Allow the microphone for this site to use voice input.",
-  network: BROWSER_ERROR,
-  "service-not-allowed": BROWSER_ERROR,
-  "language-not-supported": BROWSER_ERROR,
   "audio-capture": "No microphone found.",
-  "no-speech": "Didn't catch that. Press the mic and try again.",
+  "no-speech": NO_SPEECH,
 };
+/** Errors that mean live recognition cannot work here, so the recorder takes over. */
+const LIVE_UNUSABLE = ["network", "service-not-allowed", "language-not-supported"];
 
-function getConstructor(): RecognitionConstructor | undefined {
-  const w = window as unknown as {
-    SpeechRecognition?: RecognitionConstructor;
-    webkitSpeechRecognition?: RecognitionConstructor;
-  };
-  return w.SpeechRecognition ?? w.webkitSpeechRecognition;
-}
+/** Set once live recognition fails in this browser (e.g. Vivaldi), so later presses go straight to the recorder. */
+let liveBroken = false;
 
 const subscribeNothing = () => () => {};
+const canListen = () => (canUseLiveRecognition() && !liveBroken) || canRecord();
 
 interface VoiceInputOptions {
   /** Gets the whole text for the box: what was there, then the spoken words. */
   onText: (text: string) => void;
-  /** Called when listening has ended, for any reason. */
+  /** Called when listening and transcribing have ended, for any reason. */
   onEnd?: () => void;
 }
 
 /**
- * Speech to text with the browser's own recognition (no server, no package). start(baseText)
- * remembers what is already in the box, so speech is added to the end of it. isSupported is false
- * on the server and on the first render, then true in Chrome, Edge and Safari (never in Firefox).
+ * Speech to text. Chrome, Edge and Safari use the browser's own recognition (words appear live);
+ * Firefox, Opera, Brave, and any browser where that fails, record the voice and have it transcribed
+ * after stopping. start(baseText) remembers what is in the box, so speech is added to its end.
+ * isSupported is false on the server and on the first render, so there is no hydration mismatch.
  */
 export function useVoiceInput({ onText, onEnd }: VoiceInputOptions) {
-  const isSupported = useSyncExternalStore(
-    subscribeNothing,
-    () => getConstructor() !== undefined,
-    () => false,
-  );
-  const [isListening, setIsListening] = useState(false);
+  const isSupported = useSyncExternalStore(subscribeNothing, canListen, () => false);
+  const [status, setStatus] = useState<VoiceStatus>("idle");
+  const [level, setLevel] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const recognition = useRef<Recognition | null>(null);
+  const active = useRef<{ stop: () => void; abort: () => void } | null>(null);
   const callbacks = useRef({ onText, onEnd });
 
   useEffect(() => {
@@ -68,44 +48,84 @@ export function useVoiceInput({ onText, onEnd }: VoiceInputOptions) {
   });
 
   // Leaving the page while listening must not keep the microphone open.
-  useEffect(() => () => recognition.current?.abort(), []);
+  useEffect(() => () => active.current?.abort(), []);
 
-  const start = useCallback((baseText: string) => {
-    const Ctor = getConstructor();
-    if (!Ctor) return;
-    setError(null);
-    const instance = new Ctor();
-    instance.lang = "en-US";
-    instance.interimResults = true;
-    instance.continuous = false;
-    instance.maxAlternatives = 1;
-    const trimmed = baseText.trimEnd();
-    const prefix = trimmed ? `${trimmed} ` : "";
-    instance.onresult = (event) => {
-      let transcript = "";
-      for (let i = 0; i < event.results.length; i++) transcript += event.results[i][0].transcript;
-      callbacks.current.onText(prefix + transcript.trim());
-    };
-    instance.onerror = (event) => {
-      if (event.error !== "aborted") setError(ERRORS[event.error] ?? BROWSER_ERROR);
-    };
-    instance.onend = () => {
-      recognition.current = null;
-      setIsListening(false);
-      callbacks.current.onEnd?.();
-    };
-    recognition.current = instance;
-    try {
-      instance.start();
-      setIsListening(true);
-    } catch {
-      recognition.current = null;
-      setError(BROWSER_ERROR);
-    }
+  const finish = useCallback(() => {
+    active.current = null;
+    setStatus("idle");
+    setLevel(null);
+    callbacks.current.onEnd?.();
   }, []);
 
-  const stop = useCallback(() => recognition.current?.stop(), []);
+  const record = useCallback(
+    (prefix: string) => {
+      setStatus("listening");
+      setLevel(0);
+      active.current = startRecorder({
+        onLevel: setLevel,
+        onError: (failure) => {
+          setError(failure.message);
+          finish();
+        },
+        onClip: async (clip) => {
+          if (!clip) {
+            setError(NO_SPEECH);
+            return finish();
+          }
+          active.current = null;
+          setStatus("transcribing");
+          setLevel(null);
+          try {
+            const text = await transcribeClip(clip);
+            if (text) callbacks.current.onText(prefix + text);
+            else setError(NO_SPEECH);
+          } catch (failure) {
+            setError(failure instanceof VoiceError ? failure.message : BROWSER_ERROR);
+          }
+          finish();
+        },
+      });
+    },
+    [finish],
+  );
+
+  const start = useCallback(
+    (baseText: string) => {
+      setError(null);
+      const trimmed = baseText.trimEnd();
+      const prefix = trimmed ? `${trimmed} ` : "";
+      if (canUseLiveRecognition() && !liveBroken) {
+        try {
+          setStatus("listening");
+          setLevel(null);
+          active.current = startLiveRecognition({
+            onTranscript: (transcript) => callbacks.current.onText(prefix + transcript),
+            onError: (code) => {
+              if (LIVE_UNUSABLE.includes(code) && canRecord()) {
+                liveBroken = true;
+                record(prefix);
+              } else {
+                setError(LIVE_ERRORS[code] ?? BROWSER_ERROR);
+              }
+            },
+            onEnd: () => {
+              // After a fallback the recorder owns the state; this end belongs to the old recognition.
+              if (!liveBroken) finish();
+            },
+          });
+          return;
+        } catch {
+          liveBroken = true;
+        }
+      }
+      if (canRecord()) record(prefix);
+      else setError(BROWSER_ERROR);
+    },
+    [finish, record],
+  );
+
+  const stop = useCallback(() => active.current?.stop(), []);
   const clearError = useCallback(() => setError(null), []);
 
-  return { isSupported, isListening, error, start, stop, clearError };
+  return { isSupported, status, level, error, start, stop, clearError };
 }

@@ -77,8 +77,10 @@ export function AssistantQuestionBox({ value, onChange, onAsk, isAsking, error }
         ) : null}
         {voice.isSupported ? (
           <VoiceInputButton
-            isListening={voice.isListening}
-            onClick={() => (voice.isListening ? voice.stop() : voice.start(value))}
+            status={voice.status}
+            level={voice.level}
+            onStart={() => voice.start(value)}
+            onStop={voice.stop}
             className="size-10"
           />
         ) : null}

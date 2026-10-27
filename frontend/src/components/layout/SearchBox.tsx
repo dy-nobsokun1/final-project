@@ -112,8 +112,10 @@ export function SearchBox() {
       />
       {voice.isSupported ? (
         <VoiceInputButton
-          isListening={voice.isListening}
-          onClick={() => (voice.isListening ? voice.stop() : voice.start(query))}
+          status={voice.status}
+          level={voice.level}
+          onStart={() => voice.start(query)}
+          onStop={voice.stop}
           className="absolute right-1 top-1/2 size-7 -translate-y-1/2 text-brand-200 hover:bg-brand-600 hover:text-brand-ink"
         />
       ) : null}

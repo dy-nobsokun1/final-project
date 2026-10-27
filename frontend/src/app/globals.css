@@ -212,3 +212,28 @@
   /* Fade the pattern out downwards so the type stays readable. */
   mask-image: linear-gradient(to bottom, black, transparent 85%);
 }
+/* The mic button's sound-wave bars (components/forms/VoiceInputButton.tsx). With the recorder each bar's
+   height is set from the voice level (--h); with live recognition there is no level, so they wave. */
+@keyframes voice-wave {
+  0%, 100% { height: 25%; }
+  50% { height: 85%; }
+}
+.voice-bar {
+  width: 2px;
+  height: var(--h, 25%);
+  border-radius: 9999px;
+  background: currentColor;
+  transition: height 70ms linear;
+}
+.voice-bar[data-live] {
+  animation: voice-wave 900ms ease-in-out infinite;
+  animation-delay: var(--d, 0ms);
+}
+@media (prefers-reduced-motion: reduce) {
+  .voice-bar,
+  .voice-bar[data-live] {
+    height: 55%;
+    animation: none;
+    transition: none;
+  }
+}
