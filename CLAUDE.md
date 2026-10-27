@@ -229,11 +229,27 @@ when `uniswap` has none, so an older `uniswap` database needs the upgrade SQL (b
     with a question). That keeps Groq's per-minute token limit for new questions.
 
   A draft opens `/listings/new?type=buy_request&title=…`, which fills in `NewListingForm`.
-- **Voice input:** `hooks/use-voice-input.ts` wraps the browser's own speech recognition (no package, no
-  backend). It works in Chrome, Edge and Safari and is hidden in Firefox; Brave and the Claude browser pane
-  offer it but fail, so they show "Try Chrome, Edge or Safari". `forms/VoiceInputButton.tsx` is the mic in
-  `SearchBox`, `AssistantQuestionBox` and `MessageComposer`. Speech is added to the end of the box
-  (`start(baseText)`) and never sends or searches by itself. `en-US` only.
+- **Voice input** (no package): `forms/VoiceInputButton.tsx` is the mic in `SearchBox`,
+  `AssistantQuestionBox` and `MessageComposer`.
+  - **Engines:** `hooks/use-voice-input.ts` picks one of two.
+    - **Live recognition** (`lib/voice/live-recognition.ts`): the browser's own, in Chrome, Edge and
+      Safari. Words appear as you speak. It is continuous with a 60 s cap, `en-US`.
+    - **The recorder** (`lib/voice/recorder.ts`): in Firefox, Opera and Brave (detected), and in any
+      browser where live recognition fails with `network`, `service-not-allowed` or
+      `language-not-supported` (remembered for the page). It records with an `AnalyserNode` for the level
+      and drops silent clips, because Whisper invents "Thank you." from silence.
+  - **Transcribing:** the recorder POSTs the clip to the Next Route Handler `app/api/voice`, which
+    forwards it to `POST /api/voice/transcribe`.
+    - The API side is `routes/voice.js` and `services/whisper.js`: Groq `whisper-large-v3-turbo`, the
+      same `GROQ_API_KEY`.
+    - Signed-in only, 2 MB, nothing stored or logged.
+    - API tests fake Groq.
+  - **The button:**
+    - It shows bars while listening: they follow the voice with the recorder, or wave with live words.
+    - A spinner shows while transcribing.
+    - Tap to start and tap to stop, or hold for 300 ms or more and release to stop.
+  - **Speech is added to the end of the box** (`start(baseText)`, `trimEnd`) and never sends or
+    searches by itself. The search box drops Whisper's trailing `.`, `!` or `?`.
 - **Profile stats:** `GET /api/users/me/stats` (`db/stats.js`), for your own profile only; `/profile/[id]`
   shows nothing new. A deal is a listing now sold or traded, never a wanted post.
   - Your own listing is a sale (or trade). Someone else's is a purchase if you paid online, won the
@@ -302,7 +318,9 @@ Done (week 6, 26–27 Oct):
   - Chat rows show the listing's photo and the last message.
   - The listing page has a phone buy bar.
   - The sell form picks the type with tiles.
-- **Voice input:** a mic in the navbar search, Ask UniSwap and chat fills the box as you speak.
+- **Voice input:** a mic in the navbar search, Ask UniSwap and chat fills the box as you speak, in
+  every browser. Chrome, Edge and Safari show words live; Firefox, Opera and Brave record and use Groq's
+  Whisper. Tap or hold to talk.
 
 Built but needs the team's own accounts/keys (see `DEPLOY.md`): Supabase database, Render + Vercel
 deployment, Cloudinary photos, Stripe test payments, Telegram bot.
@@ -310,7 +328,7 @@ deployment, Cloudinary photos, Stripe test payments, Telegram bot.
 ### Picking up on another machine
 
 Everything above is pushed to `implement_backend`. Last full check (27 Oct):
-- `npm test` (70) and `npm run test:api` (119) pass.
+- `npm test` (70) and `npm run test:api` (122, with voice on 27 Oct) pass.
 - The frontend's lint and `tsc --noEmit` are clean.
 - `next build` passes (run on 27 Oct, at 835bd15, with no warnings).
 After `git pull origin implement_backend`:
@@ -342,7 +360,8 @@ After `git pull origin implement_backend`:
 4. **Demo: desktop first.** The demo is shown from a laptop on a projector whose size is unknown.
    - Check pages at 1280×800 and 1024×768 (older projectors, or 1280 zoomed to 125%).
    - Phone-only work is paused until after the demo.
-   - Show voice input from Chrome (Firefox hides the mic), and allow the microphone before presenting.
+   - Voice input: allow the microphone in the browser you present from before the demo. Chrome or Safari
+     shows words live; Firefox needs you signed in and uses the Groq quota.
    - Before the demo, try the room: the screen size macOS picks, the HDMI adapter, and how the pale greens look on the projector.
 5. **Frontend follow-ups for Dy** (found in browser testing, not fixed yet):
    - a heart tapped while signed out should return to the listing after login;
