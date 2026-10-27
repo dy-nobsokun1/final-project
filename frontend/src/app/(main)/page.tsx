@@ -108,7 +108,8 @@ function parseFilters(
         ? (condition as ListingCondition)
         : "all",
     minPrice: Number.isFinite(minPrice) && minPrice > 0 ? minPrice : undefined,
-    maxPrice: Number.isFinite(maxPrice) && maxPrice > 0 ? maxPrice : undefined,
+    // A max of 0 is kept: it shows only the $0 listings. An empty `?maxPrice=` is no limit.
+    maxPrice: first(params.maxPrice) && Number.isFinite(maxPrice) && maxPrice >= 0 ? maxPrice : undefined,
   };
 }
 

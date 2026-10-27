@@ -4,8 +4,9 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useId, useState, useTransition } from "react";
 import { FilterSelect } from "@/components/listings/FilterSelect";
 import { FilterToggle } from "@/components/listings/FilterToggle";
+import { PriceRangeFilter } from "@/components/listings/PriceRangeFilter";
 import { Button } from "@/components/ui/button";
-import { CATEGORIES, CONDITIONS, LISTING_TYPES, PRICE_MAX } from "@/lib/constants";
+import { CATEGORIES, CONDITIONS, LISTING_TYPES } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 
 const ANY = "all";
@@ -26,41 +27,24 @@ const FILTERS: Array<{ key: string; label: string; options: Option[] }> = [
     label: "Condition",
     options: [{ value: ANY, label: "Any condition" }, ...toOptions(CONDITIONS)],
   },
-  {
-    key: "minPrice",
-    label: "Min price",
-    options: [
-      { value: ANY, label: "No minimum" },
-      { value: "10", label: "$10 or more" },
-      { value: "50", label: "$50 or more" },
-      { value: "100", label: "$100 or more" },
-    ],
-  },
-  {
-    key: "maxPrice",
-    label: "Max price",
-    options: [
-      { value: ANY, label: "Any price" },
-      { value: String(PRICE_MAX / 2), label: `Under $${PRICE_MAX / 2}` },
-      { value: String(PRICE_MAX), label: `Under $${PRICE_MAX}` },
-    ],
-  },
 ];
+/** The price boxes' URL params (see PriceRangeFilter). An empty box leaves its param out. */
+const PRICE_KEYS = ["minPrice", "maxPrice"];
+const URL_KEYS = [...FILTERS.map(({ key }) => key), ...PRICE_KEYS];
 
 /**
  * Browse filters. State is written back to the URL so the current filter set is
  * shareable and survives a refresh; the server page reads it via `searchParams`.
  * The navbar's search term (`q`) is kept when a filter changes.
- * On phones the panel starts folded behind a "Filters" button, because five stacked
- * dropdowns pushed the first listing far down the screen.
+ * On phones the panel starts folded behind a "Filters" button, because the stacked
+ * filters pushed the first listing far down the screen.
  */
 export function FilterPanel() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  const readUrl = () =>
-    Object.fromEntries(FILTERS.map(({ key }) => [key, searchParams.get(key) ?? ANY]));
+  const readUrl = () => Object.fromEntries(URL_KEYS.map((key) => [key, searchParams.get(key) ?? ANY]));
   const [values, setValues] = useState<Record<string, string>>(readUrl);
   // Phones only: the panel stays open after a filter is picked, since the page keeps it mounted.
   const [isOpen, setIsOpen] = useState(false);
@@ -115,11 +99,16 @@ export function FilterPanel() {
             options={options}
           />
         ))}
+        <PriceRangeFilter
+          min={values.minPrice === ANY ? "" : values.minPrice}
+          max={values.maxPrice === ANY ? "" : values.maxPrice}
+          onApply={(min, max) => apply({ minPrice: min || ANY, maxPrice: max || ANY })}
+        />
 
         <Button
           variant="secondary"
           disabled={activeCount === 0}
-          onClick={() => apply(Object.fromEntries(FILTERS.map(({ key }) => [key, ANY])))}
+          onClick={() => apply(Object.fromEntries(URL_KEYS.map((key) => [key, ANY])))}
         >
           Clear
         </Button>
