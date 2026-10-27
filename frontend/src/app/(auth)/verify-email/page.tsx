@@ -1,37 +1,20 @@
-import { CircleAlert, CircleCheck, Mail } from "lucide-react";
+import { CircleCheck, Mail } from "lucide-react";
+import type { Metadata } from "next";
 import Link from "next/link";
-import { verifyEmail } from "@/lib/api";
+import { ConfirmEmailForm } from "@/components/forms/ConfirmEmailForm";
 
-export const metadata = { title: "Verify email | UniSwap" };
+// no-referrer keeps the token in this page's URL out of the Referer header of any request it makes.
+export const metadata: Metadata = { title: "Verify email | UniSwap", referrer: "no-referrer" };
 
 /**
  * Two states on one route. Right after registering there is no token, so this is the
  * "check your email" step. The link in that email comes back here with `?token=...`,
- * which the API checks before unlocking the account. Until then, signing in is refused.
+ * which shows a button; only pressing it asks the API to unlock the account. Until then, signing in is refused.
  */
 export default async function VerifyEmailPage({ searchParams }: PageProps<"/verify-email">) {
   const { token } = await searchParams;
 
-  if (typeof token === "string" && token) {
-    const isVerified = await verifyEmail(token);
-    const Icon = isVerified ? CircleCheck : CircleAlert;
-    return (
-      <div className="flex flex-col items-center gap-4 text-center">
-        <Icon aria-hidden="true" className="size-10 text-foreground" />
-        <h1 className="font-heading text-2xl tracking-tight">
-          {isVerified ? "Email verified" : "Link not valid"}
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          {isVerified
-            ? "Your account is ready. Sign in to start buying and selling."
-            : "This verification link is invalid or has already been used."}
-        </p>
-        <Link href={isVerified ? "/login" : "/"} className="text-sm font-medium underline">
-          {isVerified ? "Sign in" : "Go to UniSwap"}
-        </Link>
-      </div>
-    );
-  }
+  if (typeof token === "string" && token) return <ConfirmEmailForm token={token} />;
 
   return (
     <div className="flex flex-col items-center gap-4 text-center">

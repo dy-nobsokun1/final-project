@@ -3,7 +3,7 @@
 import { refresh } from "next/cache";
 import { cookies } from "next/headers";
 import { ApiError, apiFetch, TOKEN_COOKIE } from "@/lib/api/http";
-import { getKhqrStatus } from "@/lib/api";
+import { getKhqrStatus, verifyEmail } from "@/lib/api";
 import type {
   AssistantAnswer,
   AssistantMessage,
@@ -102,6 +102,15 @@ export async function requestPasswordReset(email: string): Promise<ActionResult>
   try {
     await apiFetch("/api/auth/forgot-password", { method: "POST", body: JSON.stringify({ email }) });
     return {};
+  } catch (error) {
+    return toActionError(error);
+  }
+}
+
+/** Confirms an email on the button press, never on page load. `error` is set only if the API is unreachable. */
+export async function confirmEmail(token: string): Promise<ActionResult & { verified?: boolean }> {
+  try {
+    return { verified: await verifyEmail(token) };
   } catch (error) {
     return toActionError(error);
   }
