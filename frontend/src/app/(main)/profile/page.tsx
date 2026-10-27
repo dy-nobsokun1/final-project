@@ -3,18 +3,20 @@ import Link from "next/link";
 import { ListingGrid } from "@/components/listings/ListingGrid";
 import { ProfileDashboard } from "@/components/profile/ProfileDashboard";
 import { ProfileHeader } from "@/components/profile/ProfileHeader";
-import { getConversations, getMyListings, getMyStats, getUserReviews, requireUser } from "@/lib/api";
+import { RecentPurchases } from "@/components/profile/RecentPurchases";
+import { getConversations, getMyListings, getMyPurchases, getMyStats, getUserReviews, requireUser } from "@/lib/api";
 
 export const metadata = { title: "My profile | UniSwap" };
 
 /** Profile of the signed-in user. */
 export default async function ProfilePage() {
   const user = await requireUser();
-  const [listings, conversations, { averageRating, reviewCount }, stats] = await Promise.all([
+  const [listings, conversations, { averageRating, reviewCount }, stats, purchases] = await Promise.all([
     getMyListings(),
     getConversations(),
     getUserReviews(user.id),
     getMyStats(),
+    getMyPurchases(),
   ]);
 
   // Only here, never on /profile/[id]: it shows money.
@@ -65,6 +67,7 @@ export default async function ProfilePage() {
 
       {listingsFirst ? activeListings : dashboard}
       {listingsFirst ? dashboard : activeListings}
+      <RecentPurchases purchases={purchases} />
     </div>
   );
 }

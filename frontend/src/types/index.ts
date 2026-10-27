@@ -130,6 +130,20 @@ export interface CategoryCount {
   count: number;
 }
 
+/** How a purchase happened (GET /api/users/me/purchases). */
+export type PurchaseHow = "card" | "khqr" | "auction" | "offer" | "trade" | "free";
+
+/** One item you bought. `myRating` is your review of the seller for this deal (1-5), or null. */
+export interface Purchase {
+  listing: ListingWithSeller;
+  /** Dollars paid; 0 for a giveaway or trade. */
+  amount: number;
+  /** When the deal happened (ISO). */
+  at: string | null;
+  how: PurchaseHow;
+  myRating: number | null;
+}
+
 /**
  * GET /api/users/me/stats: the signed-in student's own deals (sales, purchases, trades). Only ever
  * shown to that student, because it has money in it. Amounts are dollars.

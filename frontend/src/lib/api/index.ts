@@ -14,6 +14,7 @@ import type {
   Review,
   ReviewSummary,
   User,
+  Purchase,
   UserStats,
 } from "@/types";
 
@@ -228,6 +229,17 @@ export async function getUserReviews(userId: string): Promise<ReviewSummary> {
 export async function getMyStats(): Promise<UserStats | null> {
   const result = await orNull(apiFetch<{ stats: UserStats }>("/api/users/me/stats"));
   return result?.stats ?? null;
+}
+
+/** What you bought, newest first. `[]` on any API error, so a failed lookup only hides the section. */
+export async function getMyPurchases(): Promise<Purchase[]> {
+  try {
+    return (await apiFetch<{ purchases: Purchase[] }>("/api/users/me/purchases")).purchases;
+  } catch (error) {
+    if (!(error instanceof ApiError)) throw error;
+    if (error.status !== 401) console.error(`[purchases] could not load purchases (${error.status}): ${error.message}`);
+    return [];
+  }
 }
 
 /** The reviews about one listing's deal: at most one per person. */
