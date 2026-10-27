@@ -1157,6 +1157,106 @@
       ],
       "seller": 0,
       "hoursAgo": 136
+    },
+    {
+      "title": "BIC 4-colour pen",
+      "description": "Blue, black, red and green in one pen, all four still write. I bought a pack and only need one. Can meet at AUPP.",
+      "category": "other",
+      "condition": "like_new",
+      "type": "sale",
+      "price": 1,
+      "images": [
+        "https://upload.wikimedia.org/wikipedia/commons/thumb/2/27/Bic_4_couleurs.jpg/960px-Bic_4_couleurs.jpg"
+      ],
+      "credits": [
+        {
+          "page": "https://commons.wikimedia.org/wiki/File:Bic_4_couleurs.jpg",
+          "author": "Prog138",
+          "licence": "CC BY-SA 4.0"
+        }
+      ],
+      "seller": 0,
+      "hoursAgo": 27
+    },
+    {
+      "title": "College-ruled composition notebook (unused)",
+      "description": "100 sheets, never written in. I bought two at the start of term. Can meet at AUPP.",
+      "category": "other",
+      "condition": "new",
+      "type": "sale",
+      "price": 2,
+      "images": [
+        "https://upload.wikimedia.org/wikipedia/commons/thumb/6/65/Green_Soft-Covered_Composition_Notebook_(14822730560).jpg/960px-Green_Soft-Covered_Composition_Notebook_(14822730560).jpg"
+      ],
+      "credits": [
+        {
+          "page": "https://commons.wikimedia.org/wiki/File:Green_Soft-Covered_Composition_Notebook_(14822730560).jpg",
+          "author": "slgckgc",
+          "licence": "CC BY 2.0"
+        }
+      ],
+      "seller": 1,
+      "hoursAgo": 33
+    },
+    {
+      "title": "USB-A to USB-C cable (1 m)",
+      "description": "Charges and transfers data. A spare from a phone box, I charge wirelessly now. Can meet at AUPP.",
+      "category": "electronics",
+      "condition": "good",
+      "type": "sale",
+      "price": 3,
+      "images": [
+        "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c3/USB-C_cable_2017_A.jpg/960px-USB-C_cable_2017_A.jpg"
+      ],
+      "credits": [
+        {
+          "page": "https://commons.wikimedia.org/wiki/File:USB-C_cable_2017_A.jpg",
+          "author": "Fructibus",
+          "licence": "CC0"
+        }
+      ],
+      "seller": 2,
+      "hoursAgo": 39
+    },
+    {
+      "title": "PNY 16GB USB flash drive",
+      "description": "Wiped and empty. Handy for printing at the library. Can meet at AUPP.",
+      "category": "electronics",
+      "condition": "good",
+      "type": "sale",
+      "price": 4,
+      "images": [
+        "https://upload.wikimedia.org/wikipedia/commons/thumb/8/89/PNY_USB_flash_drive_(16GB)%2C_Hillegersberg%2C_Rotterdam_(2020)_01.jpg/960px-PNY_USB_flash_drive_(16GB)%2C_Hillegersberg%2C_Rotterdam_(2020)_01.jpg"
+      ],
+      "credits": [
+        {
+          "page": "https://commons.wikimedia.org/wiki/File:PNY_USB_flash_drive_(16GB)%2C_Hillegersberg%2C_Rotterdam_(2020)_01.jpg",
+          "author": "Donald Trung Quoc Don",
+          "licence": "CC BY-SA 4.0"
+        }
+      ],
+      "seller": 3,
+      "hoursAgo": 45
+    },
+    {
+      "title": "Wired earphones (3.5 mm jack)",
+      "description": "Both sides work and the sound is clear. Cleaned, with spare ear pads. Can meet at AUPP.",
+      "category": "electronics",
+      "condition": "good",
+      "type": "sale",
+      "price": 5,
+      "images": [
+        "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1d/Earphones_BW_2011-12-10_15-49-08.JPG/960px-Earphones_BW_2011-12-10_15-49-08.JPG"
+      ],
+      "credits": [
+        {
+          "page": "https://commons.wikimedia.org/wiki/File:Earphones_BW_2011-12-10_15-49-08.JPG",
+          "author": "Berthold Werner",
+          "licence": "CC BY-SA 3.0"
+        }
+      ],
+      "seller": 4,
+      "hoursAgo": 50
     }
   ]
 }

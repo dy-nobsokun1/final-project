@@ -13,7 +13,7 @@ npm install
 cp .env.example .env      # then edit DATABASE_URL and JWT_SECRET
 npm run db:setup          # creates the tables (drops existing data!)
 npm run db:seed           # optional demo data; every demo user's password is "password123"
-npm run db:samples        # optional: 55 more realistic items (see "Sample listings" below)
+npm run db:samples        # optional: 60 more realistic items (see "Sample listings" below)
 npm run db:demo-deals     # optional, after the two above: 9 finished deals for the profile stats demo
 npm run dev               # http://localhost:4000, restarts on file changes
 npm test                  # unit tests (Node's built-in test runner)
@@ -24,7 +24,7 @@ Check it works: `curl http://localhost:4000/api/health` → `{"status":"ok"}`
 
 ### Sample listings
 
-`npm run db:samples` adds 55 realistic items to the database you already have (it wipes nothing and
+`npm run db:samples` adds 60 realistic items to the database you already have (it wipes nothing and
 skips items it added before), posted by 6 demo students whose emails end in `@demo.edu.kh` (password
 `password123`). `npm run db:samples -- --remove` deletes those students and everything they posted.
 
@@ -39,6 +39,9 @@ They are saved in `scripts/sample-listings.json`, so loading needs no internet, 
   `credits` gives every photo's page, author and licence.
 - **23 textbooks** from [Open Library](https://openlibrary.org) (public-domain book data), with their
   cover photos; 4 of them are wanted posts.
+- **5 cheap items** for sale at $1 to $5 (a pen, a notebook, a USB-C cable, a flash drive and
+  earphones), so KHQR and card payments can be tried without spending much. Their photos come from
+  Commons too, credited the same way.
 
 Photos stay on those sites (the listings store their URLs), so no third-party images are copied into
 this repository. The seed listings (`npm run db:seed`) use photos in `frontend/public/listings/` and

@@ -144,6 +144,27 @@ const ITEMS = [
     [commons("Motorcycle_helmet.jpg", "MediaPhoto.Org", "CC BY 3.0")]],
 ];
 
+// Cheap items ($1 to $5), so KHQR and card payments can be tried without spending much. Posted a day
+// or two ago, so the hero keeps showing the newer PC parts. Added after the textbooks (see below), so
+// the textbooks' sellers and times, which count the listings before them, stay as they were.
+const CHEAP_ITEMS = [
+  ["BIC 4-colour pen", "other", "like_new", "sale", 1, 0, 27,
+    "Blue, black, red and green in one pen, all four still write. I bought a pack and only need one. Can meet at AUPP.",
+    [commons("Bic_4_couleurs.jpg", "Prog138", "CC BY-SA 4.0")]],
+  ["College-ruled composition notebook (unused)", "other", "new", "sale", 2, 1, 33,
+    "100 sheets, never written in. I bought two at the start of term. Can meet at AUPP.",
+    [commons("Green_Soft-Covered_Composition_Notebook_(14822730560).jpg", "slgckgc", "CC BY 2.0")]],
+  ["USB-A to USB-C cable (1 m)", "electronics", "good", "sale", 3, 2, 39,
+    "Charges and transfers data. A spare from a phone box, I charge wirelessly now. Can meet at AUPP.",
+    [commons("USB-C_cable_2017_A.jpg", "Fructibus", "CC0")]],
+  ["PNY 16GB USB flash drive", "electronics", "good", "sale", 4, 3, 45,
+    "Wiped and empty. Handy for printing at the library. Can meet at AUPP.",
+    [commons("PNY_USB_flash_drive_(16GB),_Hillegersberg,_Rotterdam_(2020)_01.jpg", "Donald Trung Quoc Don", "CC BY-SA 4.0")]],
+  ["Wired earphones (3.5 mm jack)", "electronics", "good", "sale", 5, 4, 50,
+    "Both sides work and the sound is clear. Cleaned, with spare ear pads. Can meet at AUPP.",
+    [commons("Earphones_BW_2011-12-10_15-49-08.JPG", "Berthold Werner", "CC BY-SA 3.0")]],
+];
+
 // Course subjects for textbooks (Open Library), each with its price. The last three become "wanted"
 // posts, where the price is the budget.
 const SUBJECTS = [["calculus", 18], ["physics", 25], ["organic chemistry", 12], ["biology", 30],
@@ -169,7 +190,7 @@ async function getJson(url) {
   return response.json();
 }
 
-const listings = ITEMS.map(([title, category, condition, type, price, seller, hoursAgo, description, photos, auction]) => ({
+const toListing = ([title, category, condition, type, price, seller, hoursAgo, description, photos, auction]) => ({
   title,
   description,
   category,
@@ -181,7 +202,8 @@ const listings = ITEMS.map(([title, category, condition, type, price, seller, ho
   ...(auction ? { auction } : {}),
   seller,
   hoursAgo,
-}));
+});
+const listings = ITEMS.map(toListing);
 
 /** Adds one Open Library book per [subject, price]; the last `wanted` subjects become wanted posts. */
 async function addTextbooks(subjects, wanted) {
@@ -214,6 +236,7 @@ async function addTextbooks(subjects, wanted) {
 
 await addTextbooks(SUBJECTS, 3);
 await addTextbooks(MORE_SUBJECTS, 1);
+listings.push(...CHEAP_ITEMS.map(toListing));
 
 const sellers = [
   ["Sreyneang Chea", "sreyneang@demo.edu.kh", "Marketing", 2027],
