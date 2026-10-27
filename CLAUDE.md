@@ -74,16 +74,29 @@ when `uniswap` has none, so an older `uniswap` database needs the upgrade SQL (b
 ## How things work (non-obvious)
 
 - **Auth:** sign-up accepts only `.edu.kh` and returns `{ email, verificationRequired: true }` with
-  no token: nobody is signed in until the emailed link is opened. Registering again with an
+  no token: nobody is signed in until the emailed code is typed. Registering again with an
   unverified email replaces that account; a verified one gets 409. Login is blocked (403) until
   verified. `resend-verification` takes `{ email, password }`. `requireAuth` re-checks in the
   database that the account exists and is verified.
-  - **Confirm button:** `/verify-email?token=…` only shows a "Confirm my email" button
-    (`ConfirmEmailForm`, Server Action `confirmEmail`). Opening the page uses nothing up, because school
-    Outlook's Safe Links opens every link to scan it and would spend the single-use token. Reset-password
-    works the same way.
-  - **Shared links:** `FRONTEND_ORIGIN` builds every emailed link. A free `cloudflared` tunnel gets a
-    new address on every restart, so update it in `backend/.env` each time, or the links point nowhere.
+  - **Sign-up code, not a link:** the email holds a 6-digit code and no link or URL at all
+    (`utils/verificationCode.js`).
+    - **Why:** a link to a `trycloudflare.com` address sent it to school Outlook's Junk.
+    - **The code:** it works for 30 minutes and allows 5 tries. Only an HMAC of it (keyed with
+      `JWT_SECRET`) is stored, in `users.verification_code_hash`.
+    - **`POST /verify-email { email, code }`:** one `UPDATE` counts the try and checks the code, so
+      parallel guesses can't get more than 5 tries.
+    - **The page:** `/verify-email` (`VerifyCodeForm`) prefills the email from the httpOnly cookie
+      `uniswap_verify_email`, which the register and resend actions set.
+    - **Reset-password** still emails a link. Its page uses the token only on submit, because Outlook's
+      Safe Links opens every link to scan it.
+  - **Shared links** (`siteOrigin()` in `services/tunnel.js`): emails, Telegram buttons and card checkout
+    build links from `FRONTEND_ORIGIN`.
+    - **The usual setup:** a fixed Tailscale Funnel address (`tailscale funnel --bg 3000`, `*.ts.net`
+      allowed in `next.config.ts`).
+    - **With a quick tunnel instead:** set `TUNNEL_METRICS_URL=http://127.0.0.1:20241` and run
+      `cloudflared … --metrics 127.0.0.1:20241`. The API then reads the tunnel's current address every 15 s.
+    - **Card checkout** returns the buyer to the address they paid from, if it is `FRONTEND_ORIGIN`, the
+      tunnel's address or `http://localhost:3000`.
 - **Passwords:** `forgot-password` answers 200 `{ requested: true }` for every `.edu.kh` email and
   stores only a SHA-256 hash of the emailed token (`users.password_reset_hash`; 1 hour, single use,
   one email per account per 2 minutes while that link is unused). `reset-password` also verifies the
@@ -94,7 +107,7 @@ when `uniswap` has none, so an older `uniswap` database needs the upgrade SQL (b
   which `render.yaml` sets); API tests read it with `loggedLinks` in `test/api/helpers.js`.
 - **Email:** school Outlook / Microsoft 365 blocks password-based SMTP from apps. Send from Gmail
   (App Password, `smtp.gmail.com:465`) or Brevo; the recipients can still be `.edu.kh`. If sending
-  fails, the verification link is printed in the API log.
+  fails, the sign-up code is printed in the API log (never when `NODE_ENV=production`).
 - **Search:** full-text (`search_vector` generated column + GIN index), partial words (ILIKE with
   `%`/`_` escaped), and title typos (`pg_trgm`, `word_similarity >= 0.5`). Ranked title matches first
   (`inTitle` in `wordMatchSql`, plus title ILIKE or a related word on the title), then matches only in
@@ -337,6 +350,8 @@ Done (week 6, 26–27 Oct):
   Whisper. Tap or hold to talk.
 - **Recent purchases (28 Oct):** your profile lists what you bought, with Review seller and More from
   that seller.
+- **Sign-up by code (28 Oct):** the sign-up email carries a 6-digit code instead of a link, so school
+  Outlook stops filing it as Junk. Links in other emails use one fixed site address.
 
 Built but needs the team's own accounts/keys (see `DEPLOY.md`): Supabase database, Render + Vercel
 deployment, Cloudinary photos, Stripe test payments, Telegram bot.
@@ -344,7 +359,7 @@ deployment, Cloudinary photos, Stripe test payments, Telegram bot.
 ### Picking up on another machine
 
 Everything above is pushed to `implement_backend`. Last full check (27 Oct):
-- `npm test` (70) and `npm run test:api` (125, with purchases on 28 Oct) pass.
+- `npm test` (77) and `npm run test:api` (132) pass (28 Oct, with the sign-up code).
 - The frontend's lint and `tsc --noEmit` are clean.
 - `next build` passes (run on 27 Oct, at 835bd15, with no warnings).
 After `git pull origin implement_backend`:
@@ -353,7 +368,8 @@ After `git pull origin implement_backend`:
 - Upgrade your local `uniswap` database: run the blocks under "Upgrading an existing database to this
   version" in `backend/README.md`, or `npm run db:setup && npm run db:seed` if it only holds demo
   data. The test database needs nothing: `npm run test:api` rebuilds it from `schema.sql`.
-  The 27 Oct block adds `listings.sold_at`; the API needs it before it starts.
+  The 27 Oct block adds `listings.sold_at`; the API needs it before it starts. So does the 28 Oct
+  sign-up code block (the `verification_code_*` columns).
 - For the profile stats demo, run `npm run db:demo-deals` (after `db:seed` and `db:samples`).
 - To add new sample items, run plain `npm run db:samples`: it skips items already there and keeps the
   sellers. `-- --remove` deletes the `@demo.edu.kh` sellers and everything hanging off them, including
