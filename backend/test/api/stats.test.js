@@ -21,16 +21,16 @@ test("stats need a sign-in", async () => {
   assert.equal((await api.request("GET", "/api/users/me/stats")).status, 401);
 });
 
-test("under 3 deals the stats are locked", async () => {
-  const seller = await api.createUser("Seller");
-  const [first, second] = await Promise.all([api.createListing(seller), api.createListing(seller)]);
-  await markAs(seller, first, "sold");
-  await markAs(seller, second, "sold");
+test("a user with no deals gets zeros, empty months and empty category lists", async () => {
+  const newcomer = await api.createUser("Newcomer");
+  await api.createListing(newcomer); // still for sale, so not a deal
 
-  const body = await stats(seller);
-  assert.equal(body.deals, 2);
-  assert.equal(body.unlocked, false);
-  assert.equal(body.unlockDeals, 3);
+  const { months, ...body } = await stats(newcomer);
+  assert.deepEqual(body, {
+    deals: 0, sales: 0, purchases: 0, trades: 0, earned: 0, spent: 0, activeListings: 1, soldListings: 0,
+    averageRating: null, reviewCount: 0, soldByCategory: [], boughtByCategory: [],
+  });
+  assert.deepEqual(months.map((month) => [month.earned, month.spent]), Array(6).fill([0, 0]));
 });
 
 test("sales, a trade, a paid purchase, an auction win and an accepted offer add up per month", async () => {
@@ -71,8 +71,8 @@ test("sales, a trade, a paid purchase, an auction win and an accepted offer add 
 
   const body = await stats(me);
   assert.deepEqual(
-    { deals: body.deals, sales: body.sales, trades: body.trades, purchases: body.purchases, unlocked: body.unlocked },
-    { deals: 5, sales: 1, trades: 1, purchases: 3, unlocked: true },
+    { deals: body.deals, sales: body.sales, trades: body.trades, purchases: body.purchases },
+    { deals: 5, sales: 1, trades: 1, purchases: 3 },
   );
   assert.equal(body.earned, 35);
   assert.equal(body.spent, 69);

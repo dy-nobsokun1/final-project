@@ -1,8 +1,6 @@
 import { LISTING_SELECT } from "./listings.js";
 import { query } from "./pool.js";
 
-// Profile stats unlock after this many completed deals (sales + purchases + trades).
-export const UNLOCK_DEALS = 3;
 // How many months the earnings and spending charts show, this month included.
 const CHART_MONTHS = 6;
 // Months are counted in Cambodian time (the database runs in UTC), so a deal late on the 31st
@@ -97,8 +95,6 @@ export async function getUserStats(userId) {
   const purchases = deals.filter((deal) => deal.role === "purchase");
 
   return {
-    unlocked: deals.length >= UNLOCK_DEALS,
-    unlockDeals: UNLOCK_DEALS,
     deals: deals.length,
     sales: deals.filter((deal) => deal.role === "sale").length,
     purchases: purchases.length,

@@ -5,6 +5,8 @@ interface StatsRingChartProps {
   title: string;
   /** Most first, as the API sends them. */
   categories: CategoryCount[];
+  /** Shown in place of the ring when there is nothing to count. */
+  emptyText: string;
 }
 
 // Six clearly different hues, each with at least 3:1 contrast on the light card (brand-600 is the
@@ -37,40 +39,44 @@ function ringGradient(categories: CategoryCount[], total: number) {
 }
 
 /** Counts per category as a ring (a CSS conic-gradient) with a legend that carries every number. */
-export function StatsRingChart({ title, categories }: StatsRingChartProps) {
+export function StatsRingChart({ title, categories, emptyText }: StatsRingChartProps) {
   const total = categories.reduce((sum, item) => sum + item.count, 0);
 
   return (
     <figure className="flex flex-col gap-3">
       <figcaption className="text-sm font-semibold">{title}</figcaption>
-      <div className="flex flex-wrap items-center gap-5">
-        {/* The legend beside it says everything the ring shows, so the ring itself is hidden from screen readers. */}
-        <div
-          aria-hidden="true"
-          className="relative size-32 shrink-0 rounded-full"
-          style={{ background: ringGradient(categories, total) }}
-        >
-          <div className="absolute inset-5 flex flex-col items-center justify-center rounded-full bg-brand-50">
-            <span className="font-heading text-2xl leading-none">{total}</span>
-            <span className="text-xs text-muted-foreground">{total === 1 ? "item" : "items"}</span>
+      {total === 0 ? (
+        <p className="text-sm text-muted-foreground">{emptyText}</p>
+      ) : (
+        <div className="flex flex-wrap items-center gap-5">
+          {/* The legend beside it says everything the ring shows, so the ring itself is hidden from screen readers. */}
+          <div
+            aria-hidden="true"
+            className="relative size-32 shrink-0 rounded-full"
+            style={{ background: ringGradient(categories, total) }}
+          >
+            <div className="absolute inset-5 flex flex-col items-center justify-center rounded-full bg-brand-50">
+              <span className="font-heading text-2xl leading-none">{total}</span>
+              <span className="text-xs text-muted-foreground">{total === 1 ? "item" : "items"}</span>
+            </div>
           </div>
+          <ul className="flex min-w-40 max-w-72 flex-1 flex-col gap-1.5 text-sm">
+            {categories.map((item, index) => (
+              <li key={item.category} className="flex items-center gap-2">
+                <span
+                  aria-hidden="true"
+                  className="size-3 shrink-0 rounded-sm"
+                  style={{ background: COLORS[index % COLORS.length] }}
+                />
+                <span className="flex-1">{categoryLabel(item.category)}</span>
+                <span className="font-semibold tabular-nums">
+                  {item.count} ({Math.round((item.count / total) * 100)}%)
+                </span>
+              </li>
+            ))}
+          </ul>
         </div>
-        <ul className="flex min-w-40 max-w-72 flex-1 flex-col gap-1.5 text-sm">
-          {categories.map((item, index) => (
-            <li key={item.category} className="flex items-center gap-2">
-              <span
-                aria-hidden="true"
-                className="size-3 shrink-0 rounded-sm"
-                style={{ background: COLORS[index % COLORS.length] }}
-              />
-              <span className="flex-1">{categoryLabel(item.category)}</span>
-              <span className="font-semibold tabular-nums">
-                {item.count} ({Math.round((item.count / total) * 100)}%)
-              </span>
-            </li>
-          ))}
-        </ul>
-      </div>
+      )}
     </figure>
   );
 }

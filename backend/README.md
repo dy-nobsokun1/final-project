@@ -369,7 +369,7 @@ other: 1 to 5 whole stars and an optional comment of up to 1000 characters.
 ### Profile stats
 
 A student's own profile shows their deals: money earned and spent per month, and items by category
-(`GET /api/users/me/stats`, `src/db/stats.js`). They unlock after 3 completed deals (`UNLOCK_DEALS`).
+(`GET /api/users/me/stats`, `src/db/stats.js`). They always show, as zeros until the first deal.
 
 - **A deal** is a listing now `sold` or `traded` (wanted posts never count), on either side:
   - a **sale** or **trade**: your own listing;
@@ -612,7 +612,7 @@ A token issued before the account's last password change or reset is refused (40
 | DELETE 🔒 | `/api/users/me/telegram` | Disconnect Telegram |
 | GET 🔒 | `/api/users/me/saved` | `{ listings }`: my saved listings, most recently saved first, in any status (a sold one shows as sold) |
 | GET 🔒 | `/api/users/me/saved/ids` | `{ listingIds }`: which listings I saved, so a page can fill in the hearts on its cards |
-| GET 🔒 | `/api/users/me/stats` | `{ stats }`: your own deals (see Profile stats above): `unlocked` (3+ deals), `deals`, `sales`, `purchases`, `trades`, `earned`, `spent`, `activeListings`, `soldListings`, `averageRating`, `reviewCount`, `months` (the last 6, oldest first: `{ month: "YYYY-MM", earned, spent }`), `soldByCategory` and `boughtByCategory` (`{ category, count }`, the most first) |
+| GET 🔒 | `/api/users/me/stats` | `{ stats }`: your own deals (see Profile stats above): `deals`, `sales`, `purchases`, `trades`, `earned`, `spent`, `activeListings`, `soldListings`, `averageRating`, `reviewCount`, `months` (the last 6, oldest first: `{ month: "YYYY-MM", earned, spent }`), `soldByCategory` and `boughtByCategory` (`{ category, count }`, the most first) |
 | GET | `/api/users/:id` | Public profile (email hidden) |
 | GET | `/api/users/:id/listings` | All listings by a user |
 | PATCH 🔒 | `/api/users/me` | `{ name?, major?, graduationYear?, bio?, avatarUrl?, bakongAccountId? }`. `bakongAccountId` is `name@bank`; `""` or `null` removes it |

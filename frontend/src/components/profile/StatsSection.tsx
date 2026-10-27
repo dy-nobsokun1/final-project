@@ -12,10 +12,12 @@ interface StatsSectionProps {
   months: Array<{ month: string; amount: number }>;
   ringTitle: string;
   categories: CategoryCount[];
+  /** Shown in place of the ring while this side has no deals, like "No sales yet". */
+  emptyText: string;
 }
 
 /** One side of your stats: its numbers, then money per month (bars) and items per category (ring). */
-export function StatsSection({ title, figures, barsTitle, months, ringTitle, categories }: StatsSectionProps) {
+export function StatsSection({ title, figures, barsTitle, months, ringTitle, categories, emptyText }: StatsSectionProps) {
   return (
     <section
       aria-label={title}
@@ -32,7 +34,7 @@ export function StatsSection({ title, figures, barsTitle, months, ringTitle, cat
       </dl>
       <div className="grid gap-8 md:grid-cols-2">
         <StatsBarChart title={barsTitle} months={months} />
-        <StatsRingChart title={ringTitle} categories={categories} />
+        <StatsRingChart title={ringTitle} categories={categories} emptyText={emptyText} />
       </div>
     </section>
   );

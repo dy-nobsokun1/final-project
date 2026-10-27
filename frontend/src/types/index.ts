@@ -135,9 +135,6 @@ export interface CategoryCount {
  * shown to that student, because it has money in it. Amounts are dollars.
  */
 export interface UserStats {
-  /** True once `deals` reaches `unlockDeals` (3); until then the profile shows a progress card. */
-  unlocked: boolean;
-  unlockDeals: number;
   deals: number;
   sales: number;
   purchases: number;
