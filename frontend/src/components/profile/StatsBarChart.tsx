@@ -48,17 +48,21 @@ export function StatsBarChart({ title, months }: StatsBarChartProps) {
         ))}
       </div>
 
-      <table className="sr-only">
-        <caption>{title}</caption>
-        <tbody>
-          {months.map(({ month, amount }) => (
-            <tr key={month}>
-              <th scope="row">{monthName(month, "long")}</th>
-              <td>{formatPrice(amount)}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      {/* sr-only goes on a wrapper: a table ignores its 1px size and its caption is not clipped, so the
+          title showed twice. */}
+      <div className="sr-only">
+        <table>
+          <caption>{title}</caption>
+          <tbody>
+            {months.map(({ month, amount }) => (
+              <tr key={month}>
+                <th scope="row">{monthName(month, "long")}</th>
+                <td>{formatPrice(amount)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </figure>
   );
 }
