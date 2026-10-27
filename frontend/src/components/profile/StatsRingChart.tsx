@@ -9,13 +9,16 @@ interface StatsRingChartProps {
 
 // Six clearly different hues, each with at least 3:1 contrast on the light card (brand-600 is the
 // lightest), biggest category first. The ring is drawn clockwise from the top in the legend's order.
+// The last slice touches the first, so maroon goes last: it looks like dark green to red-green
+// colour-blind eyes, and this way the two meet only when all six show. Blue and plum are kept apart
+// for the same reason.
 const COLORS = [
   "var(--color-brand-900)", // dark green
   "var(--color-brand-600)", // sage
-  "var(--color-brand-danger)", // maroon
-  "var(--chart-amber)",
   "var(--chart-blue)",
+  "var(--chart-amber)",
   "var(--chart-plum)",
+  "var(--color-brand-danger)", // maroon
 ];
 // A thin gap of card colour between slices, so two dark slices never run into each other.
 const GAP_DEGREES = 2;
