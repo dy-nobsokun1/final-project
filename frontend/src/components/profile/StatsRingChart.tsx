@@ -7,15 +7,15 @@ interface StatsRingChartProps {
   categories: CategoryCount[];
 }
 
-// Brand tokens with at least 3:1 contrast on the light card (brand-600 is the lightest that passes),
-// biggest category first. The ring is drawn clockwise from the top in the legend's order.
+// Six clearly different hues, each with at least 3:1 contrast on the light card (brand-600 is the
+// lightest), biggest category first. The ring is drawn clockwise from the top in the legend's order.
 const COLORS = [
-  "var(--color-brand-900)",
-  "var(--color-brand-600)",
-  "var(--color-brand-danger)",
-  "var(--color-brand-ink)",
-  "var(--color-brand-deep-2)",
-  "var(--color-brand-deep)",
+  "var(--color-brand-900)", // dark green
+  "var(--color-brand-600)", // sage
+  "var(--color-brand-danger)", // maroon
+  "var(--chart-amber)",
+  "var(--chart-blue)",
+  "var(--chart-plum)",
 ];
 // A thin gap of card colour between slices, so two dark slices never run into each other.
 const GAP_DEGREES = 2;

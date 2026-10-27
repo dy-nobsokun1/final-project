@@ -80,6 +80,11 @@
   --brand-deep: #22312d;
   /* A shade above the page, for inputs, hovers and inset panels. */
   --brand-deep-2: #31443e;
+  /* For the profile stats ring only, so its six slices differ by hue, not only by shade. Contrast
+     on the light card #E6F2DD: */
+  --chart-amber: #946000; /* 4.6:1 */
+  --chart-blue: #2b5797; /* 6.2:1 */
+  --chart-plum: #8a4a8e; /* 5.3:1 */
 
   /* The page is the dark #22312D field, so page-level text is white. Cards,
      panels and the auth card are the light #B1D3B9 / #E6F2DD surfaces, and
