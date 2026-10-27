@@ -28,7 +28,7 @@ export function PurchaseCard({ purchase }: { purchase: Purchase }) {
   const [isReviewing, setIsReviewing] = useState(false);
   const { listing, at, myRating } = purchase;
   const { seller } = listing;
-  const date = at ? new Date(at).toLocaleDateString("en-GB", { day: "numeric", month: "short" }) : null;
+  const date = at ? new Date(at).toLocaleDateString("en-GB", { day: "numeric", month: "short", timeZone: "Asia/Phnom_Penh" }) : null;
 
   return (
     <div className="light-surface flex flex-col gap-3 rounded-xl border border-border bg-card p-3">
