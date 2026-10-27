@@ -2,9 +2,11 @@
 
 import { Search } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useId, useState, type KeyboardEvent } from "react";
+import { useId, useRef, useState, type KeyboardEvent } from "react";
+import { VoiceInputButton } from "@/components/forms/VoiceInputButton";
 import { SearchSuggestions } from "@/components/layout/SearchSuggestions";
 import { useSearchSuggestions } from "@/hooks/use-search-suggestions";
+import { useVoiceInput } from "@/hooks/use-voice-input";
 
 /**
  * The navbar's search box. Typing opens suggestions under it (SearchSuggestions). ↓ and ↑ move
@@ -20,6 +22,16 @@ export function SearchBox() {
   // Only asks while the list is open, so a page loaded with ?q= does not fetch suggestions.
   const answer = useSearchSuggestions(isOpen ? query : "");
   const listboxId = useId();
+  const inputRef = useRef<HTMLInputElement>(null);
+  // Spoken words fill the box and open the suggestions; the student still presses Enter to search.
+  const voice = useVoiceInput({
+    onText: (text) => {
+      setQuery(text);
+      setIsOpen(true);
+      setActiveIndex(-1);
+    },
+    onEnd: () => inputRef.current?.focus(),
+  });
 
   const suggestions = answer?.results ?? [];
   const searchHref = query ? `/?q=${encodeURIComponent(query)}` : "/";
@@ -73,10 +85,12 @@ export function SearchBox() {
         className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-brand-200"
       />
       <input
+        ref={inputRef}
         type="search"
         name="q"
         value={query}
         onChange={(event) => {
+          voice.clearError();
           setQuery(event.target.value);
           setIsOpen(true);
           setActiveIndex(-1);
@@ -91,8 +105,23 @@ export function SearchBox() {
         aria-autocomplete="list"
         aria-activedescendant={isShown && activeIndex >= 0 ? `${listboxId}-${activeIndex}` : undefined}
         autoComplete="off"
-        className="h-9 w-full rounded-full border border-input bg-brand-deep-2 pl-9 pr-3 text-sm text-brand-50 transition-colors placeholder:text-muted-foreground focus:border-ring focus:bg-brand-600 focus:text-brand-ink focus:outline-none"
+        className="h-9 w-full rounded-full border border-input bg-brand-deep-2 pl-9 pr-10 text-sm [&::-webkit-search-cancel-button]:appearance-none text-brand-50 transition-colors placeholder:text-muted-foreground focus:border-ring focus:bg-brand-600 focus:text-brand-ink focus:outline-none"
       />
+      {voice.isSupported ? (
+        <VoiceInputButton
+          isListening={voice.isListening}
+          onClick={() => (voice.isListening ? voice.stop() : voice.start(query))}
+          className="absolute right-1 top-1/2 size-7 -translate-y-1/2 text-brand-200 hover:bg-brand-600 hover:text-brand-ink"
+        />
+      ) : null}
+      {voice.error ? (
+        <p
+          role="alert"
+          className="absolute left-0 right-0 top-full z-40 mt-1 rounded-lg bg-brand-50 px-3 py-2 text-sm text-brand-ink shadow-md"
+        >
+          {voice.error}
+        </p>
+      ) : null}
       {isShown ? (
         <SearchSuggestions
           id={listboxId}

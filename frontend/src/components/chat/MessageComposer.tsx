@@ -1,7 +1,9 @@
 "use client";
 
 import { Send } from "lucide-react";
-import { useState } from "react";
+import { useRef, useState } from "react";
+import { VoiceInputButton } from "@/components/forms/VoiceInputButton";
+import { useVoiceInput } from "@/hooks/use-voice-input";
 import { sendMessage } from "@/lib/api/actions";
 
 interface MessageComposerProps {
@@ -17,6 +19,10 @@ export function MessageComposer({ listingId, receiverId }: MessageComposerProps)
   const [draft, setDraft] = useState("");
   const [isSending, setIsSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  // Spoken words are added to the end of the draft; the student still presses Send.
+  const voice = useVoiceInput({ onText: setDraft, onEnd: () => textareaRef.current?.focus() });
+  const message = voice.error ?? error;
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -36,15 +42,27 @@ export function MessageComposer({ listingId, receiverId }: MessageComposerProps)
           Message
         </label>
         <textarea
+          ref={textareaRef}
           id="message"
           name="message"
           rows={2}
           maxLength={2000}
           value={draft}
-          onChange={(event) => setDraft(event.target.value)}
+          onChange={(event) => {
+            voice.clearError();
+            setError(null);
+            setDraft(event.target.value);
+          }}
           placeholder="Write a message..."
           className="flex-1 resize-none rounded-lg border border-input bg-card px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-ring focus:outline-none"
         />
+        {voice.isSupported ? (
+          <VoiceInputButton
+            isListening={voice.isListening}
+            onClick={() => (voice.isListening ? voice.stop() : voice.start(draft))}
+            className="size-10 rounded-lg border border-input bg-card text-foreground hover:bg-muted"
+          />
+        ) : null}
         <button
           type="submit"
           disabled={!draft.trim() || isSending}
@@ -54,9 +72,9 @@ export function MessageComposer({ listingId, receiverId }: MessageComposerProps)
           <Send aria-hidden="true" className="size-4" />
         </button>
       </div>
-      {error ? (
+      {message ? (
         <p role="alert" className="text-sm text-foreground">
-          {error}
+          {message}
         </p>
       ) : null}
     </form>

@@ -1,7 +1,11 @@
-import type { KeyboardEvent } from "react";
+"use client";
+
+import { useRef, type KeyboardEvent } from "react";
 import { Send, Sparkles } from "lucide-react";
+import { VoiceInputButton } from "@/components/forms/VoiceInputButton";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useVoiceInput } from "@/hooks/use-voice-input";
 
 /** The API takes messages of at most 1000 characters (backend/src/utils/assistant.js). */
 const MAX_LENGTH = 1000;
@@ -20,6 +24,10 @@ interface AssistantQuestionBoxProps {
 /** Ask UniSwap's question box, with the last error under it. */
 export function AssistantQuestionBox({ value, onChange, onAsk, isAsking, error }: AssistantQuestionBoxProps) {
   const isEmpty = value === "";
+  const inputRef = useRef<HTMLInputElement>(null);
+  // Spoken words are added to the end of the box; the student still presses Ask.
+  const voice = useVoiceInput({ onText: onChange, onEnd: () => inputRef.current?.focus() });
+  const message = voice.error ?? error;
 
   // Tab in the empty box fills in the example instead of moving on. Once there is text, Tab and
   // Shift+Tab move focus as usual, so nobody gets stuck in the box.
@@ -47,9 +55,13 @@ export function AssistantQuestionBox({ value, onChange, onAsk, isAsking, error }
           Your question
         </label>
         <Input
+          ref={inputRef}
           id="assistant-question"
           value={value}
-          onChange={(event) => onChange(event.target.value)}
+          onChange={(event) => {
+            voice.clearError();
+            onChange(event.target.value);
+          }}
           onKeyDown={handleKeyDown}
           maxLength={MAX_LENGTH}
           placeholder={`e.g. ${EXAMPLE}`}
@@ -63,6 +75,13 @@ export function AssistantQuestionBox({ value, onChange, onAsk, isAsking, error }
             Press Tab to use the example
           </span>
         ) : null}
+        {voice.isSupported ? (
+          <VoiceInputButton
+            isListening={voice.isListening}
+            onClick={() => (voice.isListening ? voice.stop() : voice.start(value))}
+            className="size-10"
+          />
+        ) : null}
         {/* Dark like the hero's "Browse listings" (#E6F2DD on #22312D is 11.72:1). Dimmed to 60%
             when disabled, its circle is still 3.7:1 on the bar. The ripple turns light to show. */}
         <Button
@@ -75,9 +94,9 @@ export function AssistantQuestionBox({ value, onChange, onAsk, isAsking, error }
           <Send aria-hidden="true" />
         </Button>
       </form>
-      {error ? (
+      {message ? (
         <p role="alert" className="text-sm text-foreground">
-          {error}
+          {message}
         </p>
       ) : null}
     </div>
