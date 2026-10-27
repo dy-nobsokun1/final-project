@@ -50,6 +50,7 @@ npm run test:api     # API tests: real HTTP against TEST_DATABASE_URL (a separat
 npm run db:setup     # recreate tables: WIPES ALL DATA
 npm run db:seed      # demo data
 npm run db:samples   # +55 sample items: hand-written with Commons/Flickr photos (credits in the JSON), plus Open Library textbooks (-- --remove to undo)
+npm run db:demo-deals # 9 finished deals for chanrithorn, for the profile stats (-- --remove to undo)
 npm run email:test -- someone@aupp.edu.kh
 
 # frontend/
@@ -208,6 +209,17 @@ when `uniswap` has none, so an older `uniswap` database needs the upgrade SQL (b
     with a question). That keeps Groq's per-minute token limit for new questions.
 
   A draft opens `/listings/new?type=buy_request&title=…`, which fills in `NewListingForm`.
+- **Profile stats:** `GET /api/users/me/stats` (`db/stats.js`), for your own profile only; `/profile/[id]`
+  shows nothing new. A deal is a listing now sold or traded, never a wanted post.
+  - Your own listing is a sale (or trade). Someone else's is a purchase if you paid online, won the
+    auction or had your offer accepted: `findDealPartner` without the chat rule.
+  - Amount: the paid amount, else the winning bid, else the agreed price (or the asking price if lower),
+    else the asking price. A giveaway is $0; a trade counts only its cash top-up, for the owner.
+  - Date: `paid_at`, else `listings.sold_at` (PATCH and `markPaid` set it; PATCH clears it when the item
+    goes back to active or reserved; other edits keep it). Months are in Phnom Penh time, last 6.
+  - Unlocks at 3 deals (`UNLOCK_DEALS`); badges at 5 ("Active trader") and 10 ("Top seller").
+  - `ProfileDashboard` and the `Stats*` components draw bars and a conic-gradient ring, no chart package.
+  - `npm run db:demo-deals` (`-- --remove` undoes it) gives chanrithorn 9 deals over Aug–Oct for the demo.
 - **Messaging:** there is no conversations table. A thread is all messages between two users about
   one listing (this follows the ER diagram).
 - **Uploads:** `POST /api/uploads` with raw image bytes (max 5 MB; the form takes 4 MB, `MAX_PHOTO_MB`,
@@ -246,6 +258,8 @@ Done (week 6, 26–27 Oct):
     everywhere), and an "I have this →" pill (a span inside the card's link, hidden on your own posts).
 - **Card payment polish:** the pay button says "Secure checkout by Stripe. Demo mode: no real money is
   charged." (no test card numbers on screen), and a returning buyer sees which card they paid with.
+- **Profile stats dashboard:** after 3 deals, your own profile shows what you earned and spent per
+  month and by category; before that, a progress card.
 - **Realistic sample data:** PC parts and everyday student items, with real photos.
 - **Inbox and listing pages:**
   - Chat rows show the listing's photo and the last message.
@@ -258,15 +272,17 @@ deployment, Cloudinary photos, Stripe test payments, Telegram bot.
 ### Picking up on another machine
 
 Everything above is pushed to `implement_backend`. Last full check (27 Oct):
-- `npm test` (59) and `npm run test:api` (105) pass.
+- `npm test` (59) and `npm run test:api` (110) pass.
 - The frontend's lint and `tsc --noEmit` are clean.
-- `next build` passes (run on 27 Oct, at 55c169a, with no warnings).
+- `next build` passes (run on 27 Oct, at 835bd15, with no warnings).
 After `git pull origin implement_backend`:
 
 - No packages were added, but run `npm install` in `backend/` and `frontend/` if they are stale.
 - Upgrade your local `uniswap` database: run the blocks under "Upgrading an existing database to this
   version" in `backend/README.md`, or `npm run db:setup && npm run db:seed` if it only holds demo
   data. The test database needs nothing: `npm run test:api` rebuilds it from `schema.sql`.
+  The 27 Oct block adds `listings.sold_at`; the API needs it before it starts.
+- For the profile stats demo, run `npm run db:demo-deals` (after `db:seed` and `db:samples`).
 - To swap in the new sample items, run `npm run db:samples -- --remove && npm run db:samples`. It only
   touches the `@demo.edu.kh` sellers.
 
