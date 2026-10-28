@@ -65,10 +65,13 @@ Before declaring any task complete:
 - Execute `npm test` in `backend/` (must pass 78+ unit tests).
 - Execute `npm run build` in `frontend/` (zero TypeScript or Turbopack errors).
 - Confirm live environment state (Supabase, Telegram alerts, Stripe demo flow).
+- **Continuous Commit Policy**: Automatically commit every completed task/update with a clean, descriptive message.
+- **Push Reminders**: Periodically track unpushed commits and remind the user to push to `origin implement_backend` (`git push origin implement_backend`).
 - Provide a concise Executive Summary:
   - **What Was Done**: Clear, non-technical overview of accomplishments.
   - **Files Changed**: Basenames and exact roles.
   - **Verification Results**: Test and build status.
+  - **Git Status**: Commit hash and reminder if remote push is pending.
   - **Next Steps / Decisions**: Clear action items for the user.
 
 ---

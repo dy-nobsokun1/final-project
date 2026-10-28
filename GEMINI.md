@@ -140,8 +140,10 @@ Log of recent tasks, scripts, and bug fixes completed during Gemini sessions.
   3. Delegate tasks systematically to specialized agents or execution streams.
   4. Enforce quality gates (`npm test` in backend, `npm run build` in frontend) before delivery.
 
-### 14. Continuous Git Commit Policy
+### 14. Continuous Git Commit Policy & Remote Push Reminders
 - **Rule**: Per user instruction on 28 Oct 2026, all completed tasks and updates must be committed to the repository upon completion.
+- **Push Reminders**: The manager persona will periodically track commits ahead of `origin/implement_backend` and remind the user to push to `implement_backend` branch.
+
 
 
 
