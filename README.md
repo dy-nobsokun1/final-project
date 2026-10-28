@@ -9,7 +9,7 @@ buy, sell, trade, or give away items.
 | [`backend/`](backend/) | Node.js + Express REST API + PostgreSQL | Long Vathanak |
 
 Rules for AI coding agents working in this repo are in [`Agent.md`](Agent.md).
-Putting it online (Supabase, Render, Vercel, Cloudinary, Stripe, Telegram): [`DEPLOY.md`](DEPLOY.md).
+Putting it online (Supabase, Render, Vercel, Cloudinary, Stripe, Telegram): [`memory/DEPLOY.md`](memory/DEPLOY.md).
 
 ## Status (week 5)
 
@@ -71,7 +71,7 @@ Putting it online (Supabase, Render, Vercel, Cloudinary, Stripe, Telegram): [`DE
 
 ### Not done yet
 
-- **Needs our own accounts and keys** (steps in [`DEPLOY.md`](DEPLOY.md)): the Supabase database,
+- **Needs our own accounts and keys** (steps in [`memory/DEPLOY.md`](memory/DEPLOY.md)): the Supabase database,
   Render and Vercel hosting, Cloudinary, Stripe test keys and the Telegram bot. Until their keys are
   set, photos are saved on the server's disk, and payments and Telegram stay switched off.
 - **KHQR on Render:** Bakong only answers Cambodian IP addresses, so KHQR works when the API runs
