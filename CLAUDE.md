@@ -354,8 +354,10 @@ Done (week 6, 26–27 Oct):
 - **Sign-up by code (28 Oct):** the sign-up email carries a 6-digit code instead of a link, so school
   Outlook stops filing it as Junk. Links in other emails use one fixed site address.
 
-### Recent Gemini session changelog (reference)
-@GEMINI.md
+### Team Memory & Architecture Rules (reference)
+@memory/index.md
+@memory/rules.md
+@memory/changelog.md
 
 Built but needs the team's own accounts/keys (see `DEPLOY.md`): Supabase database, Render + Vercel
 deployment, Cloudinary photos, Stripe test payments, Telegram bot.
