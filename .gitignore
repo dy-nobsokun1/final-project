@@ -1,2 +1,3 @@
 # macOS Finder metadata (in every folder)
 .DS_Store
+.claude/
