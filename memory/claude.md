@@ -9,7 +9,7 @@ uneven trades), give away, or post a "wanted" request. FYP 401 final year projec
 
 ## Team rules (must follow)
 
-@Agent.md
+@memory/rules.md
 
 In short: ask before adding any package; keep diffs small and scoped; never commit secrets (the repo
 is public); state a plan before multi-file changes; explain every change so the student can defend it.

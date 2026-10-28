@@ -15,6 +15,10 @@ Welcome to the **UniSwap Memory Bank**. This folder contains central architectur
 3. **[changelog.md](changelog.md)**:
    - **Technical Handover Log**: Detailed history of recent features, database migrations, Telegram bot integrations, and bug fixes.
 
+4. **[claude.md](claude.md)**:
+   - **Claude Code Reference**: CLI commands, dev scripts, and Claude-specific workflows.
+
+
 ---
 
 ## Quick Reference for AI Agents
