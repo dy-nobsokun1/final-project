@@ -25,6 +25,7 @@ export const authRouter = Router();
 async function deliverVerificationCode(user, code) {
   try {
     await sendVerificationEmail({ to: user.email, name: user.name, code });
+    if (process.env.NODE_ENV !== "production") console.log(`[verify-email] ${user.email}: code ${code} sent successfully`);
     return true;
   } catch (error) {
     console.error(`[verify-email] could not email ${user.email}: ${error.response ?? error.message}`);

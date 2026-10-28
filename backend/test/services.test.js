@@ -10,6 +10,7 @@ const {
   createCheckoutSession, isValidWebhookSignature, paidCard, retrieveCheckoutSession, toFormBody,
 } = await import("../src/services/stripe.js");
 const { amountToPay } = await import("../src/utils/payments.js");
+const { sendTelegramDocument } = await import("../src/services/telegram.js");
 
 test("Cloudinary signature matches the example in Cloudinary's documentation", () => {
   const params = { timestamp: 1315060510, public_id: "sample_image", eager: "w_400,h_300,c_pad|w_260,h_200,c_crop" };
@@ -88,5 +89,35 @@ test("only items for sale and won auctions can be paid, and never by the seller"
 
   for (const type of ["trade", "giveaway", "buy_request"]) {
     assert.throws(() => amountToPay({ ...sale, listing_type: type }, "buyer"), /Only items for sale/);
+  }
+});
+
+test("sendTelegramDocument sends multipart/form-data to Telegram Bot API", async () => {
+  const calls = [];
+  const realFetch = globalThis.fetch;
+  globalThis.fetch = async (url, init) => {
+    calls.push({ url, init });
+    return new Response(JSON.stringify({ ok: true, result: { message_id: 123 } }));
+  };
+  try {
+    const result = await sendTelegramDocument("123456", {
+      filename: "invoice.html",
+      content: "<h1>Receipt</h1>",
+      contentType: "text/html",
+      caption: "Your invoice",
+      buttons: [[{ text: "Help", url: "https://example.com" }]],
+    });
+    assert.deepEqual(result, { message_id: 123 });
+    assert.equal(calls.length, 1);
+    assert.match(calls[0].url, /\/sendDocument$/);
+    assert.equal(calls[0].init.method, "POST");
+    assert.ok(calls[0].init.body instanceof FormData);
+    assert.equal(calls[0].init.body.get("chat_id"), "123456");
+    assert.equal(calls[0].init.body.get("caption"), "Your invoice");
+    assert.equal(calls[0].init.body.get("parse_mode"), "HTML");
+    assert.ok(calls[0].init.body.get("reply_markup"));
+    assert.ok(calls[0].init.body.get("document"));
+  } finally {
+    globalThis.fetch = realFetch;
   }
 });

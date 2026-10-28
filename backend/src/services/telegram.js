@@ -35,14 +35,44 @@ function withButtons(buttons) {
   return buttons?.length ? { reply_markup: { inline_keyboard: buttons } } : {};
 }
 
-/** Sends plain text. `buttons` is optional: notifications (utils/notify.js) have none. */
-export function sendTelegramMessage(chatId, text, buttons) {
-  return telegram("sendMessage", { chat_id: chatId, text, disable_web_page_preview: true, ...withButtons(buttons) });
+/** Sends plain text or HTML. `buttons` is optional: notifications (utils/notify.js) have none. */
+export function sendTelegramMessage(chatId, text, buttons, options = {}) {
+  return telegram("sendMessage", {
+    chat_id: chatId,
+    text,
+    disable_web_page_preview: true,
+    ...options,
+    ...withButtons(buttons),
+  });
 }
 
 /** Sends a photo from a public https URL (Telegram downloads it itself), with the text as its caption. */
 export function sendTelegramPhoto(chatId, photoUrl, caption, buttons) {
   return telegram("sendPhoto", { chat_id: chatId, photo: photoUrl, caption, ...withButtons(buttons) });
+}
+
+/**
+ * Sends a file/document to a Telegram chat.
+ * `document`: { filename, content, contentType, caption, buttons }
+ */
+export async function sendTelegramDocument(chatId, { filename, content, contentType = "text/html", caption, buttons }) {
+  const form = new FormData();
+  form.append("chat_id", String(chatId));
+  form.append("document", new Blob([content], { type: contentType }), filename);
+  if (caption) {
+    form.append("caption", caption);
+    form.append("parse_mode", "HTML");
+  }
+  if (buttons?.length) {
+    form.append("reply_markup", JSON.stringify({ inline_keyboard: buttons }));
+  }
+  const response = await fetch(`https://api.telegram.org/bot${botToken}/sendDocument`, {
+    method: "POST",
+    body: form,
+  });
+  const result = await response.json();
+  if (!result.ok) throw new Error(`Telegram sendDocument failed: ${result.description ?? response.status}`);
+  return result.result;
 }
 
 /** Changes a text message's text and buttons. A photo message cannot be changed into text. */

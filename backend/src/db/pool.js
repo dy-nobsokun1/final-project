@@ -4,6 +4,11 @@ import { config } from "../config.js";
 // One shared connection pool for the whole app.
 export const pool = new pg.Pool({ connectionString: config.databaseUrl });
 
+// Prevent backend crashes when an idle cloud connection is reset/closed by Supabase or network
+pool.on("error", (err) => {
+  console.error("[db] unexpected error on idle database client:", err.message);
+});
+
 // Always pass user input through `params` ($1, $2, ...), never string concatenation.
 // That is what protects every query from SQL injection.
 export function query(text, params = []) {

@@ -1,6 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Completely hides the Next.js dev tools indicator icon on the webpage
+  devIndicators: false,
+
   // Dev only: lets a phone open `npm run dev` through a Cloudflare quick tunnel
   // (cloudflared tunnel --url http://localhost:3000) or a Tailscale Funnel
   // (tailscale funnel --bg 3000, an address like uniswap.tail1234.ts.net). Without it, `next dev`

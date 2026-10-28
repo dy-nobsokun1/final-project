@@ -10,7 +10,7 @@ import { useVoiceInput } from "@/hooks/use-voice-input";
 /** The API takes messages of at most 1000 characters (backend/src/utils/assistant.js). */
 const MAX_LENGTH = 1000;
 /** The grey example in the empty box, which Tab fills in. */
-const EXAMPLE = "a desk lamp under $10";
+const EXAMPLE = "looking for items under 5 buck";
 const HINT_ID = "assistant-question-hint";
 
 interface AssistantQuestionBoxProps {

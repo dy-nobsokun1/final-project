@@ -1,6 +1,6 @@
 import { findWantedForItem } from "../db/matches.js";
 import { query } from "../db/pool.js";
-import { isTelegramConfigured, sendTelegramMessage } from "../services/telegram.js";
+import { isTelegramConfigured, sendTelegramDocument, sendTelegramMessage } from "../services/telegram.js";
 import { siteOrigin } from "../services/tunnel.js";
 import { escapeHtml, isEmailConfigured, sendEmail } from "./email.js";
 
@@ -38,9 +38,13 @@ async function findUser(id) {
 /**
  * Sends one notification to a user (a row from findUser) by email, and by Telegram if they
  * connected it. `lines` are plain text: escaped for the email's HTML, sent as-is to Telegram.
+ * `telegram` (optional) can provide custom HTML and inline buttons.
  */
-async function deliver({ to, subject, lines, link, linkLabel }) {
-  await Promise.all([emailTo(to, { subject, lines, link, linkLabel }), telegramTo(to, { subject, lines, link })]);
+async function deliver({ to, subject, lines, link, linkLabel, telegram }) {
+  await Promise.all([
+    emailTo(to, { subject, lines, link, linkLabel }),
+    telegramTo(to, { subject, lines, link, telegram }),
+  ]);
 }
 
 async function emailTo(user, { subject, lines, link, linkLabel }) {
@@ -61,11 +65,28 @@ async function emailTo(user, { subject, lines, link, linkLabel }) {
   }
 }
 
-async function telegramTo(user, { subject, lines, link }) {
+async function telegramTo(user, { subject, lines, link, telegram }) {
   if (!isTelegramConfigured || !user.telegram_chat_id) return;
   try {
-    // The first line is the "Hi <name>," greeting, which reads oddly in a chat, so it is dropped.
-    await sendTelegramMessage(user.telegram_chat_id, [subject, ...lines.slice(1), link].join("\n\n"));
+    if (telegram?.html) {
+      await sendTelegramMessage(
+        user.telegram_chat_id,
+        telegram.html,
+        telegram.buttons,
+        { parse_mode: "HTML" },
+      );
+    } else {
+      // The first line is the "Hi <name>," greeting, which reads oddly in a chat, so it is dropped.
+      await sendTelegramMessage(user.telegram_chat_id, [subject, ...lines.slice(1), link].join("\n\n"));
+    }
+
+    if (telegram?.document) {
+      try {
+        await sendTelegramDocument(user.telegram_chat_id, telegram.document);
+      } catch (docError) {
+        console.error(`[notify] could not send Telegram document (${telegram.document.filename}): ${docError.message}`);
+      }
+    }
   } catch (error) {
     console.error(`[notify] could not send Telegram message ("${subject}"): ${error.message}`);
   }
@@ -145,6 +166,220 @@ export function notifyAuctionClosed({ listing_id: listingId, title, seller_id: s
   });
 }
 
+/** Standalone HTML receipt sent directly to Telegram or saved locally. */
+function buildInvoiceHtml({ invoiceNo, paidDate, listingTitle, sellerName, buyerName, amount }) {
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>UniSwap Invoice ${escapeHtml(invoiceNo)}</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: #f8fafc;
+      color: #0f172a;
+      padding: 32px 16px;
+      display: flex;
+      justify-content: center;
+    }
+    .receipt {
+      background: #ffffff;
+      max-width: 600px;
+      width: 100%;
+      border-radius: 16px;
+      border: 1px solid #e2e8f0;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+      padding: 32px;
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      border-bottom: 2px solid #f1f5f9;
+      padding-bottom: 20px;
+    }
+    .brand {
+      font-size: 24px;
+      font-weight: 800;
+      color: #059669;
+      letter-spacing: -0.5px;
+    }
+    .badge {
+      display: inline-block;
+      background: #d1fae5;
+      color: #065f46;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      padding: 4px 12px;
+      border-radius: 9999px;
+      margin-bottom: 6px;
+    }
+    .invoice-id {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 12px;
+      font-weight: 600;
+      color: #64748b;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-top: 24px;
+      background: #f8fafc;
+      padding: 16px;
+      border-radius: 12px;
+      font-size: 13px;
+    }
+    .grid-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      color: #64748b;
+      font-weight: 600;
+      margin-bottom: 2px;
+    }
+    .grid-value {
+      font-weight: 600;
+      color: #0f172a;
+    }
+    .table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 24px;
+    }
+    .table th {
+      text-align: left;
+      font-size: 11px;
+      text-transform: uppercase;
+      color: #64748b;
+      letter-spacing: 0.5px;
+      padding: 8px 0;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    .table td {
+      padding: 16px 0;
+      font-size: 14px;
+      border-bottom: 1px solid #f1f5f9;
+    }
+    .total-row td {
+      border-bottom: none;
+      padding-top: 20px;
+      font-size: 16px;
+      font-weight: 700;
+    }
+    .total-amount {
+      font-size: 22px;
+      font-weight: 800;
+      color: #059669;
+    }
+    .actions {
+      margin-top: 28px;
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+    }
+    .btn {
+      background: #059669;
+      color: #ffffff;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 2px 4px rgba(5, 150, 105, 0.2);
+    }
+    .footer {
+      margin-top: 28px;
+      text-align: center;
+      font-size: 12px;
+      color: #94a3b8;
+      border-top: 1px solid #f1f5f9;
+      padding-top: 16px;
+    }
+    @media print {
+      body { background: #ffffff; padding: 0; }
+      .receipt { box-shadow: none; border: none; padding: 0; }
+      .actions { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="receipt">
+    <div class="header">
+      <div>
+        <div class="brand">UniSwap</div>
+        <div style="font-size: 13px; color: #64748b; margin-top: 4px;">Student Marketplace • Campus Trading</div>
+      </div>
+      <div style="text-align: right;">
+        <span class="badge">Verified Payment</span>
+        <div class="invoice-id">${escapeHtml(invoiceNo)}</div>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div>
+        <div class="grid-label">Buyer</div>
+        <div class="grid-value">${escapeHtml(buyerName)}</div>
+      </div>
+      <div>
+        <div class="grid-label">Seller</div>
+        <div class="grid-value">${escapeHtml(sellerName)}</div>
+      </div>
+      <div>
+        <div class="grid-label">Payment Date</div>
+        <div class="grid-value">${escapeHtml(paidDate)}</div>
+      </div>
+      <div>
+        <div class="grid-label">Payment Method</div>
+        <div class="grid-value">Online Payment (KHQR / Card)</div>
+      </div>
+    </div>
+
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Description</th>
+          <th style="text-align: right;">Amount</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>
+            <div style="font-weight: 600; color: #0f172a;">${escapeHtml(listingTitle)}</div>
+            <div style="font-size: 12px; color: #64748b; margin-top: 2px;">Campus Marketplace Listing</div>
+          </td>
+          <td style="text-align: right; font-weight: 600; color: #0f172a;">
+            ${escapeHtml(money(amount))} USD
+          </td>
+        </tr>
+        <tr class="total-row">
+          <td>Total Paid</td>
+          <td style="text-align: right;" class="total-amount">
+            ${escapeHtml(money(amount))} USD
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="actions">
+      <button class="btn" onclick="window.print()">🖨️ Print / Save as PDF</button>
+    </div>
+
+    <div class="footer">
+      Thank you for supporting sustainable student commerce on campus! • UniSwap
+    </div>
+  </div>
+</body>
+</html>`;
+}
+
 /** An online payment (card or KHQR) went through: tell the seller to hand the item over, and give the buyer a receipt. */
 export function notifyPaid({ listing_id: listingId, buyer_id: buyerId, amount }) {
   inBackground(async () => {
@@ -153,22 +388,93 @@ export function notifyPaid({ listing_id: listingId, buyer_id: buyerId, amount })
     const { title, user_id: sellerId } = rows[0];
     const [buyer, seller] = await Promise.all([findUser(buyerId), findUser(sellerId)]);
     if (!buyer || !seller) return;
+
+    const invoiceNo = `UNI-${String(listingId).replace(/-/g, "").slice(0, 8).toUpperCase()}`;
+    const paidDate = new Date().toLocaleString("en-US", {
+      timeZone: "Asia/Phnom_Penh",
+      dateStyle: "medium",
+      timeStyle: "short",
+    });
+    const chatWithSellerUrl = threadLink(listingId, sellerId);
+    const chatWithBuyerUrl = threadLink(listingId, buyerId);
+    const listingUrl = appLink(`/listings/${listingId}`);
+    const invoiceUrl = appLink(`/listings/${listingId}?invoice=${invoiceNo}`);
+
+    const buyerTelegramHtml = [
+      `🧾 <b>PAYMENT CONFIRMED - UniSwap</b>`,
+      `━━━━━━━━━━━━━━━━━━━━`,
+      `<b>Invoice No:</b> <code>${escapeHtml(invoiceNo)}</code>`,
+      `<b>Status:</b> ✅ Paid Online`,
+      ``,
+      `📦 <b>Order Details</b>`,
+      `<b>Item:</b> ${escapeHtml(title)}`,
+      `<b>Date:</b> ${escapeHtml(paidDate)}`,
+      ``,
+      `👤 <b>Parties</b>`,
+      `<b>Seller:</b> ${escapeHtml(seller.name)}`,
+      `<b>Buyer:</b> ${escapeHtml(buyer.name)}`,
+      ``,
+      `💳 <b>Payment Summary</b>`,
+      `<b>Total Paid:</b> <b>${escapeHtml(money(amount))} USD</b>`,
+      `━━━━━━━━━━━━━━━━━━━━`,
+      `<i>Message ${escapeHtml(seller.name)} to arrange the handover on campus.</i>`,
+    ].join("\n");
+
+    const sellerTelegramHtml = [
+      `🎉 <b>ITEM SOLD - UniSwap</b>`,
+      `━━━━━━━━━━━━━━━━━━━━`,
+      `<b>Invoice No:</b> <code>${escapeHtml(invoiceNo)}</code>`,
+      `<b>Status:</b> ✅ Payment Received`,
+      ``,
+      `📦 <b>Order Details</b>`,
+      `<b>Item:</b> ${escapeHtml(title)}`,
+      `<b>Date:</b> ${escapeHtml(paidDate)}`,
+      `<b>Buyer:</b> ${escapeHtml(buyer.name)}`,
+      ``,
+      `💳 <b>Payment Summary</b>`,
+      `<b>Amount Paid:</b> <b>${escapeHtml(money(amount))} USD</b>`,
+      `━━━━━━━━━━━━━━━━━━━━`,
+      `<i>This listing is now marked as sold. Message ${escapeHtml(buyer.name)} to arrange the handover on campus.</i>`,
+    ].join("\n");
+
     await Promise.all([
       deliver({
         to: seller,
         subject: `${buyer.name} paid ${money(amount)} for "${title}"`,
-        lines: [`Hi ${seller.name},`, `${buyer.name} paid ${money(amount)} online for "${title}". It is now marked sold.`,
-          "Message them to arrange the handover on campus."],
-        link: threadLink(listingId, buyerId),
+        lines: [
+          `Hi ${seller.name},`,
+          `${buyer.name} paid ${money(amount)} online for "${title}". It is now marked sold.`,
+          "Message them to arrange the handover on campus.",
+        ],
+        link: chatWithBuyerUrl,
         linkLabel: `Message ${buyer.name}`,
+        telegram: {
+          html: sellerTelegramHtml,
+          buttons: [
+            [{ text: "📄 View Receipt", url: invoiceUrl }],
+            [{ text: "🌐 Check in Website", url: listingUrl }],
+            [{ text: `💬 Message ${buyer.name}`, url: chatWithBuyerUrl }],
+          ],
+        },
       }),
       deliver({
         to: buyer,
         subject: `Payment received: "${title}"`,
-        lines: [`Hi ${buyer.name},`, `Your payment of ${money(amount)} for "${title}" went through.`,
-          `Message ${seller.name} to arrange the handover on campus.`],
-        link: threadLink(listingId, sellerId),
+        lines: [
+          `Hi ${buyer.name},`,
+          `Your payment of ${money(amount)} for "${title}" went through.`,
+          `Message ${seller.name} to arrange the handover on campus.`,
+        ],
+        link: chatWithSellerUrl,
         linkLabel: `Message ${seller.name}`,
+        telegram: {
+          html: buyerTelegramHtml,
+          buttons: [
+            [{ text: "📥 Download Invoice", url: invoiceUrl }],
+            [{ text: "🌐 Check in Website", url: listingUrl }],
+            [{ text: `💬 Message ${seller.name}`, url: chatWithSellerUrl }],
+          ],
+        },
       }),
     ]);
   });

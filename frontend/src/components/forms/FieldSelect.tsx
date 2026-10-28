@@ -11,7 +11,8 @@ import {
 
 interface FieldSelectProps {
   name: string;
-  defaultValue: string;
+  defaultValue?: string;
+  value?: string;
   options: Array<{ value: string; label: string }>;
   onValueChange?: (value: string) => void;
 }
@@ -20,11 +21,11 @@ interface FieldSelectProps {
  * shadcn `Select` bound to its `<Field>`, like `FieldInput`: the field's label points at the
  * trigger, and `name` puts the chosen value into the form's FormData.
  */
-export function FieldSelect({ name, defaultValue, options, onValueChange }: FieldSelectProps) {
+export function FieldSelect({ name, defaultValue, value, options, onValueChange }: FieldSelectProps) {
   const { controlId, errorId, hasError } = useField();
 
   return (
-    <Select name={name} defaultValue={defaultValue} onValueChange={onValueChange}>
+    <Select name={name} value={value} defaultValue={defaultValue} onValueChange={onValueChange}>
       <SelectTrigger
         id={controlId}
         className="w-full"

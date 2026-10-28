@@ -42,6 +42,7 @@ paymentsRouter.post("/checkout", requireAuth, async (req, res) => {
     // Refuses if the item is already paid for, or someone else is paying right now.
     // req.body is undefined when no JSON body was sent; lockListingForPayment then answers 404.
     const { listing, amount } = await lockListingForPayment(client, req.body?.listingId, req.userId);
+    const { rows: [buyer] } = await client.query("SELECT email FROM users WHERE id = $1", [req.userId]);
 
     const origin = checkoutReturnOrigin(req.body?.returnOrigin, checkoutReturnOrigins(config.frontendOrigin, siteOrigin()), config.frontendOrigin);
     const page = `${origin}/listings/${listing.id}`;
@@ -50,6 +51,7 @@ paymentsRouter.post("/checkout", requireAuth, async (req, res) => {
       amountCents: Math.round(amount * 100),
       listingId: listing.id,
       buyerId: req.userId,
+      customerEmail: buyer?.email,
       // Stripe replaces {CHECKOUT_SESSION_ID}, so the listing page can confirm the payment.
       successUrl: `${page}?session_id={CHECKOUT_SESSION_ID}`,
       cancelUrl: page,

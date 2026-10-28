@@ -38,13 +38,14 @@ async function stripeRequest(method, path, fields) {
 }
 
 /** Starts a hosted checkout page for one item. Returns { id, url }. */
-export function createCheckoutSession({ title, amountCents, listingId, buyerId, successUrl, cancelUrl }) {
+export function createCheckoutSession({ title, amountCents, listingId, buyerId, customerEmail, successUrl, cancelUrl }) {
   return stripeRequest("POST", "/checkout/sessions", {
     mode: "payment",
     line_items: [{
       quantity: 1,
       price_data: { currency: "usd", unit_amount: amountCents, product_data: { name: title } },
     }],
+    ...(customerEmail && { customer_email: customerEmail }),
     success_url: successUrl,
     cancel_url: cancelUrl,
     client_reference_id: buyerId,

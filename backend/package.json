@@ -5,13 +5,15 @@
   "type": "module",
   "description": "UniSwap REST API (Node.js + Express + PostgreSQL)",
   "scripts": {
-    "start": "node --env-file=.env src/server.js",
+    "start": "node --no-network-family-autoselection --env-file=.env src/server.js",
     "start:prod": "node src/server.js",
-    "dev": "node --watch --env-file=.env src/server.js",
+    "dev": "node --no-network-family-autoselection --watch --env-file=.env src/server.js",
     "db:setup": "node --env-file=.env scripts/db-setup.js",
     "db:seed": "node --env-file=.env scripts/db-seed.js",
     "db:samples": "node --env-file=.env scripts/db-samples.js",
     "db:demo-deals": "node --env-file=.env scripts/db-demo-deals.js",
+    "db:reset-sold": "node --env-file=.env scripts/db-reset-sold.js",
+    "db:to-supabase": "node --env-file=.env scripts/migrate-to-supabase.js",
     "email:test": "node --env-file=.env scripts/check-email.js",
     "test": "node --test test/*.test.js",
     "test:api": "node --env-file=.env test/api/reset-db.js && node --env-file=.env --test test/api/*.test.js"

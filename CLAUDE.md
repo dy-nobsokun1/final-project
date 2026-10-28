@@ -51,6 +51,7 @@ npm run db:setup     # recreate tables: WIPES ALL DATA
 npm run db:seed      # demo data
 npm run db:samples   # +60 sample items: hand-written with Commons/Flickr photos (credits in the JSON), Open Library textbooks, and five $1–$5 items for trying payments (-- --remove to undo)
 npm run db:demo-deals # 9 finished deals for chanrithorn, for the profile stats (-- --remove to undo)
+npm run db:reset-sold # revert test-bought items back to active (-- --all to reset demo deals too)
 npm run email:test -- someone@aupp.edu.kh
 
 # frontend/
@@ -352,6 +353,9 @@ Done (week 6, 26–27 Oct):
   that seller.
 - **Sign-up by code (28 Oct):** the sign-up email carries a 6-digit code instead of a link, so school
   Outlook stops filing it as Junk. Links in other emails use one fixed site address.
+
+### Recent Gemini session changelog (reference)
+@GEMINI.md
 
 Built but needs the team's own accounts/keys (see `DEPLOY.md`): Supabase database, Render + Vercel
 deployment, Cloudinary photos, Stripe test payments, Telegram bot.

@@ -5,6 +5,7 @@ import { Suspense } from "react";
 import { AuctionPanel } from "@/components/listings/AuctionPanel";
 import { BuyerOfferPanel } from "@/components/listings/BuyerOfferPanel";
 import { ListingBuyBar } from "@/components/listings/ListingBuyBar";
+import { InvoiceReceiptCard } from "@/components/listings/InvoiceReceiptCard";
 import { ListingGallery } from "@/components/listings/ListingGallery";
 import { ListingHeading } from "@/components/listings/ListingHeading";
 import { ListingMatches } from "@/components/listings/ListingMatches";
@@ -41,7 +42,7 @@ const PAYMENT_BANNERS = {
 /** Detail view for a single listing. */
 export default async function ListingDetailPage({ params, searchParams }: PageProps<"/listings/[id]">) {
   const { id } = await params;
-  const { session_id: sessionId, khqr: khqrPaymentId } = await searchParams;
+  const { session_id: sessionId, khqr: khqrPaymentId, invoice: invoiceParam } = await searchParams;
   const user = await getCurrentUser();
   // Back from Stripe (?session_id=) or from a paid KHQR (?khqr=): confirm with the API first, so the
   // listing below already shows as sold. The API checks with Stripe or Bakong, never trusting the URL.
@@ -81,6 +82,10 @@ export default async function ListingDetailPage({ params, searchParams }: PagePr
         <ArrowLeft aria-hidden="true" className="size-4" />
         Back to browse
       </Link>
+
+      {typeof invoiceParam === "string" && invoiceParam ? (
+        <InvoiceReceiptCard invoiceNo={invoiceParam} listing={listing} />
+      ) : null}
 
       {payment && payment in PAYMENT_BANNERS ? (
         <p role="status" className="light-surface rounded-xl border border-border bg-card p-3 text-sm font-medium text-foreground">

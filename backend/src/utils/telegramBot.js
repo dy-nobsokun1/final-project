@@ -10,7 +10,7 @@ import {
 import { siteOrigin } from "../services/tunnel.js";
 import {
   expiredSearchScreen, goneScreen, helpScreen, inboxScreen, itemButtons, itemScreen, menuScreen,
-  myListingsScreen, newestScreen, NOT_LINKED_TEXT, notLinkedScreen, publicSiteUrl, resultsScreen,
+  myListingsScreen, newestScreen, publicSiteUrl, resultsScreen,
   savedScreen, searchPromptScreen,
 } from "./telegramScreens.js";
 
@@ -34,7 +34,7 @@ export const BOT_COMMANDS = [
 
 /** Which screen each command opens. "/start" without a code shows the menu too. */
 const COMMAND_SCREENS = {
-  menu: "menu", start: "menu", search: "search", new: "newest", saved: "saved", mylistings: "mine", inbox: "inbox", help: "help",
+  menu: "menu", search: "search", new: "newest", saved: "saved", mylistings: "mine", inbox: "inbox", help: "help",
 };
 
 /** The real Bot API. The tests pass a fake instead, so they never call Telegram. */
@@ -90,24 +90,21 @@ async function onMessage(message, telegram) {
   // "/search lamp" -> ["search", "lamp"]. In some apps a command ends in "@<bot name>".
   const [, command, argument = ""] = /^\/(\w+)(?:@\w+)?\s*(.*)$/s.exec(text) ?? [];
 
-  // "/start <code>" comes from the link in Settings, so it works before the chat is linked.
-  if (command === "start" && argument) return linkAndGreet(chat, argument);
+  // Turn off the start command: link quietly if code is present, but never reply automatically
+  if (command === "start") {
+    if (argument && /^\w+$/.test(argument)) {
+      await linkChat(argument, chat.id);
+    }
+    return;
+  }
+
   const user = await findChatUser(chat.id);
-  if (!user) return show(chat, notLinkedScreen());
+  if (!user) return;
   chat.user = user;
 
   if (command === "search" && argument) return show(chat, await searchScreen(chat, argument, 1));
-  if (command) return show(chat, await screenFor(chat, COMMAND_SCREENS[command] ?? "menu"));
-  // Any other text is a search. A photo or sticker gets the menu.
+  if (command && COMMAND_SCREENS[command]) return show(chat, await screenFor(chat, COMMAND_SCREENS[command]));
   if (text) return show(chat, await searchScreen(chat, text, 1));
-  return show(chat, menuScreen());
-}
-
-/** Links the chat to the account whose one-time code this is, then shows the menu. */
-async function linkAndGreet(chat, code) {
-  const name = /^\w+$/.test(code) ? await linkChat(code, chat.id) : null;
-  if (!name) return show(chat, { text: `That link has expired. ${NOT_LINKED_TEXT}`, buttons: [] });
-  return show(chat, menuScreen(`Connected as ${name}. UniSwap notifications will now arrive here too.\n\n`));
 }
 
 async function onButton(press, telegram) {

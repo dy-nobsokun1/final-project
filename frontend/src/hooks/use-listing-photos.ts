@@ -9,6 +9,9 @@ export interface FormPhoto {
   url: string | null;
 }
 
+/** Cache of uploaded URLs by source image URL so switching presets is instant with zero flickering. */
+const presetUploadCache = new Map<string, string>();
+
 /**
  * The photos on the listing form, in order (the first is the cover). Each picked file is uploaded
  * right away, so saving the listing only sends URLs. Starts with the listing's current photos when editing.
@@ -72,7 +75,47 @@ export function useListingPhotos(initialUrls: string[]) {
     });
   }
 
-  return { items, errors, isUploading: items.some((photo) => photo.url === null), addFiles, remove, makeCover };
+  function clear() {
+    setItems([]);
+    setErrors([]);
+  }
+
+  async function setFromUrl(url: string) {
+    if (presetUploadCache.has(url)) {
+      const cachedServerUrl = presetUploadCache.get(url)!;
+      setItems([{ key: `cached-${url}`, name: "demo.jpg", url: cachedServerUrl }]);
+      setErrors([]);
+      return;
+    }
+
+    try {
+      setErrors([]);
+      const res = await fetch(url);
+      if (!res.ok) throw new Error("Could not load image");
+      const blob = await res.blob();
+      const previewUrl = URL.createObjectURL(blob);
+      const key = `preset-${nextKey.current++}`;
+      // Display the preview instantly with zero flickering
+      setItems([{ key, name: "demo.jpg", url: previewUrl }]);
+
+      const file = new File([blob], `demo-${Date.now()}.jpg`, { type: blob.type || "image/jpeg" });
+      const data = new FormData();
+      data.set("photo", file);
+      const result = await uploadListingPhoto(data).catch(
+        (): ActionResult & { url?: string } => ({ error: "The upload failed." }),
+      );
+      if (result.url) {
+        presetUploadCache.set(url, result.url);
+        setItems([{ key, name: "demo.jpg", url: result.url }]);
+      } else {
+        presetUploadCache.set(url, previewUrl);
+      }
+    } catch (err) {
+      console.warn("Preset photo load error:", err);
+    }
+  }
+
+  return { items, errors, isUploading: items.some((photo) => photo.url === null), addFiles, remove, makeCover, clear, setFromUrl };
 }
 
 export type ListingPhotos = ReturnType<typeof useListingPhotos>;
