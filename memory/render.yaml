@@ -1,0 +1,50 @@
+# Render Blueprint for the UniSwap API. On render.com: New -> Blueprint -> pick this repository.
+# Render asks for every value marked `sync: false` (they are secrets, so they are not in git).
+# Full walkthrough: DEPLOY.md
+services:
+  - type: web
+    name: uniswap-api
+    runtime: node
+    plan: free
+    rootDir: backend
+    buildCommand: npm ci
+    # start:prod reads settings from Render's environment instead of a .env file.
+    startCommand: npm run start:prod
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: NODE_ENV # production: password-reset links are never printed in the log (routes/auth.js)
+        value: production
+      - key: DATABASE_URL # Supabase "Session pooler" URI + ?sslmode=no-verify (see DEPLOY.md)
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: FRONTEND_ORIGIN # your Vercel URL, e.g. https://uniswap.vercel.app
+        sync: false
+      - key: SMTP_HOST
+        value: smtp.gmail.com
+      - key: SMTP_PORT
+        value: "465"
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASS # Gmail App Password
+        sync: false
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+      - key: STRIPE_SECRET_KEY # sk_test_... only
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: TELEGRAM_BOT_USERNAME
+        sync: false
+      - key: GROQ_API_KEY # free key from console.groq.com; the assistant uses Groq first
+        sync: false
+      - key: GEMINI_API_KEY # free key from aistudio.google.com/apikey; the backup
+        sync: false

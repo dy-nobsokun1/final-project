@@ -1,0 +1,1262 @@
+{
+  "sellers": [
+    {
+      "name": "Sreyneang Chea",
+      "email": "sreyneang@demo.edu.kh",
+      "major": "Marketing",
+      "graduationYear": 2027
+    },
+    {
+      "name": "Vannak Sok",
+      "email": "vannak@demo.edu.kh",
+      "major": "Computer Science",
+      "graduationYear": 2026
+    },
+    {
+      "name": "Bopha Kim",
+      "email": "bopha@demo.edu.kh",
+      "major": "Biology",
+      "graduationYear": 2028
+    },
+    {
+      "name": "Rithy Heng",
+      "email": "rithy@demo.edu.kh",
+      "major": "Economics",
+      "graduationYear": 2027
+    },
+    {
+      "name": "Sophea Mao",
+      "email": "sophea@demo.edu.kh",
+      "major": "Architecture",
+      "graduationYear": 2026
+    },
+    {
+      "name": "Pisey Lim",
+      "email": "pisey@demo.edu.kh",
+      "major": "Psychology",
+      "graduationYear": 2028
+    }
+  ],
+  "listings": [
+    {
+      "title": "Corsair Vengeance LPX 16GB (2x8GB) DDR4 desktop RAM",
+      "description": "Two 8GB sticks from my desktop, I moved to a 32GB kit. Both pass MemTest and have no scratches. Can meet at AUPP.",
+      "category": "electronics",
+      "condition": "like_new",
+      "type": "sale",
+      "price": 55,
+      "images": [
+        "https://upload.wikimedia.org/wikipedia/commons/thumb/9/94/2*8Go_DDR4_Corsair_-_2018-05-08.jpg/960px-2*8Go_DDR4_Corsair_-_2018-05-08.jpg"
+      ],
+      "credits": [
+        {
+          "page": "https://commons.wikimedia.org/wiki/File:2*8Go_DDR4_Corsair_-_2018-05-08.jpg",
+          "author": "Bretwa",
+          "licence": "CC BY-SA 4.0"
+        }
+      ],
+      "seller": 1,
+      "hoursAgo": 2
+    },
+    {
+      "title": "Gigabyte RTX 3090 Eagle OC 24GB graphics card",
+      "description": "My GPU for two years of gaming and some Blender, never mined. Runs cool, I'm going back to a laptop. Highest bid wins, pick up at AUPP.",
+      "category": "electronics",
+      "condition": "good",
+      "type": "auction",
+      "price": 450,
+      "images": [
+        "https://upload.wikimedia.org/wikipedia/commons/thumb/9/91/Gigabyte_GeForce_RTX_3090_Eagle_OC_24G%2C_24576_MiB_GDDR6X_Front_20201114_DSC5880.jpg/960px-Gigabyte_GeForce_RTX_3090_Eagle_OC_24G%2C_24576_MiB_GDDR6X_Front_20201114_DSC5880.jpg",
+        "https://upload.wikimedia.org/wikipedia/commons/thumb/3/33/Gigabyte_GeForce_RTX_3090_Eagle_OC_24G%2C_24576_MiB_GDDR6X_Anschl%C3%BCsse_20201114.jpg/960px-Gigabyte_GeForce_RTX_3090_Eagle_OC_24G%2C_24576_MiB_GDDR6X_Anschl%C3%BCsse_20201114.jpg"
+      ],
+      "credits": [
+        {
+          "page": "https://commons.wikimedia.org/wiki/File:Gigabyte_GeForce_RTX_3090_Eagle_OC_24G%2C_24576_MiB_GDDR6X_Front_20201114_DSC5880.jpg",
+          "author": "PantheraLeo1359531",
+          "licence": "CC BY 4.0"
+        },
+        {
+          "page": "https://commons.wikimedia.org/wiki/File:Gigabyte_GeForce_RTX_3090_Eagle_OC_24G%2C_24576_MiB_GDDR6X_Anschl%C3%BCsse_20201114.jpg",
+          "author": "PantheraLeo1359531",
+          "licence": "CC BY 4.0"
+        }
+      ],
+      "auction": {
+        "days": 4,
+        "minIncrement": 10
+      },
+      "seller": 3,
+      "hoursAgo": 5
+    },
+    {
+      "title": "AMD Ryzen 7 1800X",
+      "description": "8 cores, still fast for coding and video editing. I upgraded my board, so it's spare: CPU only, the photo is from before I took it out. Can meet at AUPP.",
+      "category": "electronics",
+      "condition": "good",
+      "type": "sale",
+      "price": 55,
+      "images": [
+        "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3f/AMD_Ryzen_7_1800X.jpg/960px-AMD_Ryzen_7_1800X.jpg"
+      ],
+      "credits": [
+        {
+          "page": "https://commons.wikimedia.org/wiki/File:AMD_Ryzen_7_1800X.jpg",
+          "author": "Brian Wong",
+          "licence": "CC BY-SA 2.0"
+        }
+      ],
+      "seller": 1,
+      "hoursAgo": 9
+    },
+    {
+      "title": "Looking for 16GB DDR4 laptop RAM",
+      "description": "My laptop slows down with Revit and Chrome open. Need one 16GB DDR4 SO-DIMM stick, 3200 if possible. Can meet at AUPP.",
+      "category": "electronics",
+      "condition": "good",
+      "type": "buy_request",
+      "price": 40,
+      "images": [],
+      "credits": [],
+      "seller": 4,
+      "hoursAgo": 12
+    },
+    {
+      "title": "Kingston 32GB (2x16GB) DDR4 laptop RAM",
+      "description": "Two 16GB SO-DIMM sticks (DDR4-2400). Bought them for my old laptop, then got a new one with RAM built in. Can meet at AUPP.",
+      "category": "electronics",
+      "condition": "like_new",
+      "type": "sale",
+      "price": 85,
+      "images": [
+        "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f7/KVR24S17D8-16_x2_20170724.jpg/960px-KVR24S17D8-16_x2_20170724.jpg"
+      ],
+      "credits": [
+        {
+          "page": "https://commons.wikimedia.org/wiki/File:KVR24S17D8-16_x2_20170724.jpg",
+          "author": "Kenming Wang",
+          "licence": "CC BY-SA 2.0"
+        }
+      ],
+      "seller": 5,
+      "hoursAgo": 15
+    },
+    {
+      "title": "Crucial 4GB DDR4 laptop RAM (SO-DIMM)",
+      "description": "The stick my laptop came with, I swapped it for a bigger one. Works fine, good as a spare. Can meet at AUPP.",
+      "category": "electronics",
+      "condition": "good",
+      "type": "sale",
+      "price": 12,
+      "images": [
+        "https://upload.wikimedia.org/wikipedia/commons/thumb/4/49/Crucial_CT4G4SFS8213_on_laptop_motherboard_20171218.jpg/960px-Crucial_CT4G4SFS8213_on_laptop_motherboard_20171218.jpg"
+      ],
+      "credits": [
+        {
+          "page": "https://commons.wikimedia.org/wiki/File:Crucial_CT4G4SFS8213_on_laptop_motherboard_20171218.jpg",
+          "author": "Diego Torres Silvestre",
+          "licence": "CC BY 2.0"
+        }
+      ],
+      "seller": 2,
+      "hoursAgo": 20
+    },
+    {
+      "title": "Looking for a used graphics card (GTX 1660 or better)",
+      "description": "Building my first PC on a student budget. Anything from a GTX 1660 up, as long as it works. Message me.",
+      "category": "electronics",
+      "condition": "good",
+      "type": "buy_request",
+      "price": 120,
+      "images": [],
+      "credits": [],
+      "seller": 5,
+      "hoursAgo": 26
+    },
+    {
+      "title": "Gigabyte GTX 1660 Ti 6GB graphics card",
+      "description": "A GPU that runs most games at 1080p on medium to high. No crashes and the fans are quiet, selling because I upgraded. Can meet at AUPP.",
+      "category": "electronics",
+      "condition": "good",
+      "type": "sale",
+      "price": 95,
+      "images": [
+        "https://upload.wikimedia.org/wikipedia/commons/thumb/2/20/Gigabyte_GTX_1660_Ti_graphics_card_(51993493927).jpg/960px-Gigabyte_GTX_1660_Ti_graphics_card_(51993493927).jpg"
+      ],
+      "credits": [
+        {
+          "page": "https://commons.wikimedia.org/wiki/File:Gigabyte_GTX_1660_Ti_graphics_card_(51993493927).jpg",
+          "author": "Chi Ho Chan",
+          "licence": "CC BY 2.0"
+        }
+      ],
+      "seller": 0,
+      "hoursAgo": 31
+    },
+    {
+      "title": "Teal city bike",
+      "description": "Easy to ride to class, the brakes and chain were serviced last month. Graduating soon, so highest bid wins. Pick up at AUPP.",
+      "category": "bikes",
+      "condition": "good",
+      "type": "auction",
+      "price": 40,
+      "images": [
+        "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Bicycle_parked_at_a_no_bicycle_parking_sign%2C_Rotterdam-Centrum%2C_Rotterdam_(2020)_01.jpg/960px-Bicycle_parked_at_a_no_bicycle_parking_sign%2C_Rotterdam-Centrum%2C_Rotterdam_(2020)_01.jpg",
+        "https://upload.wikimedia.org/wikipedia/commons/thumb/6/64/Bicycle_parked_at_a_no_bicycle_parking_sign%2C_Rotterdam-Centrum%2C_Rotterdam_(2020)_02.jpg/960px-Bicycle_parked_at_a_no_bicycle_parking_sign%2C_Rotterdam-Centrum%2C_Rotterdam_(2020)_02.jpg"
+      ],
+      "credits": [
+        {
+          "page": "https://commons.wikimedia.org/wiki/File:Bicycle_parked_at_a_no_bicycle_parking_sign%2C_Rotterdam-Centrum%2C_Rotterdam_(2020)_01.jpg",
+          "author": "Donald Trung Quoc Don",
+          "licence": "CC BY-SA 4.0"
+        },
+        {
+          "page": "https://commons.wikimedia.org/wiki/File:Bicycle_parked_at_a_no_bicycle_parking_sign%2C_Rotterdam-Centrum%2C_Rotterdam_(2020)_02.jpg",
+          "author": "Donald Trung Quoc Don",
+          "licence": "CC BY-SA 4.0"
+        }
+      ],
+      "auction": {
+        "days": 5,
+        "minIncrement": 2
+      },
+      "seller": 4,
+      "hoursAgo": 36
+    },
+    {
+      "title": "Samsung 960 EVO 500GB NVMe SSD",
+      "description": "M.2 NVMe drive, about 90% health in CrystalDiskInfo. Wiped and ready to use. Can meet at AUPP.",
+      "category": "electronics",
+      "condition": "good",
+      "type": "sale",
+      "price": 30,
+      "images": [
+        "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e2/Samsung_960_EVO_NVME_M.2_SSD_by_Daniel_Aleksandersen.jpg/960px-Samsung_960_EVO_NVME_M.2_SSD_by_Daniel_Aleksandersen.jpg"
+      ],
+      "credits": [
+        {
+          "page": "https://commons.wikimedia.org/wiki/File:Samsung_960_EVO_NVME_M.2_SSD_by_Daniel_Aleksandersen.jpg",
+          "author": "Daniel Aleksandersen",
+          "licence": "CC BY-SA 2.0"
+        }
+      ],
+      "seller": 1,
+      "hoursAgo": 42
+    },
+    {
+      "title": "Metal desk lamp (free)",
+      "description": "Old desk lamp with an arm you can bend. Works, bulb included. Free, just pick it up at AUPP.",
+      "category": "furniture",
+      "condition": "fair",
+      "type": "giveaway",
+      "price": 0,
+      "images": [
+        "https://live.staticflickr.com/5088/5249956913_4ae598757a_b.jpg"
+      ],
+      "credits": [
+        {
+          "page": "https://www.flickr.com/photos/36910487@N07/5249956913",
+          "author": "TheLivingRoominKenmore",
+          "licence": "CC BY 2.0"
+        }
+      ],
+      "seller": 2,
+      "hoursAgo": 47
+    },
+    {
+      "title": "Samsung 870 QVO 1TB SATA SSD",
+      "description": "2.5-inch SSD, used a few months as extra storage. Good for bringing an old laptop back to life. Can meet at AUPP.",
+      "category": "electronics",
+      "condition": "like_new",
+      "type": "sale",
+      "price": 45,
+      "images": [
+        "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0f/SAMSUNG_SATA_SSD_870_QVO_1TB_FRONT.jpg/960px-SAMSUNG_SATA_SSD_870_QVO_1TB_FRONT.jpg",
+        "https://upload.wikimedia.org/wikipedia/commons/thumb/3/30/SAMSUNG_SATA_SSD_870_QVO_1TB_REAR.jpg/960px-SAMSUNG_SATA_SSD_870_QVO_1TB_REAR.jpg"
+      ],
+      "credits": [
+        {
+          "page": "https://commons.wikimedia.org/wiki/File:SAMSUNG_SATA_SSD_870_QVO_1TB_FRONT.jpg",
+          "author": "Dinkun Chen",
+          "licence": "CC BY-SA 4.0"
+        },
+        {
+          "page": "https://commons.wikimedia.org/wiki/File:SAMSUNG_SATA_SSD_870_QVO_1TB_REAR.jpg",
+          "author": "Dinkun Chen",
+          "licence": "CC BY-SA 4.0"
+        }
+      ],
+      "seller": 2,
+      "hoursAgo": 55
+    },
+    {
+      "title": "Looking for a mini fridge for my dorm",
+      "description": "A small one is fine, just for drinks and fruit. It has to work and not be too loud. I can pick it up near AUPP.",
+      "category": "furniture",
+      "condition": "good",
+      "type": "buy_request",
+      "price": 45,
+      "images": [],
+      "credits": [],
+      "seller": 3,
+      "hoursAgo": 60
+    },
+    {
+      "title": "OCZ 600W power supply",
+      "description": "Old but reliable, it ran my PC for four years without a problem. All cables included. Can meet at AUPP.",
+      "category": "electronics",
+      "condition": "fair",
+      "type": "sale",
+      "price": 25,
+      "images": [
+        "https://upload.wikimedia.org/wikipedia/commons/thumb/2/24/OCZ_600W_power_supply_unit.JPG/960px-OCZ_600W_power_supply_unit.JPG"
+      ],
+      "credits": [
+        {
+          "page": "https://commons.wikimedia.org/wiki/File:OCZ_600W_power_supply_unit.JPG",
+          "author": "Danrok",
+          "licence": "CC BY-SA 3.0"
+        }
+      ],
+      "seller": 3,
+      "hoursAgo": 70
+    },
+    {
+      "title": "Sihoo M57 mesh office chair",
+      "description": "Mesh back with a headrest, the height and armrests adjust. Bought it last semester, but I'm moving out. Pick up near AUPP.",
+      "category": "furniture",
+      "condition": "like_new",
+      "type": "sale",
+      "price": 45,
+      "images": [
+        "https://upload.wikimedia.org/wikipedia/commons/thumb/c/cc/Sihoo_M57_mesh_office_chair_03.jpg/960px-Sihoo_M57_mesh_office_chair_03.jpg",
+        "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ea/Sihoo_M57_mesh_office_chair_06.jpg/960px-Sihoo_M57_mesh_office_chair_06.jpg"
+      ],
+      "credits": [
+        {
+          "page": "https://commons.wikimedia.org/wiki/File:Sihoo_M57_mesh_office_chair_03.jpg",
+          "author": "Waldyrious",
+          "licence": "CC BY-SA 4.0"
+        },
+        {
+          "page": "https://commons.wikimedia.org/wiki/File:Sihoo_M57_mesh_office_chair_06.jpg",
+          "author": "Waldyrious",
+          "licence": "CC BY-SA 4.0"
+        }
+      ],
+      "seller": 0,
+      "hoursAgo": 80
+    },
+    {
+      "title": "Arctic Freezer 13 CPU cooler",
+      "description": "Tower cooler, much quieter than a stock one. The photo is from my old build, it comes with its fan and clips. Can meet at AUPP.",
+      "category": "electronics",
+      "condition": "good",
+      "type": "sale",
+      "price": 10,
+      "images": [
+        "https://upload.wikimedia.org/wikipedia/commons/thumb/6/61/Arctic_Freezer_13_heatsink.jpg/960px-Arctic_Freezer_13_heatsink.jpg"
+      ],
+      "credits": [
+        {
+          "page": "https://commons.wikimedia.org/wiki/File:Arctic_Freezer_13_heatsink.jpg",
+          "author": "Blackcat",
+          "licence": "CC BY-SA 4.0"
+        }
+      ],
+      "seller": 1,
+      "hoursAgo": 92
+    },
+    {
+      "title": "Computer desk with drawer and cupboard",
+      "description": "Wooden desk with a keyboard tray, a drawer and a cupboard. Monitor and PC not included. Pick up near AUPP, I can help carry it.",
+      "category": "furniture",
+      "condition": "good",
+      "type": "sale",
+      "price": 35,
+      "images": [
+        "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f4/Computer_desk.jpg/960px-Computer_desk.jpg"
+      ],
+      "credits": [
+        {
+          "page": "https://commons.wikimedia.org/wiki/File:Computer_desk.jpg",
+          "author": "Dhivyabsk",
+          "licence": "CC BY-SA 4.0"
+        }
+      ],
+      "seller": 4,
+      "hoursAgo": 105
+    },
+    {
+      "title": "RGB mechanical keyboard (TKL) - trade for a mouse or headset",
+      "description": "Clicky switches and rainbow lighting, but too loud for my dorm. I'd trade it for a wireless mouse or a headset. Can meet at AUPP.",
+      "category": "electronics",
+      "condition": "good",
+      "type": "trade",
+      "price": 0,
+      "images": [
+        "https://upload.wikimedia.org/wikipedia/commons/thumb/6/68/Lingbao_JIGUANSHI_Mechanical_Gaming_Keyboard.jpg/960px-Lingbao_JIGUANSHI_Mechanical_Gaming_Keyboard.jpg"
+      ],
+      "credits": [
+        {
+          "page": "https://commons.wikimedia.org/wiki/File:Lingbao_JIGUANSHI_Mechanical_Gaming_Keyboard.jpg",
+          "author": "Morn",
+          "licence": "CC BY-SA 4.0"
+        }
+      ],
+      "seller": 0,
+      "hoursAgo": 115
+    },
+    {
+      "title": "Small rice cooker",
+      "description": "Enough rice for two or three people. The inner pot has no scratches. Can meet at AUPP.",
+      "category": "other",
+      "condition": "good",
+      "type": "sale",
+      "price": 10,
+      "images": [
+        "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f0/Rival_Rice_Cooker.jpg/960px-Rival_Rice_Cooker.jpg"
+      ],
+      "credits": [
+        {
+          "page": "https://commons.wikimedia.org/wiki/File:Rival_Rice_Cooker.jpg",
+          "author": "Jugo Yokomizo",
+          "licence": "CC BY-SA 4.0"
+        }
+      ],
+      "seller": 5,
+      "hoursAgo": 125
+    },
+    {
+      "title": "Wired gaming mouse with RGB",
+      "description": "Green lighting, works fine. I switched to a wireless one. Can meet at AUPP.",
+      "category": "electronics",
+      "condition": "good",
+      "type": "sale",
+      "price": 8,
+      "images": [
+        "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4b/Old_Computer_Mouse.jpg/960px-Old_Computer_Mouse.jpg"
+      ],
+      "credits": [
+        {
+          "page": "https://commons.wikimedia.org/wiki/File:Old_Computer_Mouse.jpg",
+          "author": "Dean M. Campos",
+          "licence": "CC BY-SA 4.0"
+        }
+      ],
+      "seller": 4,
+      "hoursAgo": 135
+    },
+    {
+      "title": "Lenovo ThinkPad T460 (i5, 8GB, 256GB SSD)",
+      "description": "Battery lasts about 4 hours and the keyboard is great for typing essays. Fresh Windows install. Can meet at AUPP.",
+      "category": "electronics",
+      "condition": "good",
+      "type": "sale",
+      "price": 160,
+      "images": [
+        "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e7/T460_angled.jpg/960px-T460_angled.jpg"
+      ],
+      "credits": [
+        {
+          "page": "https://commons.wikimedia.org/wiki/File:T460_angled.jpg",
+          "author": "Albert György",
+          "licence": "CC BY 4.0"
+        }
+      ],
+      "seller": 1,
+      "hoursAgo": 150
+    },
+    {
+      "title": "iPad Pro 12.9 (2020) with Magic Keyboard",
+      "description": "128GB, Wi-Fi. I used it for drawing plans and it always stayed in the keyboard case, so no scratches. Pencil not included. Can meet at AUPP.",
+      "category": "electronics",
+      "condition": "like_new",
+      "type": "sale",
+      "price": 550,
+      "images": [
+        "https://upload.wikimedia.org/wikipedia/commons/thumb/7/77/13_inch_iPad_Pro_2020_on_a_desk.jpg/960px-13_inch_iPad_Pro_2020_on_a_desk.jpg"
+      ],
+      "credits": [
+        {
+          "page": "https://commons.wikimedia.org/wiki/File:13_inch_iPad_Pro_2020_on_a_desk.jpg",
+          "author": "Glide08",
+          "licence": "CC BY-SA 4.0"
+        }
+      ],
+      "seller": 4,
+      "hoursAgo": 170
+    },
+    {
+      "title": "Electric kettle (free)",
+      "description": "I got a new one, so this one is free. Boils fast and doesn't leak. Pick it up at AUPP.",
+      "category": "other",
+      "condition": "good",
+      "type": "giveaway",
+      "price": 0,
+      "images": [
+        "https://upload.wikimedia.org/wikipedia/commons/thumb/0/03/Electric_kettle%2C_Ribnitz-Damgarten_(LRM_20200521_132413-hdr).jpg/960px-Electric_kettle%2C_Ribnitz-Damgarten_(LRM_20200521_132413-hdr).jpg",
+        "https://upload.wikimedia.org/wikipedia/commons/thumb/4/47/Electric_kettle_(LRM_20200521_132339-hdr).jpg/960px-Electric_kettle_(LRM_20200521_132339-hdr).jpg"
+      ],
+      "credits": [
+        {
+          "page": "https://commons.wikimedia.org/wiki/File:Electric_kettle%2C_Ribnitz-Damgarten_(LRM_20200521_132413-hdr).jpg",
+          "author": "Matti Blume",
+          "licence": "CC BY-SA 4.0"
+        },
+        {
+          "page": "https://commons.wikimedia.org/wiki/File:Electric_kettle_(LRM_20200521_132339-hdr).jpg",
+          "author": "Matti Blume",
+          "licence": "CC BY-SA 4.0"
+        }
+      ],
+      "seller": 0,
+      "hoursAgo": 190
+    },
+    {
+      "title": "AirPods 4",
+      "description": "Got them as a gift, but I already had a pair. Used a few times, case and cable included. Can meet at AUPP.",
+      "category": "electronics",
+      "condition": "like_new",
+      "type": "sale",
+      "price": 85,
+      "images": [
+        "https://upload.wikimedia.org/wikipedia/commons/thumb/2/23/Airpods_4.jpg/960px-Airpods_4.jpg"
+      ],
+      "credits": [
+        {
+          "page": "https://commons.wikimedia.org/wiki/File:Airpods_4.jpg",
+          "author": "AppleFans 1",
+          "licence": "CC0"
+        }
+      ],
+      "seller": 5,
+      "hoursAgo": 210
+    },
+    {
+      "title": "Badminton racket with shuttlecock",
+      "description": "Light racket, the strings are still tight. Can meet at AUPP, or at the court if you want to try it.",
+      "category": "other",
+      "condition": "good",
+      "type": "sale",
+      "price": 15,
+      "images": [
+        "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ad/Rachet%C4%83_de_badminton_%C5%9Fi_flutura%C5%9F.jpg/960px-Rachet%C4%83_de_badminton_%C5%9Fi_flutura%C5%9F.jpg"
+      ],
+      "credits": [
+        {
+          "page": "https://commons.wikimedia.org/wiki/File:Rachet%C4%83_de_badminton_%C5%9Fi_flutura%C5%9F.jpg",
+          "author": "Vladimir Maftei",
+          "licence": "CC BY-SA 4.0"
+        }
+      ],
+      "seller": 2,
+      "hoursAgo": 230
+    },
+    {
+      "title": "Casio fx-991ES calculator",
+      "description": "Allowed in most math and stats exams. Works perfectly and comes with its cover. Can meet at AUPP.",
+      "category": "electronics",
+      "condition": "good",
+      "type": "sale",
+      "price": 12,
+      "images": [
+        "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3d/Casio_fx-991ES_Calculator.jpg/960px-Casio_fx-991ES_Calculator.jpg"
+      ],
+      "credits": [
+        {
+          "page": "https://commons.wikimedia.org/wiki/File:Casio_fx-991ES_Calculator.jpg",
+          "author": "Stefan-Xp",
+          "licence": "CC BY-SA 3.0"
+        }
+      ],
+      "seller": 2,
+      "hoursAgo": 250
+    },
+    {
+      "title": "Acoustic guitar with bag - trade for a keyboard or ukulele",
+      "description": "Full-size guitar with a soft bag, good for learning. I'd trade for a digital piano or a ukulele, and add up to $20 cash if yours is worth more. Can meet at AUPP.",
+      "category": "other",
+      "condition": "good",
+      "type": "trade",
+      "price": 0,
+      "images": [
+        "https://upload.wikimedia.org/wikipedia/commons/thumb/4/44/Acoustic_Guitar_2.jpg/960px-Acoustic_Guitar_2.jpg"
+      ],
+      "credits": [
+        {
+          "page": "https://commons.wikimedia.org/wiki/File:Acoustic_Guitar_2.jpg",
+          "author": "Johnnydeezwax",
+          "licence": "CC BY-SA 3.0"
+        }
+      ],
+      "seller": 3,
+      "hoursAgo": 270
+    },
+    {
+      "title": "Backpack with lots of pockets",
+      "description": "Padded straps and room for a laptop and books. All the zips work. Can meet at AUPP.",
+      "category": "other",
+      "condition": "good",
+      "type": "sale",
+      "price": 12,
+      "images": [
+        "https://live.staticflickr.com/2628/3770457870_325823e331_b.jpg"
+      ],
+      "credits": [
+        {
+          "page": "https://www.flickr.com/photos/14771153@N04/3770457870",
+          "author": "slgckgc",
+          "licence": "CC BY 2.0"
+        }
+      ],
+      "seller": 5,
+      "hoursAgo": 300
+    },
+    {
+      "title": "Denim jacket (size M)",
+      "description": "Light blue, washed and ready to wear. It's too small for me now. Can meet at AUPP.",
+      "category": "clothing",
+      "condition": "good",
+      "type": "sale",
+      "price": 12,
+      "images": [
+        "https://upload.wikimedia.org/wikipedia/commons/thumb/0/06/Jean_jacket.jpg/960px-Jean_jacket.jpg"
+      ],
+      "credits": [
+        {
+          "page": "https://commons.wikimedia.org/wiki/File:Jean_jacket.jpg",
+          "author": "NikosLikomitros",
+          "licence": "CC0"
+        }
+      ],
+      "seller": 0,
+      "hoursAgo": 335
+    },
+    {
+      "title": "Standing fan",
+      "description": "Three speeds and it still turns side to side. A bit noisy on the top speed. Pick up at AUPP.",
+      "category": "other",
+      "condition": "fair",
+      "type": "sale",
+      "price": 10,
+      "images": [
+        "https://upload.wikimedia.org/wikipedia/commons/thumb/2/27/Floor_fan.jpg/960px-Floor_fan.jpg"
+      ],
+      "credits": [
+        {
+          "page": "https://commons.wikimedia.org/wiki/File:Floor_fan.jpg",
+          "author": "Hans Olav Lien",
+          "licence": "CC BY-SA 3.0"
+        }
+      ],
+      "seller": 3,
+      "hoursAgo": 365
+    },
+    {
+      "title": "North Star sneakers (size 42)",
+      "description": "White with blue stripes, worn twice. Wrong size for me, comes with the box. Can meet at AUPP.",
+      "category": "clothing",
+      "condition": "like_new",
+      "type": "sale",
+      "price": 20,
+      "images": [
+        "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6c/North_Star_sneakers_(1).jpg/960px-North_Star_sneakers_(1).jpg",
+        "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ef/North_Star_sneakers_(2).jpg/960px-North_Star_sneakers_(2).jpg"
+      ],
+      "credits": [
+        {
+          "page": "https://commons.wikimedia.org/wiki/File:North_Star_sneakers_(1).jpg",
+          "author": "Sherwin",
+          "licence": "CC BY-SA 4.0"
+        },
+        {
+          "page": "https://commons.wikimedia.org/wiki/File:North_Star_sneakers_(2).jpg",
+          "author": "Sherwin",
+          "licence": "CC BY-SA 4.0"
+        }
+      ],
+      "seller": 3,
+      "hoursAgo": 400
+    },
+    {
+      "title": "Pink motorbike helmet (size M)",
+      "description": "No cracks in the visor. I got a new one for my birthday. Can meet at AUPP.",
+      "category": "bikes",
+      "condition": "good",
+      "type": "sale",
+      "price": 10,
+      "images": [
+        "https://upload.wikimedia.org/wikipedia/commons/thumb/3/38/Motorcycle_helmet.jpg/960px-Motorcycle_helmet.jpg"
+      ],
+      "credits": [
+        {
+          "page": "https://commons.wikimedia.org/wiki/File:Motorcycle_helmet.jpg",
+          "author": "MediaPhoto.Org",
+          "licence": "CC BY 3.0"
+        }
+      ],
+      "seller": 5,
+      "hoursAgo": 440
+    },
+    {
+      "title": "Calculus",
+      "description": "Calculus by James Stewart (1986). Some highlighting in the first chapters, otherwise clean. Can meet at AUPP.",
+      "category": "textbooks",
+      "condition": "good",
+      "type": "sale",
+      "price": 18,
+      "images": [
+        "https://covers.openlibrary.org/b/id/364094-L.jpg"
+      ],
+      "credits": [
+        {
+          "page": "https://openlibrary.org/works/OL100903W",
+          "author": "Open Library",
+          "licence": "Open Library Covers API"
+        }
+      ],
+      "seller": 2,
+      "hoursAgo": 262
+    },
+    {
+      "title": "Concepts of physics",
+      "description": "Concepts of physics by Harish Chandra Verma (1993). Barely opened, no highlighting. Can meet at AUPP.",
+      "category": "textbooks",
+      "condition": "like_new",
+      "type": "sale",
+      "price": 25,
+      "images": [
+        "https://covers.openlibrary.org/b/id/8631889-L.jpg"
+      ],
+      "credits": [
+        {
+          "page": "https://openlibrary.org/works/OL19836917W",
+          "author": "Open Library",
+          "licence": "Open Library Covers API"
+        }
+      ],
+      "seller": 3,
+      "hoursAgo": 299
+    },
+    {
+      "title": "Operational organic chemistry",
+      "description": "Operational organic chemistry by John W. Lehman (1981). The cover is worn and some pages have pencil notes, but nothing is missing. Can meet at AUPP.",
+      "category": "textbooks",
+      "condition": "fair",
+      "type": "sale",
+      "price": 12,
+      "images": [
+        "https://covers.openlibrary.org/b/id/4128310-L.jpg"
+      ],
+      "credits": [
+        {
+          "page": "https://openlibrary.org/works/OL1824432W",
+          "author": "Open Library",
+          "licence": "Open Library Covers API"
+        }
+      ],
+      "seller": 4,
+      "hoursAgo": 336
+    },
+    {
+      "title": "Biology",
+      "description": "Biology by Neil Alexander Campbell (1987). Some highlighting in the first chapters, otherwise clean. Can meet at AUPP.",
+      "category": "textbooks",
+      "condition": "good",
+      "type": "sale",
+      "price": 30,
+      "images": [
+        "https://covers.openlibrary.org/b/id/581911-L.jpg"
+      ],
+      "credits": [
+        {
+          "page": "https://openlibrary.org/works/OL1983087W",
+          "author": "Open Library",
+          "licence": "Open Library Covers API"
+        }
+      ],
+      "seller": 5,
+      "hoursAgo": 373
+    },
+    {
+      "title": "Small Is Beautiful",
+      "description": "Small Is Beautiful by E. F. Schumacher (1905). Some highlighting in the first chapters, otherwise clean. Can meet at AUPP.",
+      "category": "textbooks",
+      "condition": "good",
+      "type": "sale",
+      "price": 15,
+      "images": [
+        "https://covers.openlibrary.org/b/id/6738557-L.jpg"
+      ],
+      "credits": [
+        {
+          "page": "https://openlibrary.org/works/OL1622912W",
+          "author": "Open Library",
+          "licence": "Open Library Covers API"
+        }
+      ],
+      "seller": 0,
+      "hoursAgo": 410
+    },
+    {
+      "title": "Accounting Principles",
+      "description": "Accounting Principles by Jerry J. Weygandt (1987). Barely opened, no highlighting. Can meet at AUPP.",
+      "category": "textbooks",
+      "condition": "like_new",
+      "type": "sale",
+      "price": 22,
+      "images": [
+        "https://covers.openlibrary.org/b/id/1241487-L.jpg"
+      ],
+      "credits": [
+        {
+          "page": "https://openlibrary.org/works/OL1881226W",
+          "author": "Open Library",
+          "licence": "Open Library Covers API"
+        }
+      ],
+      "seller": 1,
+      "hoursAgo": 447
+    },
+    {
+      "title": "Marketing Management",
+      "description": "Marketing Management by Philip Kotler (2016). The cover is worn and some pages have pencil notes, but nothing is missing. Can meet at AUPP.",
+      "category": "textbooks",
+      "condition": "fair",
+      "type": "sale",
+      "price": 10,
+      "images": [
+        "https://covers.openlibrary.org/b/id/14426392-L.jpg"
+      ],
+      "credits": [
+        {
+          "page": "https://openlibrary.org/works/OL17371073W",
+          "author": "Open Library",
+          "licence": "Open Library Covers API"
+        }
+      ],
+      "seller": 2,
+      "hoursAgo": 484
+    },
+    {
+      "title": "How to Lie with Statistics",
+      "description": "How to Lie with Statistics by Darrell Huff (1954). Some highlighting in the first chapters, otherwise clean. Can meet at AUPP.",
+      "category": "textbooks",
+      "condition": "good",
+      "type": "sale",
+      "price": 28,
+      "images": [
+        "https://covers.openlibrary.org/b/id/13115835-L.jpg"
+      ],
+      "credits": [
+        {
+          "page": "https://openlibrary.org/works/OL2975846W",
+          "author": "Open Library",
+          "licence": "Open Library Covers API"
+        }
+      ],
+      "seller": 3,
+      "hoursAgo": 51
+    },
+    {
+      "title": "Automate the Boring Stuff with Python",
+      "description": "Automate the Boring Stuff with Python by Al Sweigart (2015). Some highlighting in the first chapters, otherwise clean. Can meet at AUPP.",
+      "category": "textbooks",
+      "condition": "good",
+      "type": "sale",
+      "price": 20,
+      "images": [
+        "https://covers.openlibrary.org/b/id/7363640-L.jpg"
+      ],
+      "credits": [
+        {
+          "page": "https://openlibrary.org/works/OL17192141W",
+          "author": "Open Library",
+          "licence": "Open Library Covers API"
+        }
+      ],
+      "seller": 4,
+      "hoursAgo": 88
+    },
+    {
+      "title": "Atomic Habits",
+      "description": "Atomic Habits by James Clear (2016). Barely opened, no highlighting. Can meet at AUPP.",
+      "category": "textbooks",
+      "condition": "like_new",
+      "type": "sale",
+      "price": 16,
+      "images": [
+        "https://covers.openlibrary.org/b/id/12539702-L.jpg"
+      ],
+      "credits": [
+        {
+          "page": "https://openlibrary.org/works/OL17930368W",
+          "author": "Open Library",
+          "licence": "Open Library Covers API"
+        }
+      ],
+      "seller": 5,
+      "hoursAgo": 125
+    },
+    {
+      "title": "Introduction to linear algebra",
+      "description": "Introduction to linear algebra by Gilbert Strang (1998). The cover is worn and some pages have pencil notes, but nothing is missing. Can meet at AUPP.",
+      "category": "textbooks",
+      "condition": "fair",
+      "type": "sale",
+      "price": 24,
+      "images": [
+        "https://covers.openlibrary.org/b/id/725050-L.jpg"
+      ],
+      "credits": [
+        {
+          "page": "https://openlibrary.org/works/OL3285486W",
+          "author": "Open Library",
+          "licence": "Open Library Covers API"
+        }
+      ],
+      "seller": 0,
+      "hoursAgo": 162
+    },
+    {
+      "title": "Thirty Days to Better English",
+      "description": "Thirty Days to Better English by Norman Lewis (1965). Some highlighting in the first chapters, otherwise clean. Can meet at AUPP.",
+      "category": "textbooks",
+      "condition": "good",
+      "type": "sale",
+      "price": 14,
+      "images": [
+        "https://covers.openlibrary.org/b/id/6688871-L.jpg"
+      ],
+      "credits": [
+        {
+          "page": "https://openlibrary.org/works/OL4847873W",
+          "author": "Open Library",
+          "licence": "Open Library Covers API"
+        }
+      ],
+      "seller": 1,
+      "hoursAgo": 199
+    },
+    {
+      "title": "Looking for: Data Structures and Algorithms Made Easy",
+      "description": "Need \"Data Structures and Algorithms Made Easy\" by Narasimha Karumanchi for class. Any edition is fine, message me.",
+      "category": "textbooks",
+      "condition": "good",
+      "type": "buy_request",
+      "price": 20,
+      "images": [
+        "https://covers.openlibrary.org/b/id/11067110-L.jpg"
+      ],
+      "credits": [
+        {
+          "page": "https://openlibrary.org/works/OL24463217W",
+          "author": "Open Library",
+          "licence": "Open Library Covers API"
+        }
+      ],
+      "seller": 2,
+      "hoursAgo": 236
+    },
+    {
+      "title": "Looking for: Macroeconomics",
+      "description": "Need \"Macroeconomics\" by N. Gregory Mankiw for class. Any edition is fine, message me.",
+      "category": "textbooks",
+      "condition": "like_new",
+      "type": "buy_request",
+      "price": 15,
+      "images": [
+        "https://covers.openlibrary.org/b/id/12584771-L.jpg"
+      ],
+      "credits": [
+        {
+          "page": "https://openlibrary.org/works/OL26727088W",
+          "author": "Open Library",
+          "licence": "Open Library Covers API"
+        }
+      ],
+      "seller": 3,
+      "hoursAgo": 273
+    },
+    {
+      "title": "Looking for: Anatomy",
+      "description": "Need \"Anatomy\" by Henry Gray F.R.S. for class. Any edition is fine, message me.",
+      "category": "textbooks",
+      "condition": "fair",
+      "type": "buy_request",
+      "price": 25,
+      "images": [
+        "https://covers.openlibrary.org/b/id/692969-L.jpg"
+      ],
+      "credits": [
+        {
+          "page": "https://openlibrary.org/works/OL15399118W",
+          "author": "Open Library",
+          "licence": "Open Library Covers API"
+        }
+      ],
+      "seller": 4,
+      "hoursAgo": 310
+    },
+    {
+      "title": "Foundations of college chemistry",
+      "description": "Foundations of college chemistry by Morris Hein (1967). Some highlighting in the first chapters, otherwise clean. Can meet at AUPP.",
+      "category": "textbooks",
+      "condition": "good",
+      "type": "sale",
+      "price": 20,
+      "images": [
+        "https://covers.openlibrary.org/b/id/6598795-L.jpg"
+      ],
+      "credits": [
+        {
+          "page": "https://openlibrary.org/works/OL1993999W",
+          "author": "Open Library",
+          "licence": "Open Library Covers API"
+        }
+      ],
+      "seller": 5,
+      "hoursAgo": 347
+    },
+    {
+      "title": "Human Resource Management",
+      "description": "Human Resource Management by Gary Dessler (1994). Barely opened, no highlighting. Can meet at AUPP.",
+      "category": "textbooks",
+      "condition": "like_new",
+      "type": "sale",
+      "price": 18,
+      "images": [
+        "https://covers.openlibrary.org/b/id/84029-L.jpg"
+      ],
+      "credits": [
+        {
+          "page": "https://openlibrary.org/works/OL1982791W",
+          "author": "Open Library",
+          "licence": "Open Library Covers API"
+        }
+      ],
+      "seller": 0,
+      "hoursAgo": 384
+    },
+    {
+      "title": "Database Design for Mere Mortals",
+      "description": "Database Design for Mere Mortals by Michael J. Hernandez (1996). The cover is worn and some pages have pencil notes, but nothing is missing. Can meet at AUPP.",
+      "category": "textbooks",
+      "condition": "fair",
+      "type": "sale",
+      "price": 22,
+      "images": [
+        "https://covers.openlibrary.org/b/id/135738-L.jpg"
+      ],
+      "credits": [
+        {
+          "page": "https://openlibrary.org/works/OL2945002W",
+          "author": "Open Library",
+          "licence": "Open Library Covers API"
+        }
+      ],
+      "seller": 1,
+      "hoursAgo": 421
+    },
+    {
+      "title": "Thermodynamics",
+      "description": "Thermodynamics by Yunus A. Çengel (1989). Some highlighting in the first chapters, otherwise clean. Can meet at AUPP.",
+      "category": "textbooks",
+      "condition": "good",
+      "type": "sale",
+      "price": 28,
+      "images": [
+        "https://covers.openlibrary.org/b/id/62976-L.jpg"
+      ],
+      "credits": [
+        {
+          "page": "https://openlibrary.org/works/OL2637241W",
+          "author": "Open Library",
+          "licence": "Open Library Covers API"
+        }
+      ],
+      "seller": 2,
+      "hoursAgo": 458
+    },
+    {
+      "title": "Traditions & encounters",
+      "description": "Traditions & encounters by Jerry H. Bentley (1999). Some highlighting in the first chapters, otherwise clean. Can meet at AUPP.",
+      "category": "textbooks",
+      "condition": "good",
+      "type": "sale",
+      "price": 16,
+      "images": [
+        "https://covers.openlibrary.org/b/id/65184-L.jpg"
+      ],
+      "credits": [
+        {
+          "page": "https://openlibrary.org/works/OL4289172W",
+          "author": "Open Library",
+          "licence": "Open Library Covers API"
+        }
+      ],
+      "seller": 3,
+      "hoursAgo": 25
+    },
+    {
+      "title": "The story of art",
+      "description": "The story of art by E. H. Gombrich (1950). Barely opened, no highlighting. Can meet at AUPP.",
+      "category": "textbooks",
+      "condition": "like_new",
+      "type": "sale",
+      "price": 24,
+      "images": [
+        "https://covers.openlibrary.org/b/id/538390-L.jpg"
+      ],
+      "credits": [
+        {
+          "page": "https://openlibrary.org/works/OL686193W",
+          "author": "Open Library",
+          "licence": "Open Library Covers API"
+        }
+      ],
+      "seller": 4,
+      "hoursAgo": 62
+    },
+    {
+      "title": "Rich Dad, Poor Dad",
+      "description": "Rich Dad, Poor Dad by Robert T. Kiyosaki (1990). The cover is worn and some pages have pencil notes, but nothing is missing. Can meet at AUPP.",
+      "category": "textbooks",
+      "condition": "fair",
+      "type": "sale",
+      "price": 12,
+      "images": [
+        "https://covers.openlibrary.org/b/id/8315603-L.jpg"
+      ],
+      "credits": [
+        {
+          "page": "https://openlibrary.org/works/OL2010879W",
+          "author": "Open Library",
+          "licence": "Open Library Covers API"
+        }
+      ],
+      "seller": 5,
+      "hoursAgo": 99
+    },
+    {
+      "title": "Looking for: Discrete mathematics",
+      "description": "Need \"Discrete mathematics\" by Kenneth A. Ross for class. Any edition is fine, message me.",
+      "category": "textbooks",
+      "condition": "good",
+      "type": "buy_request",
+      "price": 20,
+      "images": [
+        "https://covers.openlibrary.org/b/id/3968622-L.jpg"
+      ],
+      "credits": [
+        {
+          "page": "https://openlibrary.org/works/OL837648W",
+          "author": "Open Library",
+          "licence": "Open Library Covers API"
+        }
+      ],
+      "seller": 0,
+      "hoursAgo": 136
+    },
+    {
+      "title": "BIC 4-colour pen",
+      "description": "Blue, black, red and green in one pen, all four still write. I bought a pack and only need one. Can meet at AUPP.",
+      "category": "other",
+      "condition": "like_new",
+      "type": "sale",
+      "price": 1,
+      "images": [
+        "https://upload.wikimedia.org/wikipedia/commons/thumb/2/27/Bic_4_couleurs.jpg/960px-Bic_4_couleurs.jpg"
+      ],
+      "credits": [
+        {
+          "page": "https://commons.wikimedia.org/wiki/File:Bic_4_couleurs.jpg",
+          "author": "Prog138",
+          "licence": "CC BY-SA 4.0"
+        }
+      ],
+      "seller": 0,
+      "hoursAgo": 27
+    },
+    {
+      "title": "College-ruled composition notebook (unused)",
+      "description": "100 sheets, never written in. I bought two at the start of term. Can meet at AUPP.",
+      "category": "other",
+      "condition": "new",
+      "type": "sale",
+      "price": 2,
+      "images": [
+        "https://upload.wikimedia.org/wikipedia/commons/thumb/6/65/Green_Soft-Covered_Composition_Notebook_(14822730560).jpg/960px-Green_Soft-Covered_Composition_Notebook_(14822730560).jpg"
+      ],
+      "credits": [
+        {
+          "page": "https://commons.wikimedia.org/wiki/File:Green_Soft-Covered_Composition_Notebook_(14822730560).jpg",
+          "author": "slgckgc",
+          "licence": "CC BY 2.0"
+        }
+      ],
+      "seller": 1,
+      "hoursAgo": 33
+    },
+    {
+      "title": "USB-A to USB-C cable (1 m)",
+      "description": "Charges and transfers data. A spare from a phone box, I charge wirelessly now. Can meet at AUPP.",
+      "category": "electronics",
+      "condition": "good",
+      "type": "sale",
+      "price": 3,
+      "images": [
+        "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c3/USB-C_cable_2017_A.jpg/960px-USB-C_cable_2017_A.jpg"
+      ],
+      "credits": [
+        {
+          "page": "https://commons.wikimedia.org/wiki/File:USB-C_cable_2017_A.jpg",
+          "author": "Fructibus",
+          "licence": "CC0"
+        }
+      ],
+      "seller": 2,
+      "hoursAgo": 39
+    },
+    {
+      "title": "PNY 16GB USB flash drive",
+      "description": "Wiped and empty. Handy for printing at the library. Can meet at AUPP.",
+      "category": "electronics",
+      "condition": "good",
+      "type": "sale",
+      "price": 4,
+      "images": [
+        "https://upload.wikimedia.org/wikipedia/commons/thumb/8/89/PNY_USB_flash_drive_(16GB)%2C_Hillegersberg%2C_Rotterdam_(2020)_01.jpg/960px-PNY_USB_flash_drive_(16GB)%2C_Hillegersberg%2C_Rotterdam_(2020)_01.jpg"
+      ],
+      "credits": [
+        {
+          "page": "https://commons.wikimedia.org/wiki/File:PNY_USB_flash_drive_(16GB)%2C_Hillegersberg%2C_Rotterdam_(2020)_01.jpg",
+          "author": "Donald Trung Quoc Don",
+          "licence": "CC BY-SA 4.0"
+        }
+      ],
+      "seller": 3,
+      "hoursAgo": 45
+    },
+    {
+      "title": "Wired earphones (3.5 mm jack)",
+      "description": "Both sides work and the sound is clear. Cleaned, with spare ear pads. Can meet at AUPP.",
+      "category": "electronics",
+      "condition": "good",
+      "type": "sale",
+      "price": 5,
+      "images": [
+        "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1d/Earphones_BW_2011-12-10_15-49-08.JPG/960px-Earphones_BW_2011-12-10_15-49-08.JPG"
+      ],
+      "credits": [
+        {
+          "page": "https://commons.wikimedia.org/wiki/File:Earphones_BW_2011-12-10_15-49-08.JPG",
+          "author": "Berthold Werner",
+          "licence": "CC BY-SA 3.0"
+        }
+      ],
+      "seller": 4,
+      "hoursAgo": 50
+    }
+  ]
+}
