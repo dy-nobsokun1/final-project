@@ -10,6 +10,8 @@ This repository centralizes all project standards, architectural rules, and assi
 - **Claude Code**: Read **[`memory/claude.md`](memory/claude.md)** (or auto-loaded via [`.claude/CLAUDE.md`](.claude/CLAUDE.md)) for CLI commands, testing workflows, and environment setup.
 - **Gemini / Antigravity**: Read **[`memory/manager.md`](memory/manager.md)** and **[`memory/changelog.md`](memory/changelog.md)** for the engineering manager framework and recent task handovers.
 - **Cline / Roo Code**: Follow the hard constraints in **[`memory/rules.md`](memory/rules.md)** and the master index in **[`memory/index.md`](memory/index.md)**.
+- **Project Roadmap**: See **[`memory/plan.md`](memory/plan.md)** for the 2-phase collaboration and evaluation plan.
+
 
 ---
 

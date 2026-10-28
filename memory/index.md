@@ -18,6 +18,10 @@ Welcome to the **UniSwap Memory Bank**. This folder contains central architectur
 4. **[claude.md](claude.md)**:
    - **Claude Code Reference**: CLI commands, dev scripts, and Claude-specific workflows.
 
+5. **[plan.md](plan.md)**:
+   - **Project Roadmap & 2-Phase Strategy**: Team co-development sync (Phase 1) and pre-evaluation stealth cleanup (Phase 2).
+
+
 
 ---
 
