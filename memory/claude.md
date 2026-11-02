@@ -75,7 +75,7 @@ when `uniswap` has none, so an older `uniswap` database needs the upgrade SQL (b
 
 ## How things work (non-obvious)
 
-- **Auth:** sign-up accepts only `.edu.kh` and returns `{ email, verificationRequired: true }` with
+- **Auth:** sign-up accepts only `@aupp.edu.kh` (`isAuppEmail`; the database CHECK and `forgot-password` still take any `.edu.kh`, for the `@demo.edu.kh` sample sellers) and returns `{ email, verificationRequired: true }` with
   no token: nobody is signed in until the emailed code is typed. Registering again with an
   unverified email replaces that account; a verified one gets 409. Login is blocked (403) until
   verified. `resend-verification` takes `{ email, password }`. `requireAuth` re-checks in the
@@ -403,7 +403,7 @@ deployment, Cloudinary photos, Stripe test payments, Telegram bot.
 ### Picking up on another machine
 
 Everything above is pushed to `implement_backend`. Last full check (2 Nov):
-- `npm test` (85) and `npm run test:api` (136) pass (2 Nov, with the new notification messages).
+- `npm test` (86) and `npm run test:api` (136) pass (2 Nov, with the new notification messages).
 - The frontend's lint, `tsc --noEmit` and `next build` are clean (2 Nov).
 After `git pull origin implement_backend`:
 

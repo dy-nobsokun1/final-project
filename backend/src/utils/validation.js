@@ -10,10 +10,16 @@ export const MAX_AUCTION_DAYS = 30;
 export const STATUSES = ["active", "reserved", "sold", "traded"];
 
 const CAMPUS_EMAIL = /^[^\s@]+@([a-z0-9-]+\.)+edu\.kh$/i;
+const AUPP_EMAIL = /^[^\s@]+@aupp\.edu\.kh$/i;
 
-/** Only campus addresses ending in .edu.kh may register (proposal, Functional Requirements). */
+/** A campus address ending in .edu.kh (proposal, Functional Requirements). The database CHECK uses the same ending. */
 export function isCampusEmail(email) {
   return typeof email === "string" && CAMPUS_EMAIL.test(email.trim());
+}
+
+/** New sign-ups are AUPP only. isCampusEmail stays for password resets, so the @demo.edu.kh sample sellers keep working. */
+export function isAuppEmail(email) {
+  return typeof email === "string" && AUPP_EMAIL.test(email.trim());
 }
 
 /** One password rule for sign-up, reset and change, so all three say the same thing. Null when it is fine. */
@@ -25,7 +31,7 @@ export function passwordError(password) {
 export function validateRegistration({ name, email, password, major, graduationYear }) {
   const errors = {};
   if (typeof name !== "string" || !name.trim()) errors.name = "Name is required.";
-  if (!isCampusEmail(email)) errors.email = "Use your campus email (ending in .edu.kh).";
+  if (!isAuppEmail(email)) errors.email = "Use your AUPP email (ending in @aupp.edu.kh).";
   const problem = passwordError(password);
   if (problem) errors.password = problem;
   // Optional profile fields.

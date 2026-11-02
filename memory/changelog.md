@@ -4,6 +4,9 @@ Log of completed tasks, architecture decisions, and bug fixes for the UniSwap te
 
 ## 2 Nov 2026
 
+### Sign-up is AUPP only
+- `validateRegistration` and `RegisterForm` accept only `@aupp.edu.kh`. The database CHECK and `forgot-password` still take any `.edu.kh`, so the `@demo.edu.kh` sample sellers keep working. This narrows the proposal's `.edu.kh` rule, on purpose.
+
 ### KHQR upload removed
 - We built an "Upload your KHQR" button in Settings to read an ABA payment ID from a picture. It did not work in the real test, so we removed it and the `jsqr` package. Sellers type their Bakong app ID, as before. The code is in git history (`a9bc2d9` to `656721a`).
 

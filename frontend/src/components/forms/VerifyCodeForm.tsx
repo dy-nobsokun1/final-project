@@ -52,7 +52,7 @@ export function VerifyCodeForm({ initialEmail, children }: VerifyCodeFormProps) 
             name="email"
             type="email"
             autoComplete="email"
-            placeholder="you@university.edu.kh"
+            placeholder="you@aupp.edu.kh"
             value={email}
             onChange={(event) => setEmail(event.target.value)}
           />

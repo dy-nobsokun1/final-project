@@ -676,7 +676,7 @@ A token issued before the account's last password change or reset is refused (40
 | Method | Path | Description |
 |---|---|---|
 | GET | `/api/health` | API + database health check |
-| POST | `/api/auth/register` | `{ name, email, password, major?, graduationYear? }`. Only `.edu.kh` emails. Emails a 6-digit code; nobody is signed in yet |
+| POST | `/api/auth/register` | `{ name, email, password, major?, graduationYear? }`. Only `@aupp.edu.kh` emails. Emails a 6-digit code; nobody is signed in yet |
 | POST | `/api/auth/login` | `{ email, password }` → `{ user, token }`. `403` until the email is verified |
 | POST | `/api/auth/verify-email` | `{ email, code }` → `{ user }` and verifies the email, which unlocks signing in. The code works for 30 minutes and 5 tries (each try counts, the right one too); a wrong one answers 400 "That code is not right.", an expired one or the 5th failed try 400 "This code has expired. Sign in to get a new one." |
 | POST | `/api/auth/resend-verification` | `{ email, password }` → emails a new code (the old one stops working, and the 5 tries start again) |

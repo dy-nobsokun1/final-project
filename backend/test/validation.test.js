@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import { test } from "node:test";
 import {
+  isAuppEmail,
   isCampusEmail,
   isUploadedPhotoUrl,
   MAX_PHOTOS,
@@ -12,6 +13,16 @@ import {
   validateRegistration,
   validateReview,
 } from "../src/utils/validation.js";
+
+test("only @aupp.edu.kh emails can sign up", () => {
+  assert.equal(isAuppEmail("student@aupp.edu.kh"), true);
+  assert.equal(isAuppEmail("Student@AUPP.EDU.KH"), true);
+  assert.equal(isAuppEmail("student@rupp.edu.kh"), false);
+  assert.equal(isAuppEmail("student@fake-aupp.edu.kh"), false);
+  assert.equal(isAuppEmail("student@aupp.edu.kh.evil.com"), false);
+  assert.equal(isAuppEmail(undefined), false);
+  assert.ok(validateRegistration({ name: "Dara", email: "dara@rupp.edu.kh", password: "longenough" }).email);
+});
 
 test("only .edu.kh emails are campus emails", () => {
   assert.equal(isCampusEmail("student@aupp.edu.kh"), true);

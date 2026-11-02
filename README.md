@@ -1,6 +1,6 @@
 # UniSwap — Campus Marketplace
 
-FYP 401 Final Year Project. A closed marketplace for verified `.edu.kh` campus members to
+FYP 401 Final Year Project. A closed marketplace for verified AUPP students to
 buy, sell, trade, or give away items.
 
 | Folder | What it is | Owner |
@@ -15,7 +15,7 @@ Putting it online (Supabase, Render, Vercel, Cloudinary, Stripe, Telegram): [`me
 
 ### Built
 
-- **Accounts:** sign-up with a `.edu.kh` email only, and nobody can sign in until the 6-digit
+- **Accounts:** sign-up with an `@aupp.edu.kh` email only, and nobody can sign in until the 6-digit
   code emailed to them is typed on the site (30 minutes, 5 tries). Profiles are public; email addresses never are. Forgot your
   password? A one-hour, single-use link is emailed to your campus address, and you can change your
   password in Settings. Either one signs out every other device.
@@ -86,7 +86,7 @@ Putting it online (Supabase, Render, Vercel, Cloudinary, Stripe, Telegram): [`me
 - **One buyer pays at a time.** While someone has a card checkout or KHQR open for an item (up to
   30 minutes), other buyers are told someone is paying. This is what stops two people paying for
   the same item, but it also means any signed-in student can hold an item for 30 minutes without
-  paying. Every account is a verified `.edu.kh` student, and the item can still be sold in person.
+  paying. Every new account is a verified AUPP student, and the item can still be sold in person.
 - **A manual "Mark reserved" does not cancel a payment already in progress:** whoever pays first
   buys the item, and both people are told (it does not record who the item is reserved for, so
   cancelling could refund the very buyer the seller meant). An accepted offer does record the buyer:
@@ -145,7 +145,7 @@ different address, set `API_URL` in `frontend/.env.local`.
 
 Demo accounts (created by `npm run db:seed`, password `password123` for all):
 `sokunth@aupp.edu.kh`, `chanrithorn@aupp.edu.kh`, and `dara@aupp.edu.kh` (unverified on purpose, to
-show that sign-in is refused). New accounts need a `.edu.kh` email and cannot sign in until the 6-digit
+show that sign-in is refused). New accounts need an `@aupp.edu.kh` email and cannot sign in until the 6-digit
 code emailed to it is typed on the site; the code is printed in the API's log until email sending is set up.
 The same goes for the link that "Forgot your password?" sends, except in production
 (`NODE_ENV=production`), where neither is ever printed.

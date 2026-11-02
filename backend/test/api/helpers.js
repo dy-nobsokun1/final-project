@@ -35,7 +35,7 @@ export function useTestDatabase() {
 
 /** A fresh campus email, so tests never collide with each other's accounts. */
 export function uniqueEmail() {
-  return `student-${randomUUID().slice(0, 8)}@test.edu.kh`;
+  return `student-${randomUUID().slice(0, 8)}@aupp.edu.kh`;
 }
 
 // Lines hidden by hideSkippedEmailLogs, oldest first. Tests read from here what the app would have emailed.

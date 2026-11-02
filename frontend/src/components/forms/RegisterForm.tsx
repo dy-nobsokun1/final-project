@@ -41,8 +41,8 @@ export function RegisterForm() {
     const next: Record<string, string> = {};
 
     if (!values.name.trim()) next.name = "Enter your name.";
-    if (!values.email.trim().toLowerCase().endsWith(".edu.kh")) {
-      next.email = "Use your campus email (ending in .edu.kh).";
+    if (!values.email.trim().toLowerCase().endsWith("@aupp.edu.kh")) {
+      next.email = "Use your AUPP email (ending in @aupp.edu.kh).";
     }
     if (values.password.length < 8) next.password = "Use at least 8 characters.";
     const year = Number(values.graduationYear);
@@ -79,7 +79,7 @@ export function RegisterForm() {
           name="email"
           type="email"
           autoComplete="email"
-          placeholder="you@university.edu.kh"
+          placeholder="you@aupp.edu.kh"
           value={values.email}
           onChange={(event) => update("email")(event.target.value)}
         />

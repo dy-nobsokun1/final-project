@@ -14,7 +14,7 @@ Instructions for AI coding agents (Codex, Claude, Gemini, Cline) working on UniS
 8. **No Duplicate Components**: Do not create duplicate components with overlapping responsibilities.
 9. **No Unrequested Refactors**: Do not rewrite or refactor unrelated code while completing a task.
 10. **Preserve Demo Deals**: Never delete or overwrite the 9 simulated demo deals created for Chanrithorn Lim's profile stats (`DEMO_DEAL_TITLES` in `backend/scripts/db-reset-sold.js`).
-11. **Strict Campus Boundary**: Cambodian university emails ending in `.edu.kh` are strictly enforced across DB constraints, backend regex, and frontend forms.
+11. **Strict Campus Boundary**: New sign-ups are AUPP only: `@aupp.edu.kh` in the backend regex and the register form. The DB constraint and password reset still take any `.edu.kh`, for the `@demo.edu.kh` sample sellers.
 12. **Defensible Code**: Write code and explanations that the students can defend line-by-line during academic and peer review.
 
 ---
