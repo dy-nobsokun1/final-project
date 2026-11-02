@@ -106,3 +106,15 @@ Log of completed tasks, architecture decisions, and bug fixes for the UniSwap te
 - **Solution**:
   - Centralized project memory into `memory/` directory (`rules.md`, `manager.md`, `changelog.md`, `index.md`).
   - Updated root `Agent.md` to act as universal beacon for Codex, Claude, Gemini, and Cline.
+
+## 2 Nov 2026
+
+### 1. Re-open Demo Auctions (RTX 3090, City Bike, Calculus)
+- **Problem**: In UniSwap, auctions automatically close when `auction_ends_at <= now()`. Because the original test dates were in late October (e.g., Oct 30 for the RTX 3090), the countdown naturally expired, causing the UI to show "bidding closed" and the API to block new bids.
+- **Solution**:
+  - Re-opened `Gigabyte RTX 3090 Eagle OC 24GB graphics card` (`9ff9e789-bb59-4b9e-bd91-936bd2e824b7`) with starting price `$450`, `$10` minimum raise, `status = 'active'`, and `auction_ends_at` extended by 7 days to `2026-11-09`.
+  - Cleared lingering test bids so the RTX 3090 is completely clean for demo bidding.
+  - Also extended active demo auctions (`Teal city bike` at $40, `Calculus: Early Transcendentals` at $10) by 7 days.
+  - Preserved the 9 simulated demo deals for Chanrithorn Lim.
+  - Applied updates to both live Supabase pooler and local PostgreSQL fallback.
+
