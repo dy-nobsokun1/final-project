@@ -118,3 +118,12 @@ Log of completed tasks, architecture decisions, and bug fixes for the UniSwap te
   - Preserved the 9 simulated demo deals for Chanrithorn Lim.
   - Applied updates to both live Supabase pooler and local PostgreSQL fallback.
 
+### 2. Make Listing Description Optional in NewListingForm
+- **Problem**: When creating or editing a listing in `NewListingForm.tsx`, the form required `description.length >= 20` characters, blocking users from creating quick listings with short or empty descriptions.
+- **Solution**:
+  - Removed the 20-character minimum constraint in `frontend/src/components/forms/NewListingForm.tsx`.
+  - Updated field label to `Description (optional)`.
+  - Confirmed backend and database schema already support optional descriptions (`description TEXT NOT NULL DEFAULT ''`).
+  - Verified frontend Turbopack build and backend test suite.
+
+

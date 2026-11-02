@@ -52,7 +52,6 @@ export function NewListingForm({ listing, draft }: { listing?: Listing; draft?: 
     if (title.length < 5) next.title = "Use at least 5 characters.";
     if (!Number.isFinite(price) || price < 0) next.price = "Enter a valid price.";
     if (listingType === "trade" && !(Number(data.get("cashTopup") ?? 0) >= 0)) next.cashTopup = "Enter a valid amount.";
-    if (description.length < 20) next.description = "Describe the item in at least 20 characters.";
     if (photos.isUploading) next.imageUrls = "Wait for the photos to finish uploading.";
     if (listingType === "auction" && !lockedByBids) {
       // datetime-local gives the user's local time with no zone ("2026-10-04T18:00"). Converting it
@@ -99,7 +98,7 @@ export function NewListingForm({ listing, draft }: { listing?: Listing; draft?: 
           className="bg-brand-50/40 placeholder:text-foreground/50 dark:placeholder:text-muted-foreground"
         />
       </Field>
-      <Field label="Description" error={errors.description}>
+      <Field label="Description (optional)" error={errors.description}>
         <FieldTextarea
           name="description"
           defaultValue={start?.description}
