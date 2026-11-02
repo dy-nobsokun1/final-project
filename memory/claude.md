@@ -35,7 +35,8 @@ is public); state a plan before multi-file changes; explain every change so the 
   - `src/db/schema.sql`: tables `users`, `listings`, `messages`, `reviews` (from the proposal's ER
     diagram), plus `bids`, `offers`, `payments` and `saved_listings`. Query helpers sit beside it:
     `listings.js` (`LISTING_SELECT`, `buildBrowseQuery()` for browse/search), `auctions.js`,
-    `matches.js`, `offers.js`, `payments.js`.
+    `matches.js`, `offers.js`, `payments.js`. `schema.sql` ends by turning on row level security for
+    all 8 tables (no policies), so Supabase's public roles see nothing; the API's own login still does.
   - `src/utils/`: validation, scrypt password hashing, JWT, email (nodemailer), serializers
     (database snake_case → API camelCase, matching the frontend types).
   - The full API table is in `backend/README.md`. Keep it updated when routes change.
@@ -159,6 +160,11 @@ when `uniswap` has none, so an older `uniswap` database needs the upgrade SQL (b
     Inbox (read-only: never marks messages read) and Help. Also `/menu /search /new /saved /mylistings
     /inbox /help` (`setMyCommands` at start-up). An item card has its photo when the cover is https, and
     Save / Unsave.
+  - **Linking and silence:** `/start <code>` sends one plain `Connected as <name>. UniSwap notifications
+    will now arrive here too.` with no buttons; a bad or used code gets `That link has expired. ` plus
+    the connect instructions. An unlinked chat gets `notLinkedScreen()` for text and for buttons. A plain
+    `/start` from a linked chat stays quiet. An unknown command shows the menu (never a search), and so
+    does a photo or sticker.
   - The student always comes from `telegram_chat_id` (`findChatUser`, verified accounts only), never
     from button data (at most 64 bytes: `item:<id>`, `save:`, `page:n`…). Group chats are ignored.
   - One chat, one account: `linkChat` clears the chat from every other account, so linking a demo
@@ -270,6 +276,15 @@ when `uniswap` has none, so an older `uniswap` database needs the upgrade SQL (b
     - Tap to start and tap to stop, or hold for 300 ms or more and release to stop.
   - **Speech is added to the end of the box** (`start(baseText)`, `trimEnd`) and never sends or
     searches by itself. The search box drops Whisper's trailing `.`, `!` or `?`.
+- **Receipts:** `GET /api/payments/receipt/:listingId` (`routes/payments.js`) answers only the buyer and
+  seller of a listing with a `paid` payment (404 for anyone else, unpaid, or `refund_due`): the invoice
+  number (`invoiceNumber()` in `utils/payments.js`, also used by `notifyPaid`), the amount really paid,
+  `paid_at`, method, title and both names. The listing page (`?invoice=` only asks for it; its value is
+  ignored) shows `InvoiceReceiptCard` from that answer, the date in Phnom Penh time; signed out it shows a
+  sign-in link.
+- **Demo presets (sell form):** off unless `frontend/.env.local` has `NEXT_PUBLIC_DEMO_PRESETS=true`
+  (`hooks/use-demo-presets.ts`). On: Tab fills an empty field, Alt+D fills the form, and a preset photo is
+  added to a brand-new listing only (never when editing). Off: the form validates and sends only what was typed.
 - **Recent purchases:** `GET /api/users/me/purchases` (`db/purchases.js`), shown on your own `/profile`
   as `RecentPurchases` + `PurchaseCard` (hidden until the first purchase).
   - **Who bought it:** it shares `CLOSED_DEALS_SQL` with the stats below, so the two always agree: the
@@ -364,10 +379,9 @@ deployment, Cloudinary photos, Stripe test payments, Telegram bot.
 
 ### Picking up on another machine
 
-Everything above is pushed to `implement_backend`. Last full check (27 Oct):
-- `npm test` (77) and `npm run test:api` (132) pass (28 Oct, with the sign-up code).
-- The frontend's lint and `tsc --noEmit` are clean.
-- `next build` passes (run on 27 Oct, at 835bd15, with no warnings).
+Everything above is pushed to `implement_backend`. Last full check (2 Nov):
+- `npm test` (78) and `npm run test:api` (134) pass (2 Nov, with receipts and the Telegram link fix).
+- The frontend's lint, `tsc --noEmit` and `next build` are clean (2 Nov).
 After `git pull origin implement_backend`:
 
 - No packages were added, but run `npm install` in `backend/` and `frontend/` if they are stale.

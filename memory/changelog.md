@@ -2,6 +2,14 @@
 
 Log of completed tasks, architecture decisions, and bug fixes for the UniSwap team.
 
+## 2 Nov 2026
+
+### Review fixes: receipt, Telegram, sell form, RLS
+- **Receipt**: `GET /api/payments/receipt/:listingId` shows a receipt only to the buyer and seller of a paid listing; the listing page ignores the `?invoice=` value, so a made-up link shows nothing. Shows the amount really paid, dated in Phnom Penh time.
+- **Telegram**: `/start <code>` sends one plain confirmation with no menu; unlinked chats are told how to connect; unknown commands show the menu instead of searching.
+- **Sell form**: validates again; demo helpers only with `NEXT_PUBLIC_DEMO_PRESETS=true`. **RLS**: `schema.sql` keeps row level security on all tables.
+- Tests: 78 unit, 134 API.
+
 ## 28 Oct 2026
 
 ### 1. Reset Sold Items (`db:reset-sold`)
