@@ -134,6 +134,9 @@ works, and each one is safe to re-run:
    `verification_code_*` columns, so without them none of them works. Drop `verification_token` after
    the new API is running (the block says when).
 
+6. [Row level security](#row-level-security): keeps Supabase's public roles out of every table. The API
+   starts without it, but on Supabase run it anyway.
+
 Also recommended: [Photos](#photos), which adds the database's own limit of 6 photos per listing. The
 API already enforces that limit, so the new API starts without it.
 
@@ -156,6 +159,25 @@ the API (`utils/validation.js`) and in the database (`CHECK` constraints):
 - **condition:** new, like_new, good, fair
 - **listing type:** sale, buy_request, trade, giveaway, auction
 - **status:** active, reserved, sold, traded
+
+### Row level security
+
+Supabase gives its public roles (`anon`, `authenticated`) access to every table in `public` through its
+REST API, so without this anyone holding the public key could read and change all of them. `schema.sql`
+ends by turning on row level security for all 8 tables, with no policies: those roles then see and
+change nothing. The API connects as the tables' owner, which RLS does not apply to (there is no
+`FORCE`), so it works as before. A database made before this version needs it once; it is safe to re-run:
+
+```sql
+ALTER TABLE users          ENABLE ROW LEVEL SECURITY;
+ALTER TABLE listings       ENABLE ROW LEVEL SECURITY;
+ALTER TABLE bids           ENABLE ROW LEVEL SECURITY;
+ALTER TABLE offers         ENABLE ROW LEVEL SECURITY;
+ALTER TABLE payments       ENABLE ROW LEVEL SECURITY;
+ALTER TABLE messages       ENABLE ROW LEVEL SECURITY;
+ALTER TABLE reviews        ENABLE ROW LEVEL SECURITY;
+ALTER TABLE saved_listings ENABLE ROW LEVEL SECURITY;
+```
 
 ### Passwords
 
