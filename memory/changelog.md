@@ -4,6 +4,10 @@ Log of completed tasks, architecture decisions, and bug fixes for the UniSwap te
 
 ## 2 Nov 2026
 
+### Upload your KHQR (Settings)
+- A seller can upload a picture of their own KHQR; the browser reads the payment ID and fills the ID box (Save is still pressed by the seller). Frontend only, new package `jsqr` 1.4.0 (Apache-2.0). Merchant QRs, non-KHQR codes, bad checksums and codes with no ID are refused with plain messages. Reason: the Bakong app cannot link an ABA account.
+- **Not verified:** that ABA receives the money, or that Bakong tracks the payment. The reading code was checked on fake QR images only; the Settings screen was not checked in a browser.
+
 ### Notification messages
 - Each event in `notify.js` now has one description, drawn by `utils/notificationEmail.js` and `utils/notificationTelegram.js`. Who gets notified, and when, is unchanged.
 - `buildInvoiceHtml` is gone. `sendTelegramDocument` stays, unused. One real test email reached a school Outlook Inbox. Real Telegram display is not confirmed yet.
