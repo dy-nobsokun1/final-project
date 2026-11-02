@@ -35,6 +35,7 @@ export function BakongSettings() {
         account: UniSwap never holds it.
       </p>
       <KhqrUploadButton
+        onStart={() => setMessage(null)}
         onRead={(id) => {
           setAccountId(id);
           setMessage("Payment ID filled in from your KHQR. Press Save to use it.");

@@ -8,10 +8,11 @@ import { cn } from "@/lib/utils";
 
 /**
  * "Upload your KHQR": reads the Bakong account ID from a picture of the seller's own KHQR and hands
- * it to `onRead`. Saving stays with the caller. The picture is read in this browser tab and is never
- * uploaded or kept. The button is a label around a visually hidden file input, as in PhotoAddBox.
+ * it to `onRead`. `onStart` lets the caller clear its old message. Saving stays with the caller. The
+ * picture is read in this browser tab and is never uploaded or kept. The button is a label around a
+ * visually hidden file input, as in PhotoAddBox.
  */
-export function KhqrUploadButton({ onRead }: { onRead: (accountId: string) => void }) {
+export function KhqrUploadButton({ onStart, onRead }: { onStart: () => void; onRead: (accountId: string) => void }) {
   const [isReading, setIsReading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -22,6 +23,7 @@ export function KhqrUploadButton({ onRead }: { onRead: (accountId: string) => vo
     if (!file) return;
     setIsReading(true);
     setError(null);
+    onStart();
     const result = await readKhqrImage(file);
     setIsReading(false);
     if ("id" in result) onRead(result.id);
@@ -32,7 +34,7 @@ export function KhqrUploadButton({ onRead }: { onRead: (accountId: string) => vo
     <div className="flex flex-col gap-1.5">
       <label
         className={cn(
-          buttonVariants({ variant: "outline", size: "sm" }),
+          buttonVariants({ size: "sm" }),
           "w-fit cursor-pointer has-disabled:cursor-not-allowed has-disabled:opacity-50 has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-foreground",
         )}
       >
