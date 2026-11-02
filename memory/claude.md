@@ -323,8 +323,9 @@ when `uniswap` has none, so an older `uniswap` database needs the upgrade SQL (b
     new student's own listings stay on screen; from the first deal the stats come first
     (`listingsFirst` in `app/(main)/profile/page.tsx`).
   - `ProfileDashboard` and the `Stats*` components draw bars and a conic-gradient ring, no chart package.
-    The ring's six colours (three brand, three chart-only `--chart-*` tokens in `globals.css`, each
-    ≥3:1 on the card) are ordered so touching slices differ, also for red-green colour blindness.
+    The ring's six colours are the `--slice-1..6` tokens in `globals.css` (light: three brand, three chart-only
+    `--chart-*`, each ≥3:1 on the card; dark: their own set, each ≥3.7:1 on `#314740`). They are ordered
+    so touching slices differ, also for red-green colour blindness.
   - `npm run db:demo-deals` (`-- --remove` undoes it) gives chanrithorn 9 deals over Aug–Oct for the demo.
 - **Messaging:** there is no conversations table. A thread is all messages between two users about
   one listing (this follows the ER diagram).
