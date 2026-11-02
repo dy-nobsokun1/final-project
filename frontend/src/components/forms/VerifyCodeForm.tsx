@@ -64,7 +64,7 @@ export function VerifyCodeForm({ initialEmail, children }: VerifyCodeFormProps) 
             autoComplete="one-time-code"
             value={code}
             onChange={(event) => setCode(event.target.value.replace(/\D/g, "").slice(0, 6))}
-            className="h-12 border-foreground/50 text-center font-mono text-2xl tracking-[0.5em]"
+            className="h-12 text-center font-mono text-2xl tracking-[0.5em]"
           />
         </Field>
         <Button

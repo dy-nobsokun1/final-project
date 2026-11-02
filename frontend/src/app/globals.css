@@ -242,6 +242,8 @@
     --accent-foreground: var(--brand-ink);
     --destructive-foreground: var(--brand-ink);
     --ring: var(--brand-ink);
+    /* The page's --input is the card's own colour, so box outlines vanished. 50% black is 3.6:1 on #B1D3B9. */
+    --input: #00000080;
     /* Re-pointing --foreground is not enough on its own: `body` already turned it
        into a light colour, and children inherit that colour, not the token. So
        text with no colour class of its own (card prices, seller names) came out
