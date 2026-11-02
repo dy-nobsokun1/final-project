@@ -195,7 +195,7 @@ when `uniswap` has none, so an older `uniswap` database needs the upgrade SQL (b
   - **Upload your KHQR (2 Nov):** Settings has an "Upload your KHQR" button (`KhqrUploadButton`) beside the
     ID box, for sellers whose bank (ABA) cannot link to the Bakong app. The browser reads the image: it is
     drawn on a canvas (`lib/khqr/read-image.ts`, tries 1600, 1000 then 600 px, white border added) and
-    decoded by `jsqr` (the one frontend package, 1.4.0, Apache-2.0, loaded only when a file is picked).
+    decoded by `jsqr` (added 2 Nov, 1.4.0, Apache-2.0, loaded only when a file is picked).
     `lib/khqr/parse.ts` checks the CRC in tag `63`, takes field `00` inside tag `29` and applies the same
     format as `isBakongAccountId`. A merchant QR (tag `30`), a non-KHQR, a bad CRC and a KHQR with no ID get
     their own plain messages. It only fills the box: the seller still presses Save. The image is never

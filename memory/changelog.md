@@ -6,7 +6,7 @@ Log of completed tasks, architecture decisions, and bug fixes for the UniSwap te
 
 ### Upload your KHQR (Settings)
 - A seller can upload a picture of their own KHQR; the browser reads the payment ID and fills the ID box (Save is still pressed by the seller). Frontend only, new package `jsqr` 1.4.0 (Apache-2.0). Merchant QRs, non-KHQR codes, bad checksums and codes with no ID are refused with plain messages. Reason: the Bakong app cannot link an ABA account.
-- **Not verified:** that ABA receives the money, or that Bakong tracks the payment. The reading code was checked on fake QR images only; the Settings screen was not checked in a browser.
+- **Not verified:** that ABA receives the money, or that Bakong tracks the payment. Checked so far: the ID reader and jsQR in Node on fake QR images only. The upload button, the canvas step and the Settings screen have not run in a browser yet.
 
 ### Notification messages
 - Each event in `notify.js` now has one description, drawn by `utils/notificationEmail.js` and `utils/notificationTelegram.js`. Who gets notified, and when, is unchanged.

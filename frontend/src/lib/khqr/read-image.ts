@@ -46,7 +46,8 @@ export async function readKhqrImage(file: File): Promise<KhqrIdResult> {
   if (!bitmap) return { error: MESSAGES.noQr };
   try {
     for (const size of TRY_SIZES) {
-      const text = await decodeAtSize(bitmap, size);
+      // jsQR can throw on an odd image, and the lazy-loaded chunk can fail to load: treat both as "not found at this size".
+      const text = await decodeAtSize(bitmap, size).catch(() => null);
       if (text !== null) return text ? readKhqrId(text) : { error: KHQR_MESSAGES.notKhqr };
     }
     return { error: MESSAGES.noQr };
