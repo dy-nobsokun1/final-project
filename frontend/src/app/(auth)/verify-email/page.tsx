@@ -25,13 +25,6 @@ export default async function VerifyEmailPage() {
         </p>
       </div>
 
-      {process.env.NODE_ENV !== "production" ? (
-        <p className="text-xs text-muted-foreground">
-          Development: if the API cannot send email (see SMTP_* in backend/.env), the code is
-          printed in its log instead.
-        </p>
-      ) : null}
-
       <p className="text-sm text-muted-foreground">
         No email, or the code stopped working?{" "}
         <Link href="/login" className="font-medium underline">Sign in</Link> to get a new code.

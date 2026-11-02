@@ -96,7 +96,7 @@ test("linking moves the chat to the new account, so one chat never shows two stu
   const telegram = fakeTelegram();
   await sendText(first.chatId, `/start ${code}`, telegram);
   assert.match(lastScreen(telegram).text, /^Connected as Second Student\./);
-  assert.equal(buttonTexts(lastScreen(telegram)).length, 6);
+  assert.equal(buttonTexts(lastScreen(telegram)).length, 0);
   const rows = await api.sql("SELECT id, telegram_chat_id, telegram_link_code FROM users WHERE id = ANY($1)", [[first.id, second.id]]);
   const byId = Object.fromEntries(rows.map((row) => [row.id, row]));
   assert.equal(byId[first.id].telegram_chat_id, null);

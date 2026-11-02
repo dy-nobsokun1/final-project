@@ -28,7 +28,7 @@ function wanted(owner, fields) {
 
 /** The wanted-match alerts the app would have emailed to `email` so far. */
 function alertsTo(email) {
-  return api.skippedEmails().filter((line) => line.includes("something you're looking for") && line.endsWith(` to ${email}`));
+  return api.skippedEmails().filter((line) => line.includes("Match for your wanted post") && line.endsWith(` to ${email}`));
 }
 
 test("a wanted post lists matching items: typos, descriptions and a leading Looking for count; its own owner's, other wanted posts, closed, ended, over-budget and other-category items do not", async () => {

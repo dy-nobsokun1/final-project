@@ -26,7 +26,7 @@ export function ConversationRow({ conversation, partner, isActive }: Conversatio
       href={`/messages/${conversation.id}`}
       aria-current={isActive ? "page" : undefined}
       // Not bg-muted: inside the light-surface card that is the card's own colour, so it showed nothing.
-      className={cn("flex items-center gap-3 p-3 hover:bg-brand-50/60", isActive && "bg-brand-50/60")}
+      className={cn("flex items-center gap-3 p-3 hover:bg-inset/60", isActive && "bg-inset/60")}
     >
       {/* The title is in the text next to it, so the picture itself needs no alt text. */}
       {conversation.listingImageUrl ? (

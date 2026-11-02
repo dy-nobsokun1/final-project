@@ -89,3 +89,46 @@ test("two payments confirmed at the same moment: exactly one buys the item", asy
   const results = await Promise.all(ids.map((id) => markPaid(id)));
   assert.deepEqual(results.map((row) => row.status).sort(), ["paid", "refund_due"]);
 });
+
+test("the receipt is for the buyer and the seller only, shows the amount really paid, and needs a paid payment", async () => {
+  const [seller, buyer, stranger] = await Promise.all([api.createUser("Seller One"), api.createUser("Buyer One"), api.createUser()]);
+  const listing = await api.createListing(seller, { title: "Receipt lamp", price: 40 });
+  const receipt = (user, id = listing.id) => api.request("GET", `/api/payments/receipt/${id}`, { token: user?.token });
+
+  // Nothing is paid yet: 404 for everyone, even the seller.
+  assert.equal((await receipt(seller)).status, 404);
+  assert.equal((await receipt(buyer)).status, 404);
+
+  // An accepted offer made the buyer pay $32.50, below the $40 asking price.
+  const [{ id: paymentId }] = await api.sql(
+    "INSERT INTO payments (listing_id, buyer_id, amount, stripe_session_id) VALUES ($1, $2, 32.5, 'cs_test_receipt') RETURNING id",
+    [listing.id, buyer.id],
+  );
+  assert.equal((await receipt(buyer)).status, 404); // still pending
+  assert.equal((await markPaid(paymentId)).status, "paid");
+
+  const bought = await receipt(buyer);
+  assert.equal(bought.status, 200);
+  const { receipt: shown } = bought.body;
+  assert.equal(shown.invoiceNo, `UNI-${listing.id.replaceAll("-", "").slice(0, 8).toUpperCase()}`);
+  assert.deepEqual(
+    [shown.amount, shown.method, shown.title, shown.sellerName, shown.buyerName],
+    [32.5, "stripe", "Receipt lamp", "Seller One", "Buyer One"],
+  );
+  assert.ok(!Number.isNaN(Date.parse(shown.paidAt)));
+  assert.deepEqual((await receipt(seller)).body, bought.body);
+
+  assert.equal((await receipt(stranger)).status, 404);
+  assert.equal((await receipt(null)).status, 401);
+  assert.equal((await receipt(buyer, "not-a-uuid")).status, 404);
+});
+
+test("a payment that became refund_due gets no receipt", async () => {
+  const [seller, first, late] = await Promise.all([api.createUser(), api.createUser(), api.createUser()]);
+  const listing = await api.createListing(seller);
+  await markPaid(await pendingPayment(listing, first));
+  await markPaid(await pendingPayment(listing, late));
+  const receipt = (user) => api.request("GET", `/api/payments/receipt/${listing.id}`, { token: user.token });
+  assert.equal((await receipt(first)).status, 200);
+  assert.equal((await receipt(late)).status, 404);
+});

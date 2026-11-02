@@ -1,5 +1,10 @@
 import { HttpError } from "./httpError.js";
 
+/** The receipt number of a listing's payment, e.g. UNI-3F2A9C10: shown on the receipt and in notifications. */
+export function invoiceNumber(listingId) {
+  return `UNI-${String(listingId).replace(/-/g, "").slice(0, 8).toUpperCase()}`;
+}
+
 /**
  * How much `buyerId` should pay for a listing row (from LISTING_SELECT), or a clear error.
  * Only two things can be paid online: an item for sale, and an auction you won.

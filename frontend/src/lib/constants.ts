@@ -24,7 +24,7 @@ export const CATEGORIES: Array<{
 }> = [
   { value: "textbooks", label: "Textbooks", accent: "bg-brand-50 text-brand-ink", icon: BookOpen },
   { value: "electronics", label: "Electronics", accent: "bg-brand-600 text-brand-ink", icon: MonitorSmartphone },
-  { value: "furniture", label: "Furniture", accent: "border border-brand-ink/40 text-brand-ink", icon: Armchair },
+  { value: "furniture", label: "Furniture", accent: "border border-foreground/40 text-foreground", icon: Armchair },
   { value: "clothing", label: "Clothing", accent: "bg-brand-900 text-brand-50", icon: Shirt },
   { value: "bikes", label: "Bikes", accent: "bg-brand-400 text-brand-ink", icon: Bike },
   { value: "other", label: "Other", accent: "bg-brand-50 text-brand-ink", icon: Package },

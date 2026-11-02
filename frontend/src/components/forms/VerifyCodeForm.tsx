@@ -52,7 +52,7 @@ export function VerifyCodeForm({ initialEmail, children }: VerifyCodeFormProps) 
             name="email"
             type="email"
             autoComplete="email"
-            placeholder="you@university.edu.kh"
+            placeholder="you@aupp.edu.kh"
             value={email}
             onChange={(event) => setEmail(event.target.value)}
           />
@@ -62,7 +62,6 @@ export function VerifyCodeForm({ initialEmail, children }: VerifyCodeFormProps) 
             name="code"
             inputMode="numeric"
             autoComplete="one-time-code"
-            placeholder="123456"
             value={code}
             onChange={(event) => setCode(event.target.value.replace(/\D/g, "").slice(0, 6))}
             className="h-12 text-center font-mono text-2xl tracking-[0.5em]"

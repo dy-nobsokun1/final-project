@@ -26,7 +26,7 @@ export function DismissibleTip({ hideLabel, className, children }: DismissibleTi
         type="button"
         onClick={() => setHidden(true)}
         aria-label={hideLabel}
-        className="flex size-8 shrink-0 items-center justify-center rounded-full text-brand-ink transition-colors hover:bg-brand-50 focus-visible:outline-2 focus-visible:outline-brand-ink"
+        className="flex size-8 shrink-0 items-center justify-center rounded-full text-foreground transition-colors hover:bg-inset focus-visible:outline-2 focus-visible:outline-foreground"
       >
         <X aria-hidden="true" className="size-4" />
       </button>

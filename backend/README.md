@@ -134,6 +134,9 @@ works, and each one is safe to re-run:
    `verification_code_*` columns, so without them none of them works. Drop `verification_token` after
    the new API is running (the block says when).
 
+6. [Row level security](#row-level-security): keeps Supabase's public roles out of every table. The API
+   starts without it, but on Supabase run it anyway.
+
 Also recommended: [Photos](#photos), which adds the database's own limit of 6 photos per listing. The
 API already enforces that limit, so the new API starts without it.
 
@@ -156,6 +159,25 @@ the API (`utils/validation.js`) and in the database (`CHECK` constraints):
 - **condition:** new, like_new, good, fair
 - **listing type:** sale, buy_request, trade, giveaway, auction
 - **status:** active, reserved, sold, traded
+
+### Row level security
+
+Supabase gives its public roles (`anon`, `authenticated`) access to every table in `public` through its
+REST API, so without this anyone holding the public key could read and change all of them. `schema.sql`
+ends by turning on row level security for all 8 tables, with no policies: those roles then see and
+change nothing. The API connects as the tables' owner, which RLS does not apply to (there is no
+`FORCE`), so it works as before. A database made before this version needs it once; it is safe to re-run:
+
+```sql
+ALTER TABLE users          ENABLE ROW LEVEL SECURITY;
+ALTER TABLE listings       ENABLE ROW LEVEL SECURITY;
+ALTER TABLE bids           ENABLE ROW LEVEL SECURITY;
+ALTER TABLE offers         ENABLE ROW LEVEL SECURITY;
+ALTER TABLE payments       ENABLE ROW LEVEL SECURITY;
+ALTER TABLE messages       ENABLE ROW LEVEL SECURITY;
+ALTER TABLE reviews        ENABLE ROW LEVEL SECURITY;
+ALTER TABLE saved_listings ENABLE ROW LEVEL SECURITY;
+```
 
 ### Passwords
 
@@ -654,7 +676,7 @@ A token issued before the account's last password change or reset is refused (40
 | Method | Path | Description |
 |---|---|---|
 | GET | `/api/health` | API + database health check |
-| POST | `/api/auth/register` | `{ name, email, password, major?, graduationYear? }`. Only `.edu.kh` emails. Emails a 6-digit code; nobody is signed in yet |
+| POST | `/api/auth/register` | `{ name, email, password, major?, graduationYear? }`. Only `@aupp.edu.kh` emails. Emails a 6-digit code; nobody is signed in yet |
 | POST | `/api/auth/login` | `{ email, password }` → `{ user, token }`. `403` until the email is verified |
 | POST | `/api/auth/verify-email` | `{ email, code }` → `{ user }` and verifies the email, which unlocks signing in. The code works for 30 minutes and 5 tries (each try counts, the right one too); a wrong one answers 400 "That code is not right.", an expired one or the 5th failed try 400 "This code has expired. Sign in to get a new one." |
 | POST | `/api/auth/resend-verification` | `{ email, password }` → emails a new code (the old one stops working, and the 5 tries start again) |
@@ -686,6 +708,7 @@ A token issued before the account's last password change or reset is refused (40
 | POST 🔒 | `/api/payments/checkout` | `{ listingId, returnOrigin? }` → `{ url }` of Stripe's payment page. Stripe sends the buyer back to `returnOrigin` only if it is `FRONTEND_ORIGIN`, the tunnel's current address or `http://localhost:3000`, else to `FRONTEND_ORIGIN` |
 | POST 🔒 | `/api/payments/confirm` | `{ sessionId }` → `{ status: "paid" \| "pending" \| "refund_due" }`, checked with Stripe; "paid" may add `card: { brand, last4 }` (shown, never stored) |
 | POST | `/api/payments/webhook` | Called by Stripe only, with a signature check |
+| GET 🔒 | `/api/payments/receipt/:listingId` | → `{ receipt: { invoiceNo, amount, paidAt, method, title, sellerName, buyerName } }`: the listing's `paid` payment (`amount` is what was really paid, e.g. an accepted offer's price). Only its buyer and the seller; `404` for anyone else, for an unpaid listing and for a `refund_due` payment. The listing page shows its receipt only when this answers |
 | POST 🔒 | `/api/payments/khqr` | `{ listingId }` → `{ paymentId, qr, amount, expiresAt }`. Asking again within 30 minutes returns the same QR, as long as it still pays the seller's current Bakong account. First records any earlier QR for the item that was paid but not yet confirmed: `409` if it was this buyer's. `400` if the seller has no Bakong account. `403` if the item is reserved for another buyer; for the buyer it is reserved for, the amount is the agreed price (or the asking price, if lower). `503` if Bakong cannot be reached right now (no QR is shown that could not be confirmed) |
 | GET 🔒 | `/api/payments/khqr/:id` | Buyer only → `{ status: "paid" \| "pending" \| "expired" \| "refund_due" \| "unavailable" }`, checked with Bakong. `refund_due`: paid after the item was already sold or reserved for another buyer. `unavailable`: not paid, and the item has been sold or traded another way or reserved for another buyer, the seller changed the Bakong account this QR pays, or this buyer would now pay a different amount (see KHQR above), so the QR should not be paid |
 | GET | `/api/telegram` | `{ enabled, botUrl }`: whether Telegram alerts are switched on, and the link to the bot's chat (`null` when off). No sign-in needed |

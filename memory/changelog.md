@@ -2,6 +2,28 @@
 
 Log of completed tasks, architecture decisions, and bug fixes for the UniSwap team.
 
+## 2 Nov 2026
+
+### Sign-up is AUPP only
+- `validateRegistration` and `RegisterForm` accept only `@aupp.edu.kh`. The database CHECK and `forgot-password` still take any `.edu.kh`, so the `@demo.edu.kh` sample sellers keep working. This narrows the proposal's `.edu.kh` rule, on purpose.
+
+### KHQR upload removed
+- We built an "Upload your KHQR" button in Settings to read an ABA payment ID from a picture. It did not work in the real test, so we removed it and the `jsqr` package. Sellers type their Bakong app ID, as before. The code is in git history (`a9bc2d9` to `656721a`).
+
+### Notification messages
+- Each event in `notify.js` now has one description, drawn by `utils/notificationEmail.js` and `utils/notificationTelegram.js`. Who gets notified, and when, is unchanged.
+- `buildInvoiceHtml` is gone. `sendTelegramDocument` stays, unused. One real test email reached a school Outlook Inbox. Real Telegram display is not confirmed yet.
+
+### Dark mode (opt-in)
+- Navbar Sun/Moon button sets the `uniswap_theme` cookie and the `dark` class on `<html>`; the root layout renders it, so no flash. Default look unchanged; frontend only, no packages.
+- Dark values live in `globals.css` tokens (`.dark .light-surface` for cards); a few components swapped hard-coded pale fills for tokens. Dark rules are screen-only, so receipts print light.
+
+### Review fixes: receipt, Telegram, sell form, RLS
+- **Receipt**: `GET /api/payments/receipt/:listingId` shows a receipt only to the buyer and seller of a paid listing; the listing page ignores the `?invoice=` value, so a made-up link shows nothing. Shows the amount really paid, dated in Phnom Penh time.
+- **Telegram**: `/start <code>` sends one plain confirmation with no menu; unlinked chats are told how to connect; unknown commands show the menu instead of searching.
+- **Sell form**: validates again; demo helpers only with `NEXT_PUBLIC_DEMO_PRESETS=true`. **RLS**: `schema.sql` keeps row level security on all tables.
+- Tests: 78 unit, 134 API.
+
 ## 28 Oct 2026
 
 ### 1. Reset Sold Items (`db:reset-sold`)

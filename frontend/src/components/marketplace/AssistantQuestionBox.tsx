@@ -48,9 +48,9 @@ export function AssistantQuestionBox({ value, onChange, onAsk, isAsking, error }
           event.preventDefault();
           onAsk();
         }}
-        className="flex h-12 items-center gap-2 rounded-full border-2 border-brand-ink/70 bg-brand-50 pr-1 pl-4 shadow-md has-[input:focus-visible]:border-brand-ink has-[input:focus-visible]:ring-2 has-[input:focus-visible]:ring-brand-ink"
+        className="flex h-12 items-center gap-2 rounded-full border-2 border-foreground/70 bg-inset pr-1 pl-4 shadow-md has-[input:focus-visible]:border-foreground has-[input:focus-visible]:ring-2 has-[input:focus-visible]:ring-foreground"
       >
-        <Sparkles aria-hidden="true" className="size-4 shrink-0 text-brand-ink" />
+        <Sparkles aria-hidden="true" className="size-4 shrink-0 text-foreground" />
         <label htmlFor="assistant-question" className="sr-only">
           Your question
         </label>

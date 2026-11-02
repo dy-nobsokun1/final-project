@@ -182,3 +182,16 @@ CREATE TABLE saved_listings (
 -- The primary key finds one student's saves (it starts with user_id). This index finds everyone who
 -- saved a listing: the save count, price-drop alerts, and the cascade when a listing is deleted.
 CREATE INDEX saved_listings_listing_idx ON saved_listings (listing_id);
+
+-- Row level security: Supabase exposes every table to its public roles (anon, authenticated)
+-- through its REST API. Enabling RLS with no policies makes those roles see and change nothing.
+-- The API connects as the tables' owner, which is not subject to RLS (no FORCE), so it is
+-- not affected.
+ALTER TABLE users          ENABLE ROW LEVEL SECURITY;
+ALTER TABLE listings       ENABLE ROW LEVEL SECURITY;
+ALTER TABLE bids           ENABLE ROW LEVEL SECURITY;
+ALTER TABLE offers         ENABLE ROW LEVEL SECURITY;
+ALTER TABLE payments       ENABLE ROW LEVEL SECURITY;
+ALTER TABLE messages       ENABLE ROW LEVEL SECURITY;
+ALTER TABLE reviews        ENABLE ROW LEVEL SECURITY;
+ALTER TABLE saved_listings ENABLE ROW LEVEL SECURITY;

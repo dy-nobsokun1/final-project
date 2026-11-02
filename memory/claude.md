@@ -35,7 +35,8 @@ is public); state a plan before multi-file changes; explain every change so the 
   - `src/db/schema.sql`: tables `users`, `listings`, `messages`, `reviews` (from the proposal's ER
     diagram), plus `bids`, `offers`, `payments` and `saved_listings`. Query helpers sit beside it:
     `listings.js` (`LISTING_SELECT`, `buildBrowseQuery()` for browse/search), `auctions.js`,
-    `matches.js`, `offers.js`, `payments.js`.
+    `matches.js`, `offers.js`, `payments.js`. `schema.sql` ends by turning on row level security for
+    all 8 tables (no policies), so Supabase's public roles see nothing; the API's own login still does.
   - `src/utils/`: validation, scrypt password hashing, JWT, email (nodemailer), serializers
     (database snake_case → API camelCase, matching the frontend types).
   - The full API table is in `backend/README.md`. Keep it updated when routes change.
@@ -74,7 +75,7 @@ when `uniswap` has none, so an older `uniswap` database needs the upgrade SQL (b
 
 ## How things work (non-obvious)
 
-- **Auth:** sign-up accepts only `.edu.kh` and returns `{ email, verificationRequired: true }` with
+- **Auth:** sign-up accepts only `@aupp.edu.kh` (`isAuppEmail`; the database CHECK and `forgot-password` still take any `.edu.kh`, for the `@demo.edu.kh` sample sellers) and returns `{ email, verificationRequired: true }` with
   no token: nobody is signed in until the emailed code is typed. Registering again with an
   unverified email replaces that account; a verified one gets 409. Login is blocked (403) until
   verified. `resend-verification` takes `{ email, password }`. `requireAuth` re-checks in the
@@ -137,8 +138,15 @@ when `uniswap` has none, so an older `uniswap` database needs the upgrade SQL (b
 - **Notifications:** `utils/notify.js` (fire-and-forget, never throws). New message (first unread
   per thread only), outbid, auction won/ended, password changed, price drop on a saved listing
   (`notifyPriceDrop`, called from PATCH in `routes/listings.js`), new listing matching a wanted post
-  (create only, not edits), offer made/accepted/declined/cancelled. Add new events there; Telegram
-  can reuse it later.
+  (create only, not edits), offer made/accepted/declined/cancelled. Add new events there.
+  - **One description per event:** `{ subject, preheader, emoji, heading, intro, details, quote, action,
+    secondAction, note }`. Subjects cut titles to 40 characters.
+  - **Email:** `utils/notificationEmail.js` draws it as a table-based email with a text part. It has no
+    images and no emoji (`emoji` is for Telegram only). The sign-up and reset emails stay separate in
+    `utils/email.js`.
+  - **Telegram:** `utils/notificationTelegram.js` draws it as HTML with only `b`, `i`, `code` and
+    `blockquote`. Link buttons show only when `publicSiteUrl(siteOrigin())` is set. A refused HTML send is
+    retried once as plain text.
 - **Optional services** (`backend/src/services/`, plain `fetch`, no packages), each off until its env
   keys are set: Stripe Checkout **test mode only** (`routes/payments.js`; `markPaid` is idempotent and
   marks the item sold; the webhook needs the raw body, so it is mounted before `express.json` in
@@ -159,6 +167,11 @@ when `uniswap` has none, so an older `uniswap` database needs the upgrade SQL (b
     Inbox (read-only: never marks messages read) and Help. Also `/menu /search /new /saved /mylistings
     /inbox /help` (`setMyCommands` at start-up). An item card has its photo when the cover is https, and
     Save / Unsave.
+  - **Linking and silence:** `/start <code>` sends one plain `Connected as <name>. UniSwap notifications
+    will now arrive here too.` with no buttons; a bad or used code gets `That link has expired. ` plus
+    the connect instructions. An unlinked chat gets `notLinkedScreen()` for text and for buttons. A plain
+    `/start` from a linked chat stays quiet. An unknown command shows the menu (never a search), and so
+    does a photo or sticker.
   - The student always comes from `telegram_chat_id` (`findChatUser`, verified accounts only), never
     from button data (at most 64 bytes: `item:<id>`, `save:`, `page:n`…). Group chats are ignored.
   - One chat, one account: `linkChat` clears the chat from every other account, so linking a demo
@@ -270,6 +283,30 @@ when `uniswap` has none, so an older `uniswap` database needs the upgrade SQL (b
     - Tap to start and tap to stop, or hold for 300 ms or more and release to stop.
   - **Speech is added to the end of the box** (`start(baseText)`, `trimEnd`) and never sends or
     searches by itself. The search box drops Whisper's trailing `.`, `!` or `?`.
+- **Receipts:** `GET /api/payments/receipt/:listingId` (`routes/payments.js`) answers only the buyer and
+  seller of a listing with a `paid` payment (404 for anyone else, unpaid, or `refund_due`): the invoice
+  number (`invoiceNumber()` in `utils/payments.js`, also used by `notifyPaid`), the amount really paid,
+  `paid_at`, method, title and both names. The listing page (`?invoice=` only asks for it; its value is
+  ignored) shows `InvoiceReceiptCard` from that answer, the date in Phnom Penh time; signed out it shows a
+  sign-in link.
+- **Demo presets (sell form):** off unless `frontend/.env.local` has `NEXT_PUBLIC_DEMO_PRESETS=true`
+  (`hooks/use-demo-presets.ts`). On: Tab fills an empty field, Alt+D fills the form, and a preset photo is
+  added to a brand-new listing only (never when editing). Off: the form validates and sends only what was typed.
+- **Dark mode (opt-in):** the navbar's Sun/Moon button (`layout/ThemeToggle.tsx`) flips `class="dark"` on
+  `<html>` and sets the 1-year cookie `uniswap_theme` (`lib/theme.ts`); no reload, no package.
+  - **No flash:** the root layout reads the cookie and renders the class. It was already dynamic
+    (`getCurrentUser()` reads cookies), so no route changed. Without the cookie nothing changes: it does
+    not follow the system setting. Both icons are in the markup and CSS shows one, so no React state.
+  - **Tokens, not components:** `globals.css` holds the dark values. `.dark, .dark .light-surface` lists
+    every token `.light-surface` re-points, so cards get light text back. New tokens (`--inset`, `--field`,
+    `--label`, `--wanted-card`, `--hero-from/to`, `--chart-bar`, `--slice-1..6`) equal today's colours in
+    `:root`. Use them (`bg-inset`, `dark:bg-field`) instead of `bg-brand-50` for a surface, and
+    `text-foreground` instead of `text-brand-ink` for text sitting on a card.
+  - **Screen only:** every dark rule, and the `dark:` variant, sits in `@media screen`, so a printed receipt
+    stays light. Pale buttons with black text (`bg-brand-50 text-brand-ink`) stay as they are in both modes.
+  - **Contrast on the dark card `#314740`:** text 8.6:1, muted 6.1:1, field outline 3.2:1, focus ring
+    3.5:1 (pale, drawn at 50%), stats slices at least 3.7:1 (cream first, red last; rose stays the Wanted tag's).
+    The shadcn `dark:` fills on the outline and destructive buttons were removed so passed colours win.
 - **Recent purchases:** `GET /api/users/me/purchases` (`db/purchases.js`), shown on your own `/profile`
   as `RecentPurchases` + `PurchaseCard` (hidden until the first purchase).
   - **Who bought it:** it shares `CLOSED_DEALS_SQL` with the stats below, so the two always agree: the
@@ -293,8 +330,9 @@ when `uniswap` has none, so an older `uniswap` database needs the upgrade SQL (b
     new student's own listings stay on screen; from the first deal the stats come first
     (`listingsFirst` in `app/(main)/profile/page.tsx`).
   - `ProfileDashboard` and the `Stats*` components draw bars and a conic-gradient ring, no chart package.
-    The ring's six colours (three brand, three chart-only `--chart-*` tokens in `globals.css`, each
-    ≥3:1 on the card) are ordered so touching slices differ, also for red-green colour blindness.
+    The ring's six colours are the `--slice-1..6` tokens in `globals.css` (light: three brand, three chart-only
+    `--chart-*`, each ≥3:1 on the card; dark: their own set, each ≥3.7:1 on `#314740`). They are ordered
+    so touching slices differ, also for red-green colour blindness.
   - `npm run db:demo-deals` (`-- --remove` undoes it) gives chanrithorn 9 deals over Aug–Oct for the demo.
 - **Messaging:** there is no conversations table. A thread is all messages between two users about
   one listing (this follows the ER diagram).
@@ -364,10 +402,9 @@ deployment, Cloudinary photos, Stripe test payments, Telegram bot.
 
 ### Picking up on another machine
 
-Everything above is pushed to `implement_backend`. Last full check (27 Oct):
-- `npm test` (77) and `npm run test:api` (132) pass (28 Oct, with the sign-up code).
-- The frontend's lint and `tsc --noEmit` are clean.
-- `next build` passes (run on 27 Oct, at 835bd15, with no warnings).
+Everything above is pushed to `implement_backend`. Last full check (2 Nov):
+- `npm test` (86) and `npm run test:api` (136) pass (2 Nov, with the new notification messages).
+- The frontend's lint, `tsc --noEmit` and `next build` are clean (2 Nov).
 After `git pull origin implement_backend`:
 
 - No packages were added, but run `npm install` in `backend/` and `frontend/` if they are stale.
@@ -415,7 +452,6 @@ After `git pull origin implement_backend`:
    - real-time chat;
    - safe meetup spots;
    - per-user notification preferences;
-   - **dark mode.** The page is already the dark green field, so this means dark cards, forms and chat
-     bubbles. `globals.css` has a `.dark` block that nothing turns on yet. A switch needs every
-     light surface re-checked for contrast. Not before the demo: projectors show dark colours
-     poorly, and the pale cards keep it readable.
+   - **dark mode** is built (2 Nov, opt-in, see "How things work"). Still open: following the system
+     setting, and a look at the phone sizes. Present the demo in the default look: projectors show dark
+     colours poorly.

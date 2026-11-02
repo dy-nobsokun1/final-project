@@ -1,14 +1,26 @@
 import { findWantedForItem } from "../db/matches.js";
 import { query } from "../db/pool.js";
-import { isTelegramConfigured, sendTelegramDocument, sendTelegramMessage } from "../services/telegram.js";
+import { isTelegramConfigured, sendTelegramMessage } from "../services/telegram.js";
 import { siteOrigin } from "../services/tunnel.js";
-import { escapeHtml, isEmailConfigured, sendEmail } from "./email.js";
+import { isEmailConfigured, sendEmail } from "./email.js";
+import { renderEmail } from "./notificationEmail.js";
+import { renderTelegram } from "./notificationTelegram.js";
+import { invoiceNumber } from "./payments.js";
+import { publicSiteUrl, shorten } from "./telegramScreens.js";
 
 // Notifications by email, and by Telegram for users who connected it in Settings.
 // Every function here is "fire and forget": routes call it without `await`, and it never throws,
 // so a mail or Telegram problem can never break sending a message, placing a bid or paying.
+//
+// Each event describes its message once, as a notification:
+//   { subject, preheader?, emoji, heading, intro, details: [[label, value, "code"?]], quote?,
+//     action: { label, link }, secondAction?, note? }
+// utils/notificationEmail.js and utils/notificationTelegram.js draw it for each channel, so the two
+// always say the same thing. Everything typed by a student (names, titles, chat text) is plain text
+// here and is escaped by those two files.
 
 const PREVIEW_LENGTH = 200;
+const SUBJECT_TITLE_LENGTH = 40;
 
 /** Builds a link into the web app, e.g. appLink("/listings/abc"). */
 function appLink(path) {
@@ -30,65 +42,46 @@ function preview(text) {
   return text.length > PREVIEW_LENGTH ? `${text.slice(0, PREVIEW_LENGTH)}...` : text;
 }
 
+/** A listing title in quotes for a subject line, cut short because phones show only the start of it. */
+function quoted(title) {
+  return `"${shorten(title, SUBJECT_TITLE_LENGTH)}"`;
+}
+
 async function findUser(id) {
   const { rows } = await query("SELECT name, email, telegram_chat_id FROM users WHERE id = $1", [id]);
   return rows[0] ?? null;
 }
 
-/**
- * Sends one notification to a user (a row from findUser) by email, and by Telegram if they
- * connected it. `lines` are plain text: escaped for the email's HTML, sent as-is to Telegram.
- * `telegram` (optional) can provide custom HTML and inline buttons.
- */
-async function deliver({ to, subject, lines, link, linkLabel, telegram }) {
-  await Promise.all([
-    emailTo(to, { subject, lines, link, linkLabel }),
-    telegramTo(to, { subject, lines, link, telegram }),
-  ]);
+/** Sends one notification to a user (a row from findUser) by email, and by Telegram if they connected it. */
+async function deliver({ to, notification }) {
+  await Promise.all([emailTo(to, notification), telegramTo(to, notification)]);
 }
 
-async function emailTo(user, { subject, lines, link, linkLabel }) {
+async function emailTo(user, notification) {
   if (!isEmailConfigured) {
-    console.log(`[notify] email not configured, skipped "${subject}" to ${user.email}`);
+    console.log(`[notify] email not configured, skipped "${notification.subject}" to ${user.email}`);
     return;
   }
   try {
-    await sendEmail({
-      to: user.email,
-      subject,
-      text: `${lines.join("\n\n")}\n\n${linkLabel}: ${link}`,
-      html: `${lines.map((line) => `<p>${escapeHtml(line)}</p>`).join("\n")}
-<p><a href="${link}">${escapeHtml(linkLabel)}</a></p>`,
-    });
+    await sendEmail({ to: user.email, subject: notification.subject, ...renderEmail(notification, user.name) });
   } catch (error) {
-    console.error(`[notify] could not email ${user.email} ("${subject}"): ${error.response ?? error.message}`);
+    console.error(`[notify] could not email ${user.email} ("${notification.subject}"): ${error.response ?? error.message}`);
   }
 }
 
-async function telegramTo(user, { subject, lines, link, telegram }) {
+async function telegramTo(user, notification) {
   if (!isTelegramConfigured || !user.telegram_chat_id) return;
+  const { html, text, buttons } = renderTelegram(notification, publicSiteUrl(siteOrigin()));
   try {
-    if (telegram?.html) {
-      await sendTelegramMessage(
-        user.telegram_chat_id,
-        telegram.html,
-        telegram.buttons,
-        { parse_mode: "HTML" },
-      );
-    } else {
-      // The first line is the "Hi <name>," greeting, which reads oddly in a chat, so it is dropped.
-      await sendTelegramMessage(user.telegram_chat_id, [subject, ...lines.slice(1), link].join("\n\n"));
-    }
-
-    if (telegram?.document) {
-      try {
-        await sendTelegramDocument(user.telegram_chat_id, telegram.document);
-      } catch (docError) {
-        console.error(`[notify] could not send Telegram document (${telegram.document.filename}): ${docError.message}`);
-      }
-    }
+    await sendTelegramMessage(user.telegram_chat_id, html, buttons, { parse_mode: "HTML" });
   } catch (error) {
-    console.error(`[notify] could not send Telegram message ("${subject}"): ${error.message}`);
+    // If Telegram could not read the formatting, send the same message as plain text instead of losing it.
+    console.error(`[notify] Telegram refused "${notification.subject}", retrying as plain text: ${error.message}`);
+    try {
+      await sendTelegramMessage(user.telegram_chat_id, text);
+    } catch (retryError) {
+      console.error(`[notify] could not send Telegram message ("${notification.subject}"): ${retryError.message}`);
+    }
   }
 }
 
@@ -114,10 +107,15 @@ export function notifyNewMessage({ listingId, senderId, receiverId, body }) {
     if (!sender || !receiver) return;
     await deliver({
       to: receiver,
-      subject: `New message from ${sender.name} about "${rows[0].title}"`,
-      lines: [`Hi ${receiver.name},`, `${sender.name} wrote:`, `"${preview(body)}"`],
-      link: threadLink(listingId, senderId),
-      linkLabel: "Reply on UniSwap",
+      notification: {
+        subject: `New message from ${sender.name} about ${quoted(rows[0].title)}`,
+        preheader: preview(body),
+        emoji: "💬",
+        heading: `New message from ${sender.name}`,
+        intro: `${sender.name} wrote to you about "${rows[0].title}".`,
+        quote: preview(body),
+        action: { label: `Reply to ${sender.name}`, link: threadLink(listingId, senderId) },
+      },
     });
   });
 }
@@ -132,10 +130,14 @@ export function notifyOutbid({ listingId, previousBidderId, amount }) {
     if (!bidder || !listing) return;
     await deliver({
       to: bidder,
-      subject: `You've been outbid on "${listing.title}"`,
-      lines: [`Hi ${bidder.name},`, `Someone bid ${money(amount)} on "${listing.title}", so you are no longer the highest bidder.`],
-      link: appLink(`/listings/${listingId}`),
-      linkLabel: "Bid again",
+      notification: {
+        subject: `You've been outbid on ${quoted(listing.title)}`,
+        emoji: "🔔",
+        heading: "You've been outbid",
+        intro: `Someone bid ${money(amount)}, so you are no longer the highest bidder.`,
+        details: [["Item", listing.title], ["Highest bid", money(amount)]],
+        action: { label: "Bid again", link: appLink(`/listings/${listingId}`) },
+      },
     });
   });
 }
@@ -148,236 +150,33 @@ export function notifyAuctionClosed({ listing_id: listingId, title, seller_id: s
     await Promise.all([
       deliver({
         to: winner,
-        subject: `You won "${title}" for ${money(amount)}`,
-        lines: [`Hi ${winner.name},`, `Your bid of ${money(amount)} won the auction for "${title}".`,
-          `Message ${seller.name} to arrange a time and place to meet on campus.`],
-        link: threadLink(listingId, sellerId),
-        linkLabel: `Message ${seller.name}`,
+        notification: {
+          subject: `You won ${quoted(title)} for ${money(amount)}`,
+          emoji: "🎉",
+          heading: "You won the auction",
+          intro: `Your bid was the highest. Message ${seller.name} to arrange a time and place to meet on campus.`,
+          details: [["Item", title], ["Winning bid", money(amount)], ["Seller", seller.name]],
+          action: { label: `Message ${seller.name}`, link: threadLink(listingId, sellerId) },
+        },
       }),
       deliver({
         to: seller,
-        subject: `Your auction "${title}" ended at ${money(amount)}`,
-        lines: [`Hi ${seller.name},`, `${winner.name} won "${title}" with a bid of ${money(amount)}.`,
-          "The listing is now reserved for them. Message them to arrange the handover."],
-        link: threadLink(listingId, winnerId),
-        linkLabel: `Message ${winner.name}`,
+        notification: {
+          subject: `Your auction ${quoted(title)} ended at ${money(amount)}`,
+          emoji: "🔨",
+          heading: "Your auction has ended",
+          intro: `${winner.name} won it. The listing is now reserved for them: message them to arrange the handover.`,
+          details: [["Item", title], ["Winning bid", money(amount)], ["Winner", winner.name]],
+          action: { label: `Message ${winner.name}`, link: threadLink(listingId, winnerId) },
+        },
       }),
     ]);
   });
 }
 
-/** Standalone HTML receipt sent directly to Telegram or saved locally. */
-function buildInvoiceHtml({ invoiceNo, paidDate, listingTitle, sellerName, buyerName, amount }) {
-  return `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>UniSwap Invoice ${escapeHtml(invoiceNo)}</title>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      background: #f8fafc;
-      color: #0f172a;
-      padding: 32px 16px;
-      display: flex;
-      justify-content: center;
-    }
-    .receipt {
-      background: #ffffff;
-      max-width: 600px;
-      width: 100%;
-      border-radius: 16px;
-      border: 1px solid #e2e8f0;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-      padding: 32px;
-    }
-    .header {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      border-bottom: 2px solid #f1f5f9;
-      padding-bottom: 20px;
-    }
-    .brand {
-      font-size: 24px;
-      font-weight: 800;
-      color: #059669;
-      letter-spacing: -0.5px;
-    }
-    .badge {
-      display: inline-block;
-      background: #d1fae5;
-      color: #065f46;
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 0.5px;
-      text-transform: uppercase;
-      padding: 4px 12px;
-      border-radius: 9999px;
-      margin-bottom: 6px;
-    }
-    .invoice-id {
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-      font-size: 12px;
-      font-weight: 600;
-      color: #64748b;
-    }
-    .grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 16px;
-      margin-top: 24px;
-      background: #f8fafc;
-      padding: 16px;
-      border-radius: 12px;
-      font-size: 13px;
-    }
-    .grid-label {
-      font-size: 11px;
-      text-transform: uppercase;
-      color: #64748b;
-      font-weight: 600;
-      margin-bottom: 2px;
-    }
-    .grid-value {
-      font-weight: 600;
-      color: #0f172a;
-    }
-    .table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 24px;
-    }
-    .table th {
-      text-align: left;
-      font-size: 11px;
-      text-transform: uppercase;
-      color: #64748b;
-      letter-spacing: 0.5px;
-      padding: 8px 0;
-      border-bottom: 1px solid #e2e8f0;
-    }
-    .table td {
-      padding: 16px 0;
-      font-size: 14px;
-      border-bottom: 1px solid #f1f5f9;
-    }
-    .total-row td {
-      border-bottom: none;
-      padding-top: 20px;
-      font-size: 16px;
-      font-weight: 700;
-    }
-    .total-amount {
-      font-size: 22px;
-      font-weight: 800;
-      color: #059669;
-    }
-    .actions {
-      margin-top: 28px;
-      display: flex;
-      justify-content: center;
-      gap: 12px;
-    }
-    .btn {
-      background: #059669;
-      color: #ffffff;
-      border: none;
-      padding: 10px 20px;
-      border-radius: 10px;
-      font-size: 14px;
-      font-weight: 600;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      box-shadow: 0 2px 4px rgba(5, 150, 105, 0.2);
-    }
-    .footer {
-      margin-top: 28px;
-      text-align: center;
-      font-size: 12px;
-      color: #94a3b8;
-      border-top: 1px solid #f1f5f9;
-      padding-top: 16px;
-    }
-    @media print {
-      body { background: #ffffff; padding: 0; }
-      .receipt { box-shadow: none; border: none; padding: 0; }
-      .actions { display: none; }
-    }
-  </style>
-</head>
-<body>
-  <div class="receipt">
-    <div class="header">
-      <div>
-        <div class="brand">UniSwap</div>
-        <div style="font-size: 13px; color: #64748b; margin-top: 4px;">Student Marketplace • Campus Trading</div>
-      </div>
-      <div style="text-align: right;">
-        <span class="badge">Verified Payment</span>
-        <div class="invoice-id">${escapeHtml(invoiceNo)}</div>
-      </div>
-    </div>
-
-    <div class="grid">
-      <div>
-        <div class="grid-label">Buyer</div>
-        <div class="grid-value">${escapeHtml(buyerName)}</div>
-      </div>
-      <div>
-        <div class="grid-label">Seller</div>
-        <div class="grid-value">${escapeHtml(sellerName)}</div>
-      </div>
-      <div>
-        <div class="grid-label">Payment Date</div>
-        <div class="grid-value">${escapeHtml(paidDate)}</div>
-      </div>
-      <div>
-        <div class="grid-label">Payment Method</div>
-        <div class="grid-value">Online Payment (KHQR / Card)</div>
-      </div>
-    </div>
-
-    <table class="table">
-      <thead>
-        <tr>
-          <th>Description</th>
-          <th style="text-align: right;">Amount</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td>
-            <div style="font-weight: 600; color: #0f172a;">${escapeHtml(listingTitle)}</div>
-            <div style="font-size: 12px; color: #64748b; margin-top: 2px;">Campus Marketplace Listing</div>
-          </td>
-          <td style="text-align: right; font-weight: 600; color: #0f172a;">
-            ${escapeHtml(money(amount))} USD
-          </td>
-        </tr>
-        <tr class="total-row">
-          <td>Total Paid</td>
-          <td style="text-align: right;" class="total-amount">
-            ${escapeHtml(money(amount))} USD
-          </td>
-        </tr>
-      </tbody>
-    </table>
-
-    <div class="actions">
-      <button class="btn" onclick="window.print()">🖨️ Print / Save as PDF</button>
-    </div>
-
-    <div class="footer">
-      Thank you for supporting sustainable student commerce on campus! • UniSwap
-    </div>
-  </div>
-</body>
-</html>`;
+/** When the payment was made, in Phnom Penh time, for a receipt line. */
+function paidDate() {
+  return new Date().toLocaleString("en-US", { timeZone: "Asia/Phnom_Penh", dateStyle: "medium", timeStyle: "short" });
 }
 
 /** An online payment (card or KHQR) went through: tell the seller to hand the item over, and give the buyer a receipt. */
@@ -389,91 +188,36 @@ export function notifyPaid({ listing_id: listingId, buyer_id: buyerId, amount })
     const [buyer, seller] = await Promise.all([findUser(buyerId), findUser(sellerId)]);
     if (!buyer || !seller) return;
 
-    const invoiceNo = `UNI-${String(listingId).replace(/-/g, "").slice(0, 8).toUpperCase()}`;
-    const paidDate = new Date().toLocaleString("en-US", {
-      timeZone: "Asia/Phnom_Penh",
-      dateStyle: "medium",
-      timeStyle: "short",
-    });
-    const chatWithSellerUrl = threadLink(listingId, sellerId);
-    const chatWithBuyerUrl = threadLink(listingId, buyerId);
-    const listingUrl = appLink(`/listings/${listingId}`);
-    const invoiceUrl = appLink(`/listings/${listingId}?invoice=${invoiceNo}`);
-
-    const buyerTelegramHtml = [
-      `🧾 <b>PAYMENT CONFIRMED - UniSwap</b>`,
-      `━━━━━━━━━━━━━━━━━━━━`,
-      `<b>Invoice No:</b> <code>${escapeHtml(invoiceNo)}</code>`,
-      `<b>Status:</b> ✅ Paid Online`,
-      ``,
-      `📦 <b>Order Details</b>`,
-      `<b>Item:</b> ${escapeHtml(title)}`,
-      `<b>Date:</b> ${escapeHtml(paidDate)}`,
-      ``,
-      `👤 <b>Parties</b>`,
-      `<b>Seller:</b> ${escapeHtml(seller.name)}`,
-      `<b>Buyer:</b> ${escapeHtml(buyer.name)}`,
-      ``,
-      `💳 <b>Payment Summary</b>`,
-      `<b>Total Paid:</b> <b>${escapeHtml(money(amount))} USD</b>`,
-      `━━━━━━━━━━━━━━━━━━━━`,
-      `<i>Message ${escapeHtml(seller.name)} to arrange the handover on campus.</i>`,
-    ].join("\n");
-
-    const sellerTelegramHtml = [
-      `🎉 <b>ITEM SOLD - UniSwap</b>`,
-      `━━━━━━━━━━━━━━━━━━━━`,
-      `<b>Invoice No:</b> <code>${escapeHtml(invoiceNo)}</code>`,
-      `<b>Status:</b> ✅ Payment Received`,
-      ``,
-      `📦 <b>Order Details</b>`,
-      `<b>Item:</b> ${escapeHtml(title)}`,
-      `<b>Date:</b> ${escapeHtml(paidDate)}`,
-      `<b>Buyer:</b> ${escapeHtml(buyer.name)}`,
-      ``,
-      `💳 <b>Payment Summary</b>`,
-      `<b>Amount Paid:</b> <b>${escapeHtml(money(amount))} USD</b>`,
-      `━━━━━━━━━━━━━━━━━━━━`,
-      `<i>This listing is now marked as sold. Message ${escapeHtml(buyer.name)} to arrange the handover on campus.</i>`,
-    ].join("\n");
+    const invoiceNo = invoiceNumber(listingId);
+    const date = paidDate();
+    const total = `${money(amount)} USD`;
+    const receipt = { label: "View receipt", link: appLink(`/listings/${listingId}?invoice=${invoiceNo}`) };
 
     await Promise.all([
       deliver({
         to: seller,
-        subject: `${buyer.name} paid ${money(amount)} for "${title}"`,
-        lines: [
-          `Hi ${seller.name},`,
-          `${buyer.name} paid ${money(amount)} online for "${title}". It is now marked sold.`,
-          "Message them to arrange the handover on campus.",
-        ],
-        link: chatWithBuyerUrl,
-        linkLabel: `Message ${buyer.name}`,
-        telegram: {
-          html: sellerTelegramHtml,
-          buttons: [
-            [{ text: "📄 View Receipt", url: invoiceUrl }],
-            [{ text: "🌐 Check in Website", url: listingUrl }],
-            [{ text: `💬 Message ${buyer.name}`, url: chatWithBuyerUrl }],
-          ],
+        notification: {
+          subject: `${buyer.name} paid ${money(amount)} for ${quoted(title)}`,
+          emoji: "💰",
+          heading: `${buyer.name} paid for your item`,
+          intro: `The listing is now marked as sold. Message ${buyer.name} to arrange the handover on campus.`,
+          details: [["Item", title], ["Amount received", total], ["Buyer", buyer.name],
+            ["Invoice", invoiceNo, "code"], ["Date", date]],
+          action: { label: `Message ${buyer.name}`, link: threadLink(listingId, buyerId) },
+          secondAction: receipt,
         },
       }),
       deliver({
         to: buyer,
-        subject: `Payment received: "${title}"`,
-        lines: [
-          `Hi ${buyer.name},`,
-          `Your payment of ${money(amount)} for "${title}" went through.`,
-          `Message ${seller.name} to arrange the handover on campus.`,
-        ],
-        link: chatWithSellerUrl,
-        linkLabel: `Message ${seller.name}`,
-        telegram: {
-          html: buyerTelegramHtml,
-          buttons: [
-            [{ text: "📥 Download Invoice", url: invoiceUrl }],
-            [{ text: "🌐 Check in Website", url: listingUrl }],
-            [{ text: `💬 Message ${seller.name}`, url: chatWithSellerUrl }],
-          ],
+        notification: {
+          subject: `Payment received: ${quoted(title)}`,
+          emoji: "✅",
+          heading: "Payment confirmed",
+          intro: `Your payment went through. Message ${seller.name} to arrange the handover on campus.`,
+          details: [["Item", title], ["Total paid", total], ["Seller", seller.name],
+            ["Invoice", invoiceNo, "code"], ["Date", date]],
+          action: { label: `Message ${seller.name}`, link: threadLink(listingId, sellerId) },
+          secondAction: receipt,
         },
       }),
     ]);
@@ -494,23 +238,29 @@ export function notifyLatePayment({ listing_id: listingId, buyer_id: buyerId, am
     await Promise.all([
       deliver({
         to: seller,
-        subject: `Refund needed: ${buyer.name} paid ${money(amount)} for "${title}"`,
-        lines: [`Hi ${seller.name},`,
-          `${buyer.name}'s payment of ${money(amount)} for "${title}" arrived after the item was already sold or reserved for another buyer.`,
-          `Please send the ${money(amount)} back to ${buyer.name}, and message them to confirm.`,
-          `If you sold the item to ${buyer.name} yourself, this was their payment for it: nothing needs refunding.`],
-        link: threadLink(listingId, buyerId),
-        linkLabel: `Message ${buyer.name}`,
+        notification: {
+          subject: `Refund needed: ${buyer.name} paid ${money(amount)} for ${quoted(title)}`,
+          emoji: "⚠️",
+          heading: `Please refund ${buyer.name}`,
+          intro: `${buyer.name}'s payment arrived after the item was already sold or reserved for another buyer. `
+            + `Please send the ${money(amount)} back to ${buyer.name}, and message them to confirm.`,
+          details: [["Item", title], ["Refund", `${money(amount)} from you to ${buyer.name}`]],
+          action: { label: `Message ${buyer.name}`, link: threadLink(listingId, buyerId) },
+          note: `If you sold the item to ${buyer.name} yourself, this was their payment for it: nothing needs refunding.`,
+        },
       }),
       deliver({
         to: buyer,
-        subject: `Your payment for "${title}" arrived too late`,
-        lines: [`Hi ${buyer.name},`,
-          `Your payment of ${money(amount)} for "${title}" went through, but the item had already been sold or reserved for another buyer.`,
-          `${seller.name} has been asked to refund you. Message them if you have not heard back.`,
-          `If ${seller.name} gave you the item, this was your payment for it: no refund is due.`],
-        link: threadLink(listingId, sellerId),
-        linkLabel: `Message ${seller.name}`,
+        notification: {
+          subject: `Your payment for ${quoted(title)} arrived too late`,
+          emoji: "⚠️",
+          heading: "Your payment arrived too late",
+          intro: `Your payment went through, but the item had already been sold or reserved for another buyer. `
+            + `${seller.name} has been asked to refund you. Message them if you have not heard back.`,
+          details: [["Item", title], ["Refund due", `${money(amount)} from ${seller.name} to you`]],
+          action: { label: `Message ${seller.name}`, link: threadLink(listingId, sellerId) },
+          note: `If ${seller.name} gave you the item, this was your payment for it: no refund is due.`,
+        },
       }),
     ]);
   });
@@ -526,13 +276,15 @@ export function notifyPasswordChanged(userId) {
     if (!user) return;
     await deliver({
       to: user,
-      subject: "Your UniSwap password was changed",
-      lines: [`Hi ${user.name},`,
-        "Your UniSwap password was just changed. Devices signed in with the old password have been signed out.",
-        "Your Telegram connection and Bakong account stay as they were: check in Settings that they are still yours.",
-        "If you did not do this, reset your password now."],
-      link: appLink("/forgot-password"),
-      linkLabel: "Reset my password",
+      notification: {
+        subject: "Your UniSwap password was changed",
+        emoji: "🔒",
+        heading: "Your password was changed",
+        intro: "Your UniSwap password was just changed, and devices signed in with the old password have been signed out. "
+          + "If this was you, there is nothing more to do. If it was not, reset your password now.",
+        action: { label: "Reset my password", link: appLink("/forgot-password") },
+        note: "Your Telegram connection and Bakong account stay as they were: check in Settings that they are still yours.",
+      },
     });
   });
 }
@@ -553,12 +305,15 @@ export function notifyPriceDrop({ listingId, title, oldPrice, newPrice }) {
     for (const saver of savers) {
       await deliver({
         to: saver,
-        subject: `Price drop: "${title}" is now ${money(newPrice)}`,
-        lines: [`Hi ${saver.name},`,
-          `"${title}", which you saved on UniSwap, went down from ${money(oldPrice)} to ${money(newPrice)}.`,
-          "You get this because you saved it. Remove it from your Saved page to stop these alerts."],
-        link: appLink(`/listings/${listingId}`),
-        linkLabel: "View the listing",
+        notification: {
+          subject: `Price drop: ${quoted(title)} is now ${money(newPrice)}`,
+          emoji: "🏷️",
+          heading: "Price drop on an item you saved",
+          intro: `The price went down from ${money(oldPrice)} to ${money(newPrice)}.`,
+          details: [["Item", title], ["Was", money(oldPrice)], ["Now", money(newPrice)]],
+          action: { label: "View the listing", link: appLink(`/listings/${listingId}`) },
+          note: "You get this because you saved it. Remove it from your Saved page to stop these alerts.",
+        },
       });
     }
   });
@@ -587,12 +342,15 @@ export function notifyWantedMatches({ id: listingId, title }) {
       // One at a time, so ten alerts do not hit the mail server at once.
       await deliver({
         to: student,
-        subject: `Someone just listed something you're looking for: "${title}"`,
-        lines: [`Hi ${student.name},`,
-          `"${title}" was just posted on UniSwap. It matches your wanted post "${post.title}".`,
-          "Found what you need? Mark your wanted post as sold or reserved (or delete it) and these alerts stop."],
-        link: appLink(`/listings/${listingId}`),
-        linkLabel: "See the listing",
+        notification: {
+          subject: `Match for your wanted post: ${quoted(title)}`,
+          emoji: "🔎",
+          heading: "Something you're looking for was just posted",
+          intro: "A new listing on UniSwap matches your wanted post.",
+          details: [["New listing", title], ["Your wanted post", post.title]],
+          action: { label: "See the listing", link: appLink(`/listings/${listingId}`) },
+          note: "Found what you need? Mark your wanted post as sold or reserved (or delete it) and these alerts stop.",
+        },
       });
     }
   });
@@ -618,12 +376,14 @@ export function notifyOfferMade(offer) {
     const { listing, buyer, seller } = people;
     await deliver({
       to: seller,
-      subject: `${buyer.name} offered ${money(offer.amount)} for "${listing.title}"`,
-      lines: [`Hi ${seller.name},`,
-        `${buyer.name} offered ${money(offer.amount)} for "${listing.title}" (you asked ${money(listing.price)}).`,
-        "Accept it to reserve the item for them at that price, or decline it."],
-      link: appLink(`/listings/${offer.listing_id}`),
-      linkLabel: "Answer the offer",
+      notification: {
+        subject: `${buyer.name} offered ${money(offer.amount)} for ${quoted(listing.title)}`,
+        emoji: "🤝",
+        heading: `${buyer.name} made an offer`,
+        intro: "Accept it to reserve the item for them at that price, or decline it.",
+        details: [["Item", listing.title], ["Offer", money(offer.amount)], ["Your price", money(listing.price)]],
+        action: { label: "Answer the offer", link: appLink(`/listings/${offer.listing_id}`) },
+      },
     });
   });
 }
@@ -636,12 +396,15 @@ export function notifyOfferAccepted(offer) {
     const { listing, buyer, seller } = people;
     await deliver({
       to: buyer,
-      subject: `${seller.name} accepted your offer for "${listing.title}"`,
-      lines: [`Hi ${buyer.name},`,
-        `${seller.name} accepted your offer of ${money(offer.amount)} for "${listing.title}". It is now reserved for you at that price.`,
-        "Pay online from the listing page, or message them to meet on campus and pay in person."],
-      link: appLink(`/listings/${offer.listing_id}`),
-      linkLabel: "Open the listing",
+      notification: {
+        subject: `${seller.name} accepted your offer for ${quoted(listing.title)}`,
+        emoji: "🎉",
+        heading: "Your offer was accepted",
+        intro: `${seller.name} accepted your offer. The item is now reserved for you at that price.`,
+        details: [["Item", listing.title], ["Agreed price", money(offer.amount)], ["Seller", seller.name]],
+        action: { label: "Open the listing", link: appLink(`/listings/${offer.listing_id}`) },
+        note: "Pay online from the listing page, or message them to meet on campus and pay in person.",
+      },
     });
   });
 }
@@ -656,18 +419,22 @@ export function notifyOfferDeclined(offer) {
     const people = await findOfferPeople(offer);
     if (!people) return;
     const { listing, buyer, seller } = people;
-    let reason = `${seller.name} declined your offer of ${money(offer.amount)} for "${listing.title}". It is still available: you can make a new offer.`;
+    let reason = `${seller.name} declined your offer. The item is still available: you can make a new offer.`;
     if (listing.status !== "active") {
-      reason = `Your offer of ${money(offer.amount)} for "${listing.title}" was declined because the item is no longer available.`;
+      reason = "Your offer was declined because the item is no longer available.";
     } else if (listing.listing_type !== "sale") {
-      reason = `Your offer of ${money(offer.amount)} for "${listing.title}" was declined because ${seller.name} changed it from an item for sale to a kind of listing that takes no offers.`;
+      reason = `Your offer was declined because ${seller.name} changed it from an item for sale to a kind of listing that takes no offers.`;
     }
     await deliver({
       to: buyer,
-      subject: `Your offer for "${listing.title}" was declined`,
-      lines: [`Hi ${buyer.name},`, reason],
-      link: appLink(`/listings/${offer.listing_id}`),
-      linkLabel: "See the listing",
+      notification: {
+        subject: `Your offer for ${quoted(listing.title)} was declined`,
+        emoji: "ℹ️",
+        heading: "Your offer was declined",
+        intro: reason,
+        details: [["Item", listing.title], ["Your offer", money(offer.amount)]],
+        action: { label: "See the listing", link: appLink(`/listings/${offer.listing_id}`) },
+      },
     });
   });
 }
@@ -680,12 +447,15 @@ export function notifyOfferCancelled(offer) {
     const { listing, buyer, seller } = people;
     await deliver({
       to: buyer,
-      subject: `"${listing.title}" is no longer reserved for you`,
-      lines: [`Hi ${buyer.name},`,
-        `${seller.name} made "${listing.title}" available again, so your accepted offer of ${money(offer.amount)} no longer reserves it.`,
-        `Message ${seller.name} if you still want it.`],
-      link: threadLink(offer.listing_id, listing.user_id),
-      linkLabel: `Message ${seller.name}`,
+      notification: {
+        subject: `${quoted(listing.title)} is no longer reserved for you`,
+        emoji: "ℹ️",
+        heading: "The item is no longer reserved for you",
+        intro: `${seller.name} made it available again, so your accepted offer no longer reserves it. `
+          + `Message ${seller.name} if you still want it.`,
+        details: [["Item", listing.title], ["Your offer", money(offer.amount)]],
+        action: { label: `Message ${seller.name}`, link: threadLink(offer.listing_id, listing.user_id) },
+      },
     });
   });
 }

@@ -11,14 +11,14 @@ interface StatsRingChartProps {
 // lightest), biggest category first. The ring is drawn clockwise from the top in the legend's order.
 // The last slice touches the first, so maroon goes last: it looks like dark green to red-green
 // colour-blind eyes, and this way the two meet only when all six show. Blue and plum are kept apart
-// for the same reason.
+// for the same reason. Dark mode swaps the whole set (globals.css `--slice-*`), each at least 3:1 on the dark card.
 const COLORS = [
-  "var(--color-brand-900)", // dark green
-  "var(--color-brand-600)", // sage
-  "var(--chart-blue)",
-  "var(--chart-amber)",
-  "var(--chart-plum)",
-  "var(--color-brand-danger)", // maroon
+  "var(--slice-1)", // dark green
+  "var(--slice-2)", // sage
+  "var(--slice-3)", // blue
+  "var(--slice-4)", // amber
+  "var(--slice-5)", // plum
+  "var(--slice-6)", // maroon
 ];
 // A thin gap of card colour between slices, so two dark slices never run into each other.
 const GAP_DEGREES = 2;
@@ -50,7 +50,7 @@ export function StatsRingChart({ title, categories }: StatsRingChartProps) {
           className="relative size-32 shrink-0 rounded-full"
           style={{ background: ringGradient(categories, total) }}
         >
-          <div className="absolute inset-5 flex flex-col items-center justify-center rounded-full bg-brand-50">
+          <div className="absolute inset-5 flex flex-col items-center justify-center rounded-full bg-brand-50 dark:bg-card">
             <span className="font-heading text-2xl leading-none">{total}</span>
             <span className="text-xs text-muted-foreground">{total === 1 ? "item" : "items"}</span>
           </div>

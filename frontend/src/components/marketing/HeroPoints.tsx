@@ -14,13 +14,13 @@ const POINTS = [
  */
 export function HeroPoints() {
   return (
-    <ul className="grid gap-3 text-brand-ink sm:grid-cols-3 lg:max-w-[38rem]">
+    <ul className="grid gap-3 text-foreground sm:grid-cols-3 lg:max-w-[38rem]">
       {POINTS.map(({ icon: Icon, title, text }) => (
         // Icon, then title, then the line. On phones the icon sits left of both (two rows); in
         // the narrow cards from `sm` up it sits beside the title and the line runs full width.
         <li
           key={title}
-          className="grid grid-cols-[auto_1fr] items-center gap-x-2.5 sm:gap-y-1.5 sm:rounded-xl sm:border sm:border-border sm:bg-brand-50/70 sm:p-3"
+          className="grid grid-cols-[auto_1fr] items-center gap-x-2.5 sm:gap-y-1.5 sm:rounded-xl sm:border sm:border-border sm:bg-inset/70 sm:p-3"
         >
           {/* #E6F2DD on #22312D is 11.72:1, like the hero's "Browse listings". */}
           <span

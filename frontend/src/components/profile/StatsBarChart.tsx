@@ -34,7 +34,7 @@ export function StatsBarChart({ title, months }: StatsBarChartProps) {
           <div key={month} className="flex flex-1 flex-col items-center justify-end gap-1">
             <span className="text-xs font-semibold tabular-nums">{formatPrice(amount)}</span>
             <div
-              className="w-full max-w-12 rounded-t-md bg-brand-900"
+              className="w-full max-w-12 rounded-t-md bg-chart-bar"
               style={{ height: max > 0 ? Math.round((amount / max) * BAR_MAX_PX) : 0 }}
             />
           </div>

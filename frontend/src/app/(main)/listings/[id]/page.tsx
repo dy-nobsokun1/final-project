@@ -25,6 +25,7 @@ import {
   getListingById,
   getMyOffer,
   getPaymentOptions,
+  getReceipt,
   paymentBannerStatus,
 } from "@/lib/api";
 import { CATEGORIES, conditionLabel, listingTypeLabel, statusLabel } from "@/lib/constants";
@@ -54,6 +55,9 @@ export default async function ListingDetailPage({ params, searchParams }: PagePr
   // For "Paid with Mastercard •••• 4444" under the banner. Stripe tells the API; nothing is stored.
   const paidCard = cardResult !== "unconfirmed" && cardResult?.status === "paid" ? cardResult.card : undefined;
   const [listing, paymentOptions] = await Promise.all([getListingById(id), getPaymentOptions()]);
+  // A receipt link (?invoice=) only asks to see it: the card shows if the API says this is your paid deal.
+  const wantsReceipt = typeof invoiceParam === "string" && invoiceParam !== "";
+  const receipt = user && wantsReceipt && listing ? await getReceipt(listing.id) : null;
 
   if (!listing) notFound();
   const bids = listing.auction ? await getBids(listing.id) : [];
@@ -83,8 +87,11 @@ export default async function ListingDetailPage({ params, searchParams }: PagePr
         Back to browse
       </Link>
 
-      {typeof invoiceParam === "string" && invoiceParam ? (
-        <InvoiceReceiptCard invoiceNo={invoiceParam} listing={listing} />
+      {receipt ? <InvoiceReceiptCard receipt={receipt} listing={listing} /> : null}
+      {wantsReceipt && !user ? (
+        <p className="light-surface rounded-xl border border-border bg-card p-3 text-sm text-foreground">
+          <Link href="/login" className="font-medium underline">Sign in</Link> to see the receipt for this payment.
+        </p>
       ) : null}
 
       {payment && payment in PAYMENT_BANNERS ? (

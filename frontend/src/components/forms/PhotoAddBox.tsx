@@ -26,7 +26,7 @@ export function PhotoAddBox({ disabled, onFiles }: PhotoAddBoxProps) {
   }
 
   return (
-    <label className="flex cursor-pointer flex-col items-center gap-1 rounded-lg border-2 border-dashed border-brand-ink/50 bg-brand-50/40 px-4 py-6 text-center transition-colors hover:bg-brand-50/70 has-disabled:cursor-not-allowed has-disabled:opacity-60 has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-brand-ink">
+    <label className="flex cursor-pointer flex-col items-center gap-1 rounded-lg border-2 border-dashed border-foreground/50 bg-brand-50/40 px-4 py-6 text-center transition-colors hover:bg-brand-50/70 dark:bg-field dark:hover:bg-inset has-disabled:cursor-not-allowed has-disabled:opacity-60 has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-foreground">
       <ImagePlus aria-hidden="true" className="size-6" />
       <span className="text-sm font-medium">{disabled ? "All photos added" : "Add photos"}</span>
       <span className="text-xs text-muted-foreground">
