@@ -14,6 +14,9 @@ import {
 } from "@/components/ui/select";
 import { register } from "@/lib/api/actions";
 
+/** Shown faded in the empty graduation year box. Tapping the box fills it in, for a quick demo. */
+const SAMPLE_YEAR = "2027";
+
 /**
  * Registration form. Creates the account through the API, which emails a 6-digit code,
  * then shows the "check your email" step. Nobody is signed in until that code is entered.
@@ -104,8 +107,16 @@ export function RegisterForm() {
           name="graduationYear"
           type="number"
           inputMode="numeric"
+          placeholder={SAMPLE_YEAR}
           value={values.graduationYear}
           onChange={(event) => update("graduationYear")(event.target.value)}
+          onClick={(event) => {
+            if (values.graduationYear) return;
+            const input = event.currentTarget;
+            update("graduationYear")(SAMPLE_YEAR);
+            // Selected, so a student who graduates another year can just type over it.
+            requestAnimationFrame(() => input.select());
+          }}
         />
       </Field>
 

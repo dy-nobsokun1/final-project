@@ -48,7 +48,7 @@ function button({ label, link }) {
 function renderHtml(n, name) {
   const body = [
     name && paragraph(`Hi ${esc(name)},`, "margin-bottom:12px;color:" + MUTED + ";"),
-    `<h1 style="margin:0 0 12px;font-size:22px;line-height:28px;font-weight:bold;color:${TEXT};">${n.emoji ? `${n.emoji} ` : ""}${esc(n.heading)}</h1>`,
+    `<h1 style="margin:0 0 12px;font-size:22px;line-height:28px;font-weight:bold;color:${TEXT};">${esc(n.heading)}</h1>`,
     paragraph(esc(n.intro)),
     n.details?.length && detailsTable(n.details),
     n.quote && quoteBlock(n.quote),

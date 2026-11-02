@@ -35,6 +35,8 @@ test("the email escapes names, titles and chat text, and the link inside href", 
 test("the email has no images, one button, a hidden preheader, and a text part with the link written out", () => {
   const { html, text } = renderEmail(notification({ preheader: "A short preview" }), "Dara");
   assert.equal(html.includes("<img"), false);
+  assert.equal(html.includes(notification().emoji), false);
+  assert.equal(text.includes(notification().emoji), false);
   assert.equal(html.match(/<a /g).length, 1);
   assert.ok(html.includes("display:none") && html.includes("A short preview"));
   assert.ok(html.includes('width="560"') && html.includes("max-width:560px"));

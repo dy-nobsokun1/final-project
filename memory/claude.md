@@ -140,9 +140,10 @@ when `uniswap` has none, so an older `uniswap` database needs the upgrade SQL (b
   (`notifyPriceDrop`, called from PATCH in `routes/listings.js`), new listing matching a wanted post
   (create only, not edits), offer made/accepted/declined/cancelled. Add new events there.
   - **One description per event:** `{ subject, preheader, emoji, heading, intro, details, quote, action,
-    secondAction, note }`. Subjects cut titles to 40 characters and have no emoji.
+    secondAction, note }`. Subjects cut titles to 40 characters.
   - **Email:** `utils/notificationEmail.js` draws it as a table-based email with a text part. It has no
-    images. The sign-up and reset emails stay separate in `utils/email.js`.
+    images and no emoji (`emoji` is for Telegram only). The sign-up and reset emails stay separate in
+    `utils/email.js`.
   - **Telegram:** `utils/notificationTelegram.js` draws it as HTML with only `b`, `i`, `code` and
     `blockquote`. Link buttons show only when `publicSiteUrl(siteOrigin())` is set. A refused HTML send is
     retried once as plain text.
