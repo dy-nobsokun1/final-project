@@ -192,17 +192,6 @@ when `uniswap` has none, so an older `uniswap` database needs the upgrade SQL (b
   item was already sold (or reserved for another buyer by an accepted offer) becomes `refund_due` (not `paid`); the listing is untouched and both people
   are told the seller must refund (`notifyLatePayment`). Bakong only accepts Cambodian
   IPs, so it does not work from Render. Token in `BAKONG_TOKEN`, expires 13 Jan 2027.
-  - **Upload your KHQR (2 Nov):** Settings has an "Upload your KHQR" button (`KhqrUploadButton`) beside the
-    ID box, for sellers whose bank (ABA) cannot link to the Bakong app. The browser reads the image: it is
-    drawn on a canvas (`lib/khqr/read-image.ts`, tries 1600, 1000 then 600 px, white border added) and
-    decoded by `jsqr` (added 2 Nov, 1.4.0, Apache-2.0, loaded only when a file is picked).
-    `lib/khqr/parse.ts` checks the CRC in tag `63`, takes field `00` inside tag `29` and applies the same
-    format as `isBakongAccountId`. A merchant QR (tag `30`), a non-KHQR, a bad CRC and a KHQR with no ID get
-    their own plain messages. It only fills the box: the seller still presses Save. The image is never
-    sent or stored.
-  - **Not verified:** that money sent to an ID read from an ABA KHQR reaches the ABA account, or that Bakong
-    tracks such a payment. Also `khqr.js` copies only field `00` of tag `29`, while a real KHQR may hold more
-    fields there (for example `01`), so a real QR's test also checks that.
 - **Deleting listings:** payments, reviews and offers are `ON DELETE CASCADE`, so `DELETE /api/listings/:id`
   refuses (409) when the listing is sold/traded, has reviews, has a paid or `refund_due` payment,
   has an unconfirmed payment that may still be confirmed (`RECHECK_HOURS`, 24, in `db/payments.js`,
@@ -418,7 +407,7 @@ Everything above is pushed to `implement_backend`. Last full check (2 Nov):
 - The frontend's lint, `tsc --noEmit` and `next build` are clean (2 Nov).
 After `git pull origin implement_backend`:
 
-- One package was added on 2 Nov (`jsqr` in `frontend/`), so run `npm install` in `frontend/`; run it in `backend/` too if it is stale.
+- No packages were added, but run `npm install` in `backend/` and `frontend/` if they are stale.
 - Upgrade your local `uniswap` database: run the blocks under "Upgrading an existing database to this
   version" in `backend/README.md`, or `npm run db:setup && npm run db:seed` if it only holds demo
   data. The test database needs nothing: `npm run test:api` rebuilds it from `schema.sql`.

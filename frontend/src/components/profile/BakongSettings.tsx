@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { Field, FieldInput } from "@/components/forms/Field";
-import { KhqrUploadButton } from "@/components/profile/KhqrUploadButton";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { updateBakongAccount } from "@/lib/api/actions";
@@ -34,13 +33,6 @@ export function BakongSettings() {
         Add your Bakong account ID to let buyers pay you by KHQR. The money goes straight to your
         account: UniSwap never holds it.
       </p>
-      <KhqrUploadButton
-        onStart={() => setMessage(null)}
-        onRead={(id) => {
-          setAccountId(id);
-          setMessage("Payment ID filled in from your KHQR. Press Save to use it.");
-        }}
-      />
       <Field label="Bakong account ID">
         <FieldInput
           name="bakongAccountId"
