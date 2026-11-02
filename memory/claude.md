@@ -138,8 +138,14 @@ when `uniswap` has none, so an older `uniswap` database needs the upgrade SQL (b
 - **Notifications:** `utils/notify.js` (fire-and-forget, never throws). New message (first unread
   per thread only), outbid, auction won/ended, password changed, price drop on a saved listing
   (`notifyPriceDrop`, called from PATCH in `routes/listings.js`), new listing matching a wanted post
-  (create only, not edits), offer made/accepted/declined/cancelled. Add new events there; Telegram
-  can reuse it later.
+  (create only, not edits), offer made/accepted/declined/cancelled. Add new events there.
+  - **One description per event:** `{ subject, preheader, emoji, heading, intro, details, quote, action,
+    secondAction, note }`. Subjects cut titles to 40 characters and have no emoji.
+  - **Email:** `utils/notificationEmail.js` draws it as a table-based email with a text part. It has no
+    images. The sign-up and reset emails stay separate in `utils/email.js`.
+  - **Telegram:** `utils/notificationTelegram.js` draws it as HTML with only `b`, `i`, `code` and
+    `blockquote`. Link buttons show only when `publicSiteUrl(siteOrigin())` is set. A refused HTML send is
+    retried once as plain text.
 - **Optional services** (`backend/src/services/`, plain `fetch`, no packages), each off until its env
   keys are set: Stripe Checkout **test mode only** (`routes/payments.js`; `markPaid` is idempotent and
   marks the item sold; the webhook needs the raw body, so it is mounted before `express.json` in
@@ -396,7 +402,7 @@ deployment, Cloudinary photos, Stripe test payments, Telegram bot.
 ### Picking up on another machine
 
 Everything above is pushed to `implement_backend`. Last full check (2 Nov):
-- `npm test` (78) and `npm run test:api` (134) pass (2 Nov, with receipts and the Telegram link fix).
+- `npm test` (85) and `npm run test:api` (136) pass (2 Nov, with the new notification messages).
 - The frontend's lint, `tsc --noEmit` and `next build` are clean (2 Nov).
 After `git pull origin implement_backend`:
 

@@ -4,6 +4,10 @@ Log of completed tasks, architecture decisions, and bug fixes for the UniSwap te
 
 ## 2 Nov 2026
 
+### Notification messages
+- Each event in `notify.js` now has one description, drawn by `utils/notificationEmail.js` and `utils/notificationTelegram.js`. Who gets notified, and when, is unchanged.
+- `buildInvoiceHtml` is gone. `sendTelegramDocument` stays, unused. Not yet tried with a real inbox or a real Telegram chat.
+
 ### Dark mode (opt-in)
 - Navbar Sun/Moon button sets the `uniswap_theme` cookie and the `dark` class on `<html>`; the root layout renders it, so no flash. Default look unchanged; frontend only, no packages.
 - Dark values live in `globals.css` tokens (`.dark .light-surface` for cards); a few components swapped hard-coded pale fills for tokens. Dark rules are screen-only, so receipts print light.
