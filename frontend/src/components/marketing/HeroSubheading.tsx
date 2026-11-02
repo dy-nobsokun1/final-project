@@ -29,7 +29,7 @@ const COPY =
  */
 export function HeroSubheading() {
   return (
-    <p className="grid max-w-md text-base text-brand-ink">
+    <p className="grid max-w-md text-base text-foreground">
       <span aria-hidden="true" className="invisible col-start-1 row-start-1 motion-reduce:visible">
         {COPY}
       </span>

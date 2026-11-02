@@ -94,7 +94,7 @@ export function NewListingForm({ listing, draft }: { listing?: Listing; draft?: 
           name="title"
           defaultValue={start?.title}
           placeholder={demo.preset?.title ?? "Calculus: Early Transcendentals, 9th ed."}
-          className="bg-brand-50/40 placeholder:text-foreground/50"
+          className="bg-brand-50/40 placeholder:text-foreground/50 dark:placeholder:text-muted-foreground"
         />
       </Field>
       <Field label="Description" error={errors.description}>
@@ -103,7 +103,7 @@ export function NewListingForm({ listing, draft }: { listing?: Listing; draft?: 
           defaultValue={start?.description}
           rows={5}
           placeholder={demo.preset?.description ?? "Condition, defects, and what is included."}
-          className="bg-brand-50/40 placeholder:text-foreground/50"
+          className="bg-brand-50/40 placeholder:text-foreground/50 dark:placeholder:text-muted-foreground"
         />
       </Field>
 
@@ -121,7 +121,7 @@ export function NewListingForm({ listing, draft }: { listing?: Listing; draft?: 
               defaultValue={start?.price}
               placeholder={demo.preset ? String(demo.preset.price) : undefined}
               disabled={lockedByBids}
-              className="bg-brand-50/40 placeholder:text-foreground/50"
+              className="bg-brand-50/40 placeholder:text-foreground/50 dark:placeholder:text-muted-foreground"
             />
           </Field>
         ) : null}

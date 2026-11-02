@@ -32,7 +32,7 @@ export function ListingTypeTiles({ value, onChange, error }: ListingTypeTilesPro
           return (
             <label
               key={type}
-              className="flex cursor-pointer flex-col items-center gap-1.5 rounded-lg border border-brand-600/40 bg-brand-50/40 p-3 text-sm font-medium transition-colors hover:bg-brand-50/70 has-checked:border-brand-ink has-checked:bg-brand-50 has-checked:ring-1 has-checked:ring-brand-ink has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-brand-ink"
+              className="flex cursor-pointer flex-col items-center gap-1.5 rounded-lg border border-brand-600/40 bg-brand-50/40 p-3 text-sm font-medium transition-colors hover:bg-brand-50/70 dark:bg-field dark:hover:bg-inset has-checked:border-foreground has-checked:bg-inset has-checked:ring-1 has-checked:ring-foreground has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-foreground"
             >
               <input
                 type="radio"

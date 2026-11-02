@@ -58,15 +58,15 @@ export function PriceRangeFilter({ min, max, onApply }: PriceRangeFilterProps) {
   return (
     <div role="group" aria-labelledby={labelId} className="flex flex-col gap-1.5" onBlur={onBlur}>
       {/* Styled like FilterSelect's labels, so the row reads as one set. */}
-      <span id={labelId} className="text-center text-sm font-bold uppercase tracking-wide text-brand-deep">
+      <span id={labelId} className="text-center text-sm font-bold uppercase tracking-wide text-label">
         Price
       </span>
       <div className="flex items-center gap-1.5">
         {BOXES.map(({ key, label, placeholder }, index) => (
           <Fragment key={key}>
-            {index > 0 ? <span aria-hidden="true" className="text-brand-deep">–</span> : null}
+            {index > 0 ? <span aria-hidden="true" className="text-label">–</span> : null}
             <div className="relative flex-1 sm:w-24 sm:flex-none">
-              <span aria-hidden="true" className="pointer-events-none absolute inset-y-0 left-2.5 flex items-center text-sm text-brand-deep">
+              <span aria-hidden="true" className="pointer-events-none absolute inset-y-0 left-2.5 flex items-center text-sm text-label">
                 $
               </span>
               <Input
@@ -79,7 +79,7 @@ export function PriceRangeFilter({ min, max, onApply }: PriceRangeFilterProps) {
                 onChange={(event) => setDraft({ ...draft, [key]: event.target.value })}
                 onKeyDown={onKeyDown}
                 // On the #B1D3B9 card: border 3.2:1 (inputs need 3:1), text 11.72:1, placeholder 4.84:1.
-                className="border-brand-deep/60 bg-brand-50 pl-6 text-brand-deep placeholder:text-brand-deep/70"
+                className="border-label/60 bg-inset pl-6 text-label placeholder:text-label/70"
               />
             </div>
           </Fragment>

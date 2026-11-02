@@ -21,7 +21,7 @@ export function FilterSelect({ label, value, onValueChange, options }: FilterSel
           than the trigger's colours. brand-deep (#22312D) reads 8.34:1 on the
           #B1D3B9 card and matches the open panel, tying the two together.
           `text-center` aligns it over the trigger, which is w-44 from sm up. */}
-      <span className="text-center text-sm font-bold uppercase tracking-wide text-brand-deep">
+      <span className="text-center text-sm font-bold uppercase tracking-wide text-label">
         {label}
       </span>
       <Select value={value} onValueChange={onValueChange}>
@@ -31,7 +31,7 @@ export function FilterSelect({ label, value, onValueChange, options }: FilterSel
             on this red, i.e. effectively invisible. A descendant selector outranks
             it. */}
         <SelectTrigger
-          className="w-full border-destructive bg-destructive text-brand-50 hover:bg-destructive/90 sm:w-44 [&>svg]:text-brand-50"
+          className="w-full border-destructive bg-brand-danger text-brand-50 hover:bg-brand-danger/90 sm:w-44 [&>svg]:text-brand-50"
           aria-label={label}
         >
           <SelectValue />
@@ -51,7 +51,7 @@ export function FilterSelect({ label, value, onValueChange, options }: FilterSel
             <SelectItem
               key={option.value}
               value={option.value}
-              className="focus:bg-destructive focus:text-brand-50 not-data-[variant=destructive]:focus:**:text-brand-50"
+              className="focus:bg-brand-danger focus:text-brand-50 not-data-[variant=destructive]:focus:**:text-brand-50"
             >
               {option.label}
             </SelectItem>

@@ -16,7 +16,7 @@ import { Effects } from '@/components/animate-ui/primitives/effects/effect';
  */
 export function HeroHeading() {
   return (
-    <h1 className="font-heading text-5xl leading-[0.9] tracking-tight text-brand-ink sm:text-7xl">
+    <h1 className="font-heading text-5xl leading-[0.9] tracking-tight text-foreground sm:text-7xl">
       {/* `asChild` is required: without it `Effect` renders a `motion.div`
           wrapper per word, and block-level divs stack each word on its own line.
           Slot mode merges the motion props onto each span instead.

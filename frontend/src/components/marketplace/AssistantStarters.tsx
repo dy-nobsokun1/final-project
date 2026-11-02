@@ -24,7 +24,7 @@ export function AssistantStarters({ onPick }: { onPick: (question: string) => vo
             <button
               type="button"
               onClick={() => onPick(question)}
-              className="rounded-full border border-brand-ink/30 px-3 py-1.5 text-sm text-foreground transition-colors hover:bg-brand-50"
+              className="rounded-full border border-foreground/30 px-3 py-1.5 text-sm text-foreground transition-colors hover:bg-inset"
             >
               {question}
             </button>

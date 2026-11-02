@@ -9,7 +9,7 @@ import { HeroSubheading } from "@/components/marketing/HeroSubheading";
 /** Brand banner that sits above the browse filters on the home page. */
 export function HeroBand() {
   return (
-    <section className="light-surface relative overflow-hidden rounded-3xl border border-border bg-gradient-to-br from-brand-200 to-brand-50">
+    <section className="light-surface relative overflow-hidden rounded-3xl border border-border bg-gradient-to-br from-hero-from to-hero-to">
       {/* Decorative grid, faded out towards the bottom. */}
       <div aria-hidden="true" className="brand-grid absolute inset-0 opacity-60" />
 
@@ -53,7 +53,7 @@ export function HeroBand() {
               brand-200) outlines it, since its fill matches the pale end of the gradient. */}
           <Link
             href="/assistant"
-            className="inline-flex w-full items-center gap-2 rounded-2xl border border-brand-ink/60 bg-brand-50 px-3 py-2.5 text-sm text-brand-ink transition-colors hover:bg-brand-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-ink sm:w-fit sm:gap-3 sm:rounded-full sm:px-4"
+            className="inline-flex w-full items-center gap-2 rounded-2xl border border-foreground/60 bg-inset px-3 py-2.5 text-sm text-foreground transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground sm:w-fit sm:gap-3 sm:rounded-full sm:px-4"
           >
             <Sparkles aria-hidden="true" className="size-4 shrink-0" />
             <span>

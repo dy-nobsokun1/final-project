@@ -17,7 +17,7 @@ export function MessageBubble({ message, isOwn }: MessageBubbleProps) {
           // card's own colour, so the bubble vanished and replies read as loose text.
           isOwn
             ? "bg-primary text-primary-foreground"
-            : "border border-brand-600/40 bg-brand-50 text-foreground",
+            : "border border-brand-600/40 bg-inset text-foreground",
         )}
       >
         <p className="whitespace-pre-wrap break-words">{message.body}</p>

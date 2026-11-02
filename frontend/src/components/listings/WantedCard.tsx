@@ -30,7 +30,7 @@ export function WantedCard({ listing, saved }: WantedCardProps) {
     <div className="relative h-full transition-transform hover:-translate-y-0.5">
       <Link
         href={`/listings/${listing.id}`}
-        className="group flex h-full flex-col overflow-hidden rounded-xl border-2 border-dashed border-brand-200/70 bg-brand-deep-2 text-brand-50 transition-all hover:border-brand-50 hover:shadow-lg hover:shadow-brand-600/20"
+        className="group flex h-full flex-col overflow-hidden rounded-xl border-2 border-dashed border-brand-200/70 bg-wanted-card text-brand-50 transition-all hover:border-brand-50 hover:shadow-lg hover:shadow-brand-600/20"
       >
         {/* Where an item card has its photo, with the status and type tags in the same corners. */}
         <div className="relative flex aspect-[4/3] items-center justify-center bg-brand-600/25">
