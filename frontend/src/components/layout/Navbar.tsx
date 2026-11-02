@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { Suspense } from "react";
 import { AskNavPill } from "@/components/layout/AskNavPill";
 import { SearchBox } from "@/components/layout/SearchBox";
+import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { UserAvatar } from "@/components/profile/UserAvatar";
 import { useAuth } from "@/contexts/AuthContext";
 import { APP_NAME, NAV_LINKS } from "@/lib/constants";
@@ -42,6 +43,7 @@ export function Navbar() {
           )}
         </nav>
 
+        <ThemeToggle />
         <UserMenu />
       </div>
     </header>

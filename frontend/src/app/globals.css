@@ -2,10 +2,25 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
-@custom-variant dark (&:is(.dark *));
+/* Screen only, so a printed receipt keeps the light look even when dark mode is on. */
+@custom-variant dark {
+  @media screen {
+    &:is(.dark *) {
+      @slot;
+    }
+  }
+}
 
 @theme inline {
   --color-background: var(--background);
+  /* Surfaces and colours that change with the theme (values in :root and .dark below). */
+  --color-inset: var(--inset);
+  --color-field: var(--field);
+  --color-label: var(--label);
+  --color-wanted-card: var(--wanted-card);
+  --color-hero-from: var(--hero-from);
+  --color-hero-to: var(--hero-to);
+  --color-chart-bar: var(--chart-bar);
   --color-foreground: var(--foreground);
   /* Bebas Neue drives the big condensed headings, Nunito everything else. */
   --font-sans: var(--font-nunito), ui-sans-serif, system-ui, sans-serif;
@@ -85,6 +100,22 @@
   --chart-amber: #946000; /* 4.6:1 */
   --chart-blue: #2b5797; /* 6.2:1 */
   --chart-plum: #8a4a8e; /* 5.3:1 */
+  /* The ring's slices in order (StatsRingChart). Dark mode swaps the whole set. */
+  --slice-1: var(--brand-900);
+  --slice-2: var(--brand-600);
+  --slice-3: var(--chart-blue);
+  --slice-4: var(--chart-amber);
+  --slice-5: var(--chart-plum);
+  --slice-6: var(--brand-danger);
+  --chart-bar: var(--brand-900);
+
+  /* Values the theme switch changes. Here they are today's colours, so the default look stays as it was. */
+  --inset: var(--brand-50); /* a raised panel, bubble or card inside a card */
+  --field: var(--brand-50); /* form fields (dark mode only: `dark:bg-field`) */
+  --label: var(--brand-deep); /* small caps labels on the filter panel */
+  --wanted-card: var(--brand-deep-2); /* the Wanted card */
+  --hero-from: var(--brand-200); /* hero and profile header gradient */
+  --hero-to: var(--brand-50);
 
   /* The page is the dark #22312D field, so page-level text is white. Cards,
      panels and the auth card are the light #B1D3B9 / #E6F2DD surfaces, and
@@ -128,40 +159,71 @@
   --sidebar-ring: var(--brand-ink);
 }
 
-/* Nothing toggles dark mode today. Hex for the same reason as :root -- the
-   oklch() form compiles to out-of-range lab() L values that clamp to white. */
-.dark {
-  --background: #22312d;
-  --foreground: #e6f2dd;
-  --card: #31443e;
-  --card-foreground: #e6f2dd;
-  --popover: #31443e;
-  --popover-foreground: #e6f2dd;
-  --primary: #88bda4;
-  --primary-foreground: #000000;
-  --secondary: #31443e;
-  --secondary-foreground: #e6f2dd;
-  --muted: #31443e;
-  --muted-foreground: #b1d3b9;
-  --accent: #659287;
-  --accent-foreground: #000000;
-  --destructive: #931621;
-  --border: #b1d3b933;
-  --input: #b1d3b940;
-  --ring: #88bda4;
-  --chart-1: #88bda4;
-  --chart-2: #b1d3b9;
-  --chart-3: #e6f2dd;
-  --chart-4: #659287;
-  --chart-5: #1b3022;
-  --sidebar: #31443e;
-  --sidebar-foreground: #e6f2dd;
-  --sidebar-primary: #88bda4;
-  --sidebar-primary-foreground: #000000;
-  --sidebar-accent: #659287;
-  --sidebar-accent-foreground: #000000;
-  --sidebar-border: #b1d3b933;
-  --sidebar-ring: #88bda4;
+/* Dark mode, switched on by class="dark" on <html> (the navbar button; the root layout reads the
+   uniswap_theme cookie). Screen only: a printed receipt keeps the light look. Hex, not oklch(),
+   for the same reason as :root. The page keeps its deep green; cards are one step lighter, fields
+   one step darker. Contrast on the card #314740: text #E6F2DD 8.6:1, muted #B1D3B9 6.1:1.
+   `.dark .light-surface` lists every token `.light-surface` re-points, so a card gets the dark
+   values back. */
+@media screen {
+  .dark {
+    color-scheme: dark;
+  }
+  .dark,
+  .dark .light-surface {
+    --background: #22312d;
+    --foreground: #e6f2dd;
+    --card: #314740;
+    --card-foreground: #e6f2dd;
+    --popover: #314740;
+    --popover-foreground: #e6f2dd;
+    --primary: #88bda4;
+    --primary-foreground: #000000;
+    --secondary: #3c564d;
+    --secondary-foreground: #e6f2dd;
+    --muted: #3c564d;
+    --muted-foreground: #b1d3b9;
+    --accent: #659287;
+    --accent-foreground: #000000;
+    /* Light red: 4.1:1 as a border on the card. A red fill with pale text would need a
+       different red, so fills use brand-danger instead. */
+    --destructive: #f08a8a;
+    --destructive-foreground: #e6f2dd;
+    --border: #b1d3b933;
+    /* Field outlines: 3.2:1 against the card, 3.9:1 against the field. */
+    --input: #b1d3b99e;
+    /* Pale, because the focus outline is drawn at 50%: 3.5:1 on the card, 4.2:1 on the page. */
+    --ring: #e6f2dd;
+    --chart-1: #88bda4;
+    --chart-2: #b1d3b9;
+    --chart-3: #e6f2dd;
+    --chart-4: #659287;
+    --chart-5: #1b3022;
+    --sidebar: #314740;
+    --sidebar-foreground: #e6f2dd;
+    --sidebar-primary: #88bda4;
+    --sidebar-primary-foreground: #000000;
+    --sidebar-accent: #659287;
+    --sidebar-accent-foreground: #000000;
+    --sidebar-border: #b1d3b933;
+    --sidebar-ring: #e6f2dd;
+
+    --inset: #3c564d;
+    --field: #263832;
+    --label: #e6f2dd;
+    --wanted-card: #18231f; /* darker than the page, so it stays apart from the lighter item cards */
+    --hero-from: #3a5448;
+    --hero-to: #2b4037;
+    /* Each slice is at least 3:1 on the card. Cream goes first and red last, so where the last
+       slice meets the first they differ in lightness as well as hue. */
+    --slice-1: #e6f2dd; /* 8.6:1 */
+    --slice-2: #e0a63a; /* 4.6:1 */
+    --slice-3: #7fa8e8; /* 4.1:1 */
+    --slice-4: #88bda4; /* 4.7:1 */
+    --slice-5: #c58ac9; /* 3.7:1 */
+    --slice-6: #ff7a7a; /* 4.0:1 */
+    --chart-bar: #88bda4;
+  }
 }
 
 /* Light surfaces sit on the dark page but still need black text. Re-pointing the
