@@ -285,6 +285,21 @@ when `uniswap` has none, so an older `uniswap` database needs the upgrade SQL (b
 - **Demo presets (sell form):** off unless `frontend/.env.local` has `NEXT_PUBLIC_DEMO_PRESETS=true`
   (`hooks/use-demo-presets.ts`). On: Tab fills an empty field, Alt+D fills the form, and a preset photo is
   added to a brand-new listing only (never when editing). Off: the form validates and sends only what was typed.
+- **Dark mode (opt-in):** the navbar's Sun/Moon button (`layout/ThemeToggle.tsx`) flips `class="dark"` on
+  `<html>` and sets the 1-year cookie `uniswap_theme` (`lib/theme.ts`); no reload, no package.
+  - **No flash:** the root layout reads the cookie and renders the class. It was already dynamic
+    (`getCurrentUser()` reads cookies), so no route changed. Without the cookie nothing changes: it does
+    not follow the system setting. Both icons are in the markup and CSS shows one, so no React state.
+  - **Tokens, not components:** `globals.css` holds the dark values. `.dark, .dark .light-surface` lists
+    every token `.light-surface` re-points, so cards get light text back. New tokens (`--inset`, `--field`,
+    `--label`, `--wanted-card`, `--hero-from/to`, `--chart-bar`, `--slice-1..6`) equal today's colours in
+    `:root`. Use them (`bg-inset`, `dark:bg-field`) instead of `bg-brand-50` for a surface, and
+    `text-foreground` instead of `text-brand-ink` for text sitting on a card.
+  - **Screen only:** every dark rule, and the `dark:` variant, sits in `@media screen`, so a printed receipt
+    stays light. Pale buttons with black text (`bg-brand-50 text-brand-ink`) stay as they are in both modes.
+  - **Contrast on the dark card `#314740`:** text 8.6:1, muted 6.1:1, field outline 3.2:1, focus ring
+    3.5:1 (pale, drawn at 50%), stats slices at least 3.7:1 (cream first, red last; rose stays the Wanted tag's).
+    The shadcn `dark:` fills on the outline and destructive buttons were removed so passed colours win.
 - **Recent purchases:** `GET /api/users/me/purchases` (`db/purchases.js`), shown on your own `/profile`
   as `RecentPurchases` + `PurchaseCard` (hidden until the first purchase).
   - **Who bought it:** it shares `CLOSED_DEALS_SQL` with the stats below, so the two always agree: the
@@ -429,7 +444,6 @@ After `git pull origin implement_backend`:
    - real-time chat;
    - safe meetup spots;
    - per-user notification preferences;
-   - **dark mode.** The page is already the dark green field, so this means dark cards, forms and chat
-     bubbles. `globals.css` has a `.dark` block that nothing turns on yet. A switch needs every
-     light surface re-checked for contrast. Not before the demo: projectors show dark colours
-     poorly, and the pale cards keep it readable.
+   - **dark mode** is built (2 Nov, opt-in, see "How things work"). Still open: following the system
+     setting, and a look at the phone sizes. Present the demo in the default look: projectors show dark
+     colours poorly.

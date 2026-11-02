@@ -4,6 +4,10 @@ Log of completed tasks, architecture decisions, and bug fixes for the UniSwap te
 
 ## 2 Nov 2026
 
+### Dark mode (opt-in)
+- Navbar Sun/Moon button sets the `uniswap_theme` cookie and the `dark` class on `<html>`; the root layout renders it, so no flash. Default look unchanged; frontend only, no packages.
+- Dark values live in `globals.css` tokens (`.dark .light-surface` for cards); a few components swapped hard-coded pale fills for tokens. Dark rules are screen-only, so receipts print light.
+
 ### Review fixes: receipt, Telegram, sell form, RLS
 - **Receipt**: `GET /api/payments/receipt/:listingId` shows a receipt only to the buyer and seller of a paid listing; the listing page ignores the `?invoice=` value, so a made-up link shows nothing. Shows the amount really paid, dated in Phnom Penh time.
 - **Telegram**: `/start <code>` sends one plain confirmation with no menu; unlinked chats are told how to connect; unknown commands show the menu instead of searching.
