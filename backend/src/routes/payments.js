@@ -13,7 +13,8 @@ import {
 } from "../services/stripe.js";
 import { siteOrigin } from "../services/tunnel.js";
 import { HttpError } from "../utils/httpError.js";
-import { checkoutReturnOrigin, checkoutReturnOrigins } from "../utils/payments.js";
+import { checkoutReturnOrigin, checkoutReturnOrigins, invoiceNumber } from "../utils/payments.js";
+import { isUuid } from "../utils/validation.js";
 
 // Online card payments with Stripe Checkout (test mode). The buyer is sent to a page hosted by
 // Stripe, so card numbers never touch our servers.
@@ -91,6 +92,38 @@ paymentsRouter.post("/confirm", requireAuth, async (req, res) => {
   if (!payment) throw new HttpError(404, "Payment not found."); // its listing was deleted meanwhile
   const card = payment.status === "paid" ? paidCard(session) : null;
   res.json({ status: payment.status, ...(card && { card }) });
+});
+
+// GET /api/payments/receipt/:listingId  (logged in) -> { receipt: { invoiceNo, amount, paidAt, method, title,
+// sellerName, buyerName } }. Only the buyer and the seller of a listing with a paid payment get it;
+// everyone else, and every unpaid listing, gets the same 404, so nobody can probe who bought what.
+paymentsRouter.get("/receipt/:listingId", requireAuth, async (req, res) => {
+  const { listingId } = req.params;
+  const { rows: [paid] } = isUuid(listingId) ? await query(
+    `SELECT p.amount, p.paid_at, p.method, p.buyer_id, l.user_id AS seller_id, l.title,
+            seller.name AS seller_name, buyer.name AS buyer_name
+     FROM payments p
+     JOIN listings l ON l.id = p.listing_id
+     JOIN users seller ON seller.id = l.user_id
+     JOIN users buyer ON buyer.id = p.buyer_id
+     WHERE p.listing_id = $1 AND p.status = 'paid'
+     ORDER BY p.paid_at DESC LIMIT 1`,
+    [listingId],
+  ) : { rows: [] };
+  if (!paid || (paid.buyer_id !== req.userId && paid.seller_id !== req.userId)) {
+    throw new HttpError(404, "Receipt not found.");
+  }
+  res.json({
+    receipt: {
+      invoiceNo: invoiceNumber(listingId),
+      amount: Number(paid.amount),
+      paidAt: paid.paid_at,
+      method: paid.method,
+      title: paid.title,
+      sellerName: paid.seller_name,
+      buyerName: paid.buyer_name,
+    },
+  });
 });
 
 /**

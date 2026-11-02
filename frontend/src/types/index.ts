@@ -220,6 +220,17 @@ export interface CardPaymentResult {
   card?: { brand: string; last4: string };
 }
 
+/** The receipt of a paid listing, for its buyer and seller only (GET /api/payments/receipt/:listingId). */
+export interface PaymentReceipt {
+  invoiceNo: string;
+  amount: number;
+  paidAt: string;
+  method: "stripe" | "khqr";
+  title: string;
+  sellerName: string;
+  buyerName: string;
+}
+
 export interface ListingFilters {
   query?: string;
   listingType?: ListingType | "all";

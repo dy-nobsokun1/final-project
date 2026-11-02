@@ -3,16 +3,18 @@
 import { CheckCircle2, Download, Printer, X } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import type { ListingWithSeller } from "@/types";
+import type { ListingWithSeller, PaymentReceipt } from "@/types";
 
 interface InvoiceReceiptCardProps {
-  invoiceNo: string;
+  receipt: PaymentReceipt;
   listing: ListingWithSeller;
 }
 
-export function InvoiceReceiptCard({ invoiceNo, listing }: InvoiceReceiptCardProps) {
-  const currentDate = new Date().toLocaleDateString("en-US", {
+/** The receipt of a paid listing. Every figure comes from the API's record of the payment, never the URL. */
+export function InvoiceReceiptCard({ receipt, listing }: InvoiceReceiptCardProps) {
+  const paidOn = new Date(receipt.paidAt).toLocaleDateString("en-US", {
     dateStyle: "medium",
+    timeZone: "Asia/Phnom_Penh",
   });
 
   return (
@@ -40,7 +42,7 @@ export function InvoiceReceiptCard({ invoiceNo, listing }: InvoiceReceiptCardPro
                   Official Payment Receipt
                 </h2>
                 <span className="rounded-md bg-emerald-500/10 px-2 py-0.5 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
-                  Paid Online
+                  {receipt.method === "khqr" ? "Paid by KHQR" : "Paid by card"}
                 </span>
               </div>
               <p className="text-xs text-muted-foreground">
@@ -54,7 +56,7 @@ export function InvoiceReceiptCard({ invoiceNo, listing }: InvoiceReceiptCardPro
               Invoice Number
             </span>
             <code className="font-mono text-sm font-bold text-foreground">
-              {invoiceNo}
+              {receipt.invoiceNo}
             </code>
           </div>
         </div>
@@ -62,21 +64,21 @@ export function InvoiceReceiptCard({ invoiceNo, listing }: InvoiceReceiptCardPro
         {/* Invoice Summary Details */}
         <div className="grid grid-cols-2 gap-4 text-sm sm:grid-cols-4">
           <div>
-            <span className="block text-xs text-muted-foreground">Date Issued</span>
-            <span className="font-medium text-foreground">{currentDate}</span>
+            <span className="block text-xs text-muted-foreground">Date Paid</span>
+            <span className="font-medium text-foreground">{paidOn}</span>
           </div>
           <div>
             <span className="block text-xs text-muted-foreground">Seller</span>
-            <span className="font-medium text-foreground">{listing.seller.name}</span>
+            <span className="font-medium text-foreground">{receipt.sellerName}</span>
           </div>
           <div>
-            <span className="block text-xs text-muted-foreground">Category</span>
-            <span className="font-medium capitalize text-foreground">{listing.category}</span>
+            <span className="block text-xs text-muted-foreground">Buyer</span>
+            <span className="font-medium text-foreground">{receipt.buyerName}</span>
           </div>
           <div>
             <span className="block text-xs text-muted-foreground">Total Paid</span>
             <span className="font-mono text-base font-bold text-primary">
-              ${Number(listing.price).toFixed(2)} USD
+              ${receipt.amount.toFixed(2)} USD
             </span>
           </div>
         </div>
@@ -87,7 +89,7 @@ export function InvoiceReceiptCard({ invoiceNo, listing }: InvoiceReceiptCardPro
             Purchased Item
           </span>
           <p className="mt-1 font-heading text-base font-semibold text-foreground">
-            {listing.title}
+            {receipt.title}
           </p>
           <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">
             {listing.description || "Campus student transaction via UniSwap."}

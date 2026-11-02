@@ -3,6 +3,7 @@ import { query } from "../db/pool.js";
 import { isTelegramConfigured, sendTelegramDocument, sendTelegramMessage } from "../services/telegram.js";
 import { siteOrigin } from "../services/tunnel.js";
 import { escapeHtml, isEmailConfigured, sendEmail } from "./email.js";
+import { invoiceNumber } from "./payments.js";
 
 // Notifications by email, and by Telegram for users who connected it in Settings.
 // Every function here is "fire and forget": routes call it without `await`, and it never throws,
@@ -389,7 +390,7 @@ export function notifyPaid({ listing_id: listingId, buyer_id: buyerId, amount })
     const [buyer, seller] = await Promise.all([findUser(buyerId), findUser(sellerId)]);
     if (!buyer || !seller) return;
 
-    const invoiceNo = `UNI-${String(listingId).replace(/-/g, "").slice(0, 8).toUpperCase()}`;
+    const invoiceNo = invoiceNumber(listingId);
     const paidDate = new Date().toLocaleString("en-US", {
       timeZone: "Asia/Phnom_Penh",
       dateStyle: "medium",

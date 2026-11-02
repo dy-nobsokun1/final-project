@@ -11,6 +11,7 @@ import type {
   ListingWithSeller,
   Message,
   Offer,
+  PaymentReceipt,
   Review,
   ReviewSummary,
   User,
@@ -158,6 +159,14 @@ export async function getMyOffer(listingId: string): Promise<Offer | null> {
     apiFetch<{ offer: Offer | null }>(`/api/listings/${encodeURIComponent(listingId)}/offers/mine`),
   );
   return result?.offer ?? null;
+}
+
+/** The receipt of a paid listing, or null unless you are its buyer or seller and it was paid online. */
+export async function getReceipt(listingId: string): Promise<PaymentReceipt | null> {
+  const result = await orNull(
+    apiFetch<{ receipt: PaymentReceipt }>(`/api/payments/receipt/${encodeURIComponent(listingId)}`),
+  );
+  return result?.receipt ?? null;
 }
 
 /** The open offers on your own listing, highest first, and the accepted one. Owner only. */
