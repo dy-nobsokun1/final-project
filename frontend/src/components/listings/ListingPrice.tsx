@@ -24,5 +24,11 @@ export function ListingPrice({ listing, myOffer }: ListingPriceProps) {
       </p>
     );
   }
-  return <p className="text-3xl font-semibold">{formatListingPrice(listing)}</p>;
+  const topup = listing.listingType === "trade" ? listing.cashTopup ?? 0 : 0;
+  return (
+    <div>
+      <p className="text-3xl font-semibold">{formatListingPrice(listing)}</p>
+      {topup > 0 ? <p className="text-sm text-muted-foreground">Plus {formatPrice(topup)} cash top-up</p> : null}
+    </div>
+  );
 }

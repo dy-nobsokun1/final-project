@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import { AuctionFields } from "@/components/forms/AuctionFields";
+import { CashTopupField } from "@/components/forms/CashTopupField";
 import { Field, FieldInput, FieldTextarea } from "@/components/forms/Field";
 import { FieldSelect } from "@/components/forms/FieldSelect";
 import { ListingTypeTiles } from "@/components/forms/ListingTypeTiles";
@@ -50,6 +51,7 @@ export function NewListingForm({ listing, draft }: { listing?: Listing; draft?: 
     const next: Record<string, string> = {};
     if (title.length < 5) next.title = "Use at least 5 characters.";
     if (!Number.isFinite(price) || price < 0) next.price = "Enter a valid price.";
+    if (listingType === "trade" && !(Number(data.get("cashTopup") ?? 0) >= 0)) next.cashTopup = "Enter a valid amount.";
     if (description.length < 20) next.description = "Describe the item in at least 20 characters.";
     if (photos.isUploading) next.imageUrls = "Wait for the photos to finish uploading.";
     if (listingType === "auction" && !lockedByBids) {
@@ -125,6 +127,7 @@ export function NewListingForm({ listing, draft }: { listing?: Listing; draft?: 
             />
           </Field>
         ) : null}
+        {listingType === "trade" ? <CashTopupField error={errors.cashTopup} defaultValue={listing?.cashTopup} /> : null}
         <Field label="Category" error={errors.category}>
           <FieldSelect
             key={`category-${demo.selects.id}`}

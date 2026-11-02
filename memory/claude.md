@@ -211,6 +211,7 @@ when `uniswap` has none, so an older `uniswap` database needs the upgrade SQL (b
   the wanted post's price as budget (0 = any), both active, different owners, verified posters);
   `GET /api/listings/:id/matches` (the owner's listing page shows it in `ListingMatches`); alerts from
   POST only (`notifyWantedMatches`: one message per student, at most 10 students).
+- **Trade top-up:** the sell form shows `CashTopupField` only for a trade (empty means none), and `ListingPrice` shows "Plus $X cash top-up". Changing the type on an edit clears it (`cashTopup` in `lib/api/actions.ts`).
 - **Offers:** `routes/offers.js` + `db/offers.js`, table `offers` (pending/accepted/declined/withdrawn/
   cancelled); sale listings only, below the asking price; one pending offer per buyer (a new one
   withdraws the old); every offer change locks the listing row. Accept sets `listings.reserved_for` +
@@ -403,7 +404,7 @@ deployment, Cloudinary photos, Stripe test payments, Telegram bot.
 ### Picking up on another machine
 
 Everything above is pushed to `implement_backend`. Last full check (2 Nov):
-- `npm test` (86) and `npm run test:api` (136) pass (2 Nov, with the new notification messages).
+- `npm test` (86) and `npm run test:api` (137) pass (2 Nov, with the new notification messages).
 - The frontend's lint, `tsc --noEmit` and `next build` are clean (2 Nov).
 After `git pull origin implement_backend`:
 

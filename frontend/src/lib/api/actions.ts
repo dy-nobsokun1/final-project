@@ -201,6 +201,7 @@ export async function createListing(formData: FormData): Promise<ActionResult & 
         condition: formData.get("condition"),
         listingType: formData.get("listingType"),
         price: Number(formData.get("price") || 0),
+        cashTopup: cashTopup(formData),
         imageUrls: photoUrls(formData),
         // Auctions only. The form has already turned the local date and time into an ISO string.
         ...(formData.get("listingType") === "auction" && {
@@ -245,6 +246,13 @@ function photoUrls(formData: FormData): string[] {
   return formData.getAll("imageUrls").filter((value): value is string => typeof value === "string");
 }
 
+/** A trade's cash top-up, or null: an empty box, or any other type, which also clears an old top-up on edit. */
+function cashTopup(formData: FormData): number | null {
+  if (formData.get("listingType") !== "trade") return null;
+  const value = formData.get("cashTopup");
+  return value ? Number(value) : null;
+}
+
 /**
  * Saves an edited listing. The form starts with the current photos, so its photo URLs are the
  * complete new list: an empty list removes them all. Once an auction has bids the form leaves out
@@ -265,6 +273,7 @@ export async function updateListing(id: string, formData: FormData): Promise<Act
         listingType,
         // A giveaway is free, as on the create form.
         price: listingType === "giveaway" ? 0 : price === null ? undefined : Number(price || 0),
+        cashTopup: listingType === undefined ? undefined : cashTopup(formData),
         // The form has already turned the local end time into an ISO string.
         auctionEndsAt: isAuction ? formData.get("auctionEndsAt") : undefined,
         minIncrement: isAuction ? Number(formData.get("minIncrement") || 1) : undefined,

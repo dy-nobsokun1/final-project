@@ -4,6 +4,9 @@ Log of completed tasks, architecture decisions, and bug fixes for the UniSwap te
 
 ## 2 Nov 2026
 
+### Cash top-up on trades
+- The sell form now has a cash top-up box for trades, and the listing page shows it. The API and database already stored it, but students could not enter it before. Checked with a temporary trade on the live site, created through the form, edited and deleted.
+
 ### Sign-up is AUPP only
 - `validateRegistration` and `RegisterForm` accept only `@aupp.edu.kh`. The database CHECK and `forgot-password` still take any `.edu.kh`, so the `@demo.edu.kh` sample sellers keep working. This narrows the proposal's `.edu.kh` rule, on purpose.
 
