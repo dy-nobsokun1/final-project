@@ -87,6 +87,9 @@ messagesRouter.get("/stream", (req, res) => {
     "X-Accel-Buffering": "no",
   });
   res.flushHeaders();
+  // A first comment line at once: Next's proxy only passes the headers on with the first bytes,
+  // and the browser's EventSource only reports "open" once it has them.
+  res.write(": connected\n\n");
   const ping = setInterval(() => res.write(": ping\n\n"), PING_MS);
   // The response's "close" fires when the client goes away (tab closed, Next's proxy aborted).
   res.on("close", () => {
