@@ -1,7 +1,7 @@
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { MessageBubble } from "@/components/chat/MessageBubble";
+import { LiveMessageList } from "@/components/chat/LiveMessageList";
 import { MessageComposer } from "@/components/chat/MessageComposer";
 import { ThreadReview } from "@/components/chat/ThreadReview";
 import { UserAvatar } from "@/components/profile/UserAvatar";
@@ -80,17 +80,14 @@ export default async function MessageThreadPage({
           time order, which is also the order screen readers read them in. */}
       <div className="flex min-h-0 flex-1 flex-col-reverse overflow-y-auto">
         <div className="flex flex-col gap-4">
-          {messages.length === 0 ? (
-            <p className="text-sm text-muted-foreground">
-              No messages yet. Say hi and suggest a time to meet on campus.
-            </p>
-          ) : (
-            <ul className="flex flex-col gap-2">
-              {messages.map((message) => (
-                <MessageBubble key={message.id} message={message} isOwn={message.senderId === me.id} />
-              ))}
-            </ul>
-          )}
+          {/* Keyed by thread, so moving to another thread starts its live list afresh. */}
+          <LiveMessageList
+            key={`${listing.id}_${partner.id}`}
+            messages={messages}
+            meId={me.id}
+            listingId={listing.id}
+            partnerId={partner.id}
+          />
           <ThreadReview partner={partner} meId={me.id} listingId={listing.id} mayReview={mayReview} reviews={reviews} />
         </div>
       </div>

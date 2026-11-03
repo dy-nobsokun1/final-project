@@ -21,7 +21,10 @@ export function MessageBubble({ message, isOwn }: MessageBubbleProps) {
         )}
       >
         <p className="whitespace-pre-wrap break-words">{message.body}</p>
+        {/* The time is worked out again in the browser (LiveMessageList), where a few seconds
+            later it may read "1 minute ago" instead of "just now". That is fine. */}
         <p
+          suppressHydrationWarning
           className={cn(
             "mt-1 text-[10px]",
             // Bubbles sit inside the thread's light-surface card, so both

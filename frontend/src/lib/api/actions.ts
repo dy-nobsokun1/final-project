@@ -3,7 +3,7 @@
 import { refresh } from "next/cache";
 import { cookies, headers } from "next/headers";
 import { ApiError, apiFetch, TOKEN_COOKIE, VERIFY_EMAIL_COOKIE } from "@/lib/api/http";
-import { getKhqrStatus } from "@/lib/api";
+import { getKhqrStatus, markThreadRead } from "@/lib/api";
 import type {
   AssistantAnswer,
   AssistantMessage,
@@ -478,6 +478,14 @@ export async function sendMessage(listingId: string, receiverId: string, body: s
   }
   refresh(); // re-render the thread so the new message shows
   return {};
+}
+
+/**
+ * Marks an open thread read when a message arrives live (use-live-messages). No refresh(): the
+ * message is already on screen. A failure is ignored; opening the thread again marks it read.
+ */
+export async function markLiveThreadRead(listingId: string, partnerId: string): Promise<void> {
+  await markThreadRead(listingId, partnerId).catch(() => {});
 }
 
 /**
