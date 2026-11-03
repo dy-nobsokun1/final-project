@@ -508,7 +508,7 @@ verification email):
 
 | Event | Who gets it | Link in the email |
 |---|---|---|
-| New chat message | The receiver. Only the first unread message in a thread emails; reading the thread re-arms it | The chat thread |
+| New chat message | The receiver. Only the first unread message in a thread emails; reading the thread re-arms it. Nothing is sent while the receiver has that thread open (its live stream) | The chat thread |
 | Outbid | The person who just lost the highest bid | The auction |
 | Auction ended with bids | The winner ("You won…") and the seller ("ended at $…") | Their chat with each other |
 | Password changed or reset | The account owner | `/forgot-password`, in case it was not them |
@@ -726,6 +726,7 @@ A token issued before the account's last password change or reset is refused (40
 | GET 🔒 | `/api/messages?listingId=&withUserId=` | One thread, oldest first |
 | POST 🔒 | `/api/messages` | `{ listingId, receiverId, body }` |
 | PATCH 🔒 | `/api/messages/read` | `{ listingId, withUserId }` → mark a thread read |
+| GET 🔒 | `/api/messages/stream?listingId=&withUserId=` | Server-Sent Events: my new messages, live. Each is `event: message` with the same JSON as `POST /api/messages` returns (`toMessage`), sent to both the sender's and the receiver's streams. With both params it gets only that thread and counts as watching it, so no new-message email or Telegram is sent while it is open; with neither (the inbox) it gets all of mine. `: connected` at once, then `: ping` every 25 s. `400` with only one param |
 | POST 🔒 | `/api/uploads` | One photo per request: raw image bytes with `Content-Type: image/jpeg`, `png`, `webp` or `gif` (max 5 MB) → `{ url }` |
 | POST 🔒 | `/api/voice/transcribe` | Raw audio bytes with `Content-Type: audio/webm`, `ogg`, `mp4`, `mpeg` or `wav` (max 2 MB, about 60 s) → `{ text }` from Groq's Whisper (`GROQ_API_KEY`). Nothing is stored or logged. `415` wrong type, `503` while off or while Groq's free limit is used up, `502` if Groq fails |
 | GET | `/api/assistant/config` | `{ enabled }`: whether the shopping assistant is switched on (`GROQ_API_KEY` or `GEMINI_API_KEY` set) |

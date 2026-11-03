@@ -136,9 +136,10 @@ when `uniswap` has none, so an older `uniswap` database needs the upgrade SQL (b
   `reserved` (highest bid wins; on a tie, the earlier bid). After the first bid, type, price,
   end time and raise are locked (409). Every listing in the API has `auction: null | {...}`.
 - **Notifications:** `utils/notify.js` (fire-and-forget, never throws). New message (first unread
-  per thread only), outbid, auction won/ended, password changed, price drop on a saved listing
-  (`notifyPriceDrop`, called from PATCH in `routes/listings.js`), new listing matching a wanted post
-  (create only, not edits), offer made/accepted/declined/cancelled. Add new events there.
+  per thread only, and none while the receiver has that thread open, see Messaging), outbid,
+  auction won/ended, password changed, price drop on a saved listing (`notifyPriceDrop`, called
+  from PATCH in `routes/listings.js`), new listing matching a wanted post (create only, not edits),
+  offer made/accepted/declined/cancelled. Add new events there.
   - **One description per event:** `{ subject, preheader, emoji, heading, intro, details, quote, action,
     secondAction, note }`. Subjects cut titles to 40 characters.
   - **Email:** `utils/notificationEmail.js` draws it as a table-based email with a text part. It has no
@@ -337,6 +338,26 @@ when `uniswap` has none, so an older `uniswap` database needs the upgrade SQL (b
   - `npm run db:demo-deals` (`-- --remove` undoes it) gives chanrithorn 9 deals over Aug–Oct for the demo.
 - **Messaging:** there is no conversations table. A thread is all messages between two users about
   one listing (this follows the ER diagram).
+  - **Live chat (4 Nov), Server-Sent Events, no package:** `GET /api/messages/stream` keeps one response
+    open per page. `utils/liveHub.js` holds the open streams in memory (`Map<userId, Set>`), keyed on the
+    token's user only; `listingId` + `withUserId` can only narrow a stream to one thread. `POST
+    /api/messages` publishes the new message to the sender's and the receiver's streams. A first
+    `: connected` line goes out at once (Next only passes the headers on with the first bytes), then
+    `: ping` every 25 s.
+  - **Next side:** the Route Handler `app/api/messages/stream` reads the `uniswap_token` cookie and passes
+    the stream through (`request.signal` ends the API's stream when the tab closes; `no-transform` keeps
+    `next start`'s gzip off). The thread page's `LiveMessageList` (`hooks/use-live-messages.ts`) merges
+    live messages with the server-rendered ones by id (the sender gets theirs from `refresh()` and the
+    stream), marks the partner's read (`markLiveThreadRead`, no refresh) and refreshes once after a
+    reconnect to fill any gap. The inbox's `LiveInboxRefresh` refreshes the page for each message.
+  - **Notification rule:** no new-message email or Telegram while the receiver has a stream on that
+    exact thread. The inbox stream does not count.
+  - **Limits:** one API process only (a second one would not see the first one's streams). The auth
+    check runs once, when the stream opens. A thread left open in a background tab counts as
+    watching. A refused stream (any error status, such as a 502 while the API restarts) is not retried,
+    so that page is not live until it reloads; chat still works. On HTTP/1.1 `localhost` each open
+    chat tab uses one of the browser's ~6 connections to the site. Vercel's function time limit just
+    cuts the stream; the reconnect and its refresh cover it.
 - **Uploads:** `POST /api/uploads` with raw image bytes (max 5 MB; the form takes 4 MB, `MAX_PHOTO_MB`,
   because Vercel refuses requests over 4.5 MB), saved to `backend/uploads/`
   (git-ignored). Must move to Cloudinary before deploying, because Render wipes the disk on restart.
@@ -390,6 +411,8 @@ Done (week 6, 26–27 Oct):
   Whisper. Tap or hold to talk.
 - **Recent purchases (28 Oct):** your profile lists what you bought, with Review seller and More from
   that seller.
+- **Live chat (4 Nov):** a new message shows on the other person's open thread, and in their inbox,
+  without a reload. No email or Telegram while they have that thread open.
 - **Sign-up by code (28 Oct):** the sign-up email carries a 6-digit code instead of a link, so school
   Outlook stops filing it as Junk. Links in other emails use one fixed site address.
 
@@ -450,7 +473,6 @@ After `git pull origin implement_backend`:
      - the hero fills the first screen, so no items show without scrolling;
      - the redesigned Wanted card (27 Oct) has not been checked at 375 px.
 6. Later ideas (after the demo):
-   - real-time chat;
    - safe meetup spots;
    - per-user notification preferences;
    - **dark mode** is built (2 Nov, opt-in, see "How things work"). Still open: following the system

@@ -2,6 +2,13 @@
 
 Log of completed tasks, architecture decisions, and bug fixes for the UniSwap team.
 
+## 4 Nov 2026
+
+### Live chat (Server-Sent Events)
+- New messages show at once on the other person's open thread and in their inbox, no reload, no package. `GET /api/messages/stream` (Express, in-memory hub `utils/liveHub.js`) behind the Next Route Handler `app/api/messages/stream`; the thread page merges live messages by id; the inbox refreshes on each one.
+- No new-message email or Telegram while the receiver has that thread open. If the stream fails, chat works as before.
+- Checked with two demo users through `next start`, also through the Tailscale address (the event arrived in about 0.2 s), and after an API restart. Tests: 86 unit, 142 API.
+
 ## 2 Nov 2026
 
 ### Cash top-up on trades
