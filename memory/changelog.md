@@ -4,6 +4,9 @@ Log of completed tasks, architecture decisions, and bug fixes for the UniSwap te
 
 ## 4 Nov 2026
 
+### Enter sends a chat message
+- In `MessageComposer`, Enter sends through the form's own `handleSubmit` (`requestSubmit()`); Shift+Enter adds a line. Enter is ignored while an IME is composing, while sending, and while voice input is not idle.
+
 ### Live chat (Server-Sent Events)
 - New messages show at once on the other person's open thread and in their inbox, no reload, no package. `GET /api/messages/stream` (Express, in-memory hub `utils/liveHub.js`) behind the Next Route Handler `app/api/messages/stream`; the thread page merges live messages by id; the inbox refreshes on each one.
 - No new-message email or Telegram while the receiver has that thread open. If the stream fails, chat works as before.
