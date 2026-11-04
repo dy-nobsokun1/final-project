@@ -59,7 +59,7 @@ export default async function ProfilePage() {
               className="inline-flex items-center justify-center gap-2 rounded-lg border border-border bg-brand-50 px-5 py-2.5 text-sm font-semibold text-brand-ink transition-colors hover:bg-brand-200"
             >
               <Inbox aria-hidden="true" className="size-4" />
-              {conversations.length} chats
+              {conversations.length} {conversations.length === 1 ? "chat" : "chats"}
             </Link>
           </>
         }
