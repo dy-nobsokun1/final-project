@@ -31,12 +31,12 @@ is public); state a plan before multi-file changes; explain every change so the 
   - Shared types: `src/types/index.ts`. Labels and options: `src/lib/constants.ts`.
 - `backend/`: Node.js 20.6+, Express 5, PostgreSQL, ES modules, plain JavaScript.
   - `src/app.js` mounts routes in `src/routes/`: auth, listings, bids, reviews, saved, offers, users,
-    telegram, messages, uploads, payments (Stripe) and khqr.
+    telegram, messages, meetups, uploads, payments (Stripe) and khqr.
   - `src/db/schema.sql`: tables `users`, `listings`, `messages`, `reviews` (from the proposal's ER
-    diagram), plus `bids`, `offers`, `payments` and `saved_listings`. Query helpers sit beside it:
+    diagram), plus `bids`, `offers`, `payments`, `saved_listings` and `meetups`. Query helpers sit beside it:
     `listings.js` (`LISTING_SELECT`, `buildBrowseQuery()` for browse/search), `auctions.js`,
     `matches.js`, `offers.js`, `payments.js`. `schema.sql` ends by turning on row level security for
-    all 8 tables (no policies), so Supabase's public roles see nothing; the API's own login still does.
+    all 9 tables (no policies), so Supabase's public roles see nothing; the API's own login still does.
   - `src/utils/`: validation, scrypt password hashing, JWT, email (nodemailer), serializers
     (database snake_case → API camelCase, matching the frontend types).
   - The full API table is in `backend/README.md`. Keep it updated when routes change.
@@ -360,6 +360,24 @@ when `uniswap` has none, so an older `uniswap` database needs the upgrade SQL (b
     so that page is not live until it reloads; chat still works. On HTTP/1.1 `localhost` each open
     chat tab uses one of the browser's ~6 connections to the site. Vercel's function time limit just
     cuts the stream; the reconnect and its refresh cover it.
+- **Meetups (4 Nov):** in a chat thread either person plans a meetup (campus spot + time); the invitee
+  accepts or declines, either cancels. `routes/meetups.js`, `db/meetups.js`, `utils/meetups.js`, table
+  `meetups` (RLS on; README "Meetups" has the upgrade block, which the API needs to start).
+  - **Who:** the listing owner and someone with at least one message with them about it (checked in the
+    database). Time: an ISO time with its zone, future, within 14 days; shown in Phnom Penh time.
+  - **Spots:** `MEETUP_SPOTS` keys in `utils/meetups.js` and `frontend/src/lib/meetup-spots.ts` (keep
+    both the same). The four labels are **placeholders**; only the API checks the key, so renaming a
+    label needs no database change.
+  - **One open per thread:** a new proposal cancels the waiting one (listing row lock + partial unique
+    index); refused (409) while an accepted one is still to come. Each answer is one conditional `UPDATE`.
+  - **Live:** `publishMeetup` in `liveHub.js` sends `event: meetup` to both streams; `use-live-messages`
+    calls `router.refresh()` on it, and the page re-reads the meetup (`getThreadMeetup`).
+  - **Alerts:** `notifyMeetupChanged` (skipped while the other person has the thread open, like
+    messages) and `notifyMeetupReminder` (always, both people). `server.js` runs `claimDueReminders()`
+    once a minute: one `UPDATE … RETURNING`, so no reminder goes out twice.
+  - **UI:** `MeetupCard` under the thread header (Accept / Decline for the invitee, Cancel meetup for
+    either), `MeetupPlanner` + `MeetupForm` above the chat box (hidden until the thread has a message and
+    while a meetup is accepted).
 - **Uploads:** `POST /api/uploads` with raw image bytes (max 5 MB; the form takes 4 MB, `MAX_PHOTO_MB`,
   because Vercel refuses requests over 4.5 MB), saved to `backend/uploads/`
   (git-ignored). Must move to Cloudinary before deploying, because Render wipes the disk on restart.
@@ -415,6 +433,8 @@ Done (week 6, 26–27 Oct):
   that seller.
 - **Live chat (4 Nov):** a new message shows on the other person's open thread, and in their inbox,
   without a reload. No email or Telegram while they have that thread open.
+- **Meetup planner (4 Nov):** plan a campus meetup from a chat; the card updates live for both people,
+  and both get an email + Telegram reminder 30 minutes before. Spot names are placeholders to rename.
 - **Sign-up by code (28 Oct):** the sign-up email carries a 6-digit code instead of a link, so school
   Outlook stops filing it as Junk. Links in other emails use one fixed site address.
 
@@ -438,7 +458,8 @@ After `git pull origin implement_backend`:
   version" in `backend/README.md`, or `npm run db:setup && npm run db:seed` if it only holds demo
   data. The test database needs nothing: `npm run test:api` rebuilds it from `schema.sql`.
   The 27 Oct block adds `listings.sold_at`; the API needs it before it starts. So does the 28 Oct
-  sign-up code block (the `verification_code_*` columns).
+  sign-up code block (the `verification_code_*` columns). And the 4 Nov meetups block (table `meetups`;
+  already applied to the Supabase demo database).
 - For the profile stats demo, run `npm run db:demo-deals` (after `db:seed` and `db:samples`).
 - To add new sample items, run plain `npm run db:samples`: it skips items already there and keeps the
   sellers. `-- --remove` deletes the `@demo.edu.kh` sellers and everything hanging off them, including

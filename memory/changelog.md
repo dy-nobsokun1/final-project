@@ -4,6 +4,13 @@ Log of completed tasks, architecture decisions, and bug fixes for the UniSwap te
 
 ## 4 Nov 2026
 
+### Meetup planner in chat
+- In a chat thread, either person taps "Plan meetup" and picks a campus spot, a date and a time (Phnom Penh time). A card under the thread's header shows it at once for both people (live, `event: meetup`). The other person accepts or declines; either can cancel. Both get an email + Telegram reminder 30 minutes before (`server.js`, once a minute, one `UPDATE … RETURNING` so it is sent once).
+- Only the owner and someone who already chatted with them may plan one (checked in the database). One open meetup per thread: a new proposal replaces the waiting one; refused while an accepted one is still to come.
+- New table `meetups` with row level security; applied to the Supabase demo database on 4 Nov. Other databases need the README's Meetups upgrade block before the API starts.
+- The four spots ("Library entrance", "Cafeteria", "Main gate", "Student lounge") are placeholders: rename them in `backend/src/utils/meetups.js` and `frontend/src/lib/meetup-spots.ts`.
+- Checked in the browser at 1280×800 and 1024×768 (light) and in dark mode, with two demo users (browser + API). Tests: 88 unit, 151 API.
+
 ### Two items visible in dark mode
 - The inbox unread dot (`ConversationRow`) is pale in dark mode, 8.6:1 on the card (was 2.1:1), and the Telegram strip's icon (`TelegramPromo`) is black on its pale circle, 18.1:1 (was 1:1). Only `dark:` classes, so light mode is unchanged.
 
