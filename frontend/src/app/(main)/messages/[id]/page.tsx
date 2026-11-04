@@ -2,6 +2,8 @@ import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { LiveMessageList } from "@/components/chat/LiveMessageList";
+import { MeetupCard } from "@/components/chat/MeetupCard";
+import { MeetupPlanner } from "@/components/chat/MeetupPlanner";
 import { MessageComposer } from "@/components/chat/MessageComposer";
 import { ThreadReview } from "@/components/chat/ThreadReview";
 import { UserAvatar } from "@/components/profile/UserAvatar";
@@ -11,6 +13,7 @@ import {
   getListingById,
   getListingReviews,
   getMessages,
+  getThreadMeetup,
   getUserById,
   markThreadRead,
   parseConversationId,
@@ -42,11 +45,14 @@ export default async function MessageThreadPage({
   // Opening the thread counts as reading it, which clears its unread badge in the inbox.
   await markThreadRead(listing.id, partner.id);
   const isFinished = listing.status === "sold" || listing.status === "traded";
-  const [messages, reviews, mayReview] = await Promise.all([
+  const [messages, reviews, mayReview, meetup] = await Promise.all([
     getMessages(listing.id, partner.id),
     getListingReviews(listing.id),
     isFinished ? canReview(listing.id, partner.id) : false,
+    getThreadMeetup(listing.id, partner.id),
   ]);
+  // The API only takes a meetup once the two have chatted, and not while one is accepted.
+  const mayPlanMeetup = messages.length > 0 && meetup?.status !== "accepted";
 
   return (
     // Fills the screen under the navbar (65px) and main's 24px top and bottom padding, so the
@@ -75,6 +81,8 @@ export default async function MessageThreadPage({
         </div>
       </header>
 
+      {meetup ? <MeetupCard meetup={meetup} meId={me.id} partnerName={partner.name} /> : null}
+
       {/* flex-col-reverse makes the browser start this scroll area at the bottom, so the newest
           message is in view on load with no JavaScript. Its one child keeps the messages in
           time order, which is also the order screen readers read them in. */}
@@ -92,6 +100,7 @@ export default async function MessageThreadPage({
         </div>
       </div>
 
+      {mayPlanMeetup ? <MeetupPlanner listingId={listing.id} partnerId={partner.id} /> : null}
       <MessageComposer listingId={listing.id} receiverId={partner.id} />
     </div>
   );

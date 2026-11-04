@@ -81,6 +81,24 @@ export interface Message {
   readAt: string | null;
 }
 
+export type MeetupStatus = "proposed" | "accepted" | "declined" | "cancelled";
+
+/**
+ * A meetup planned in a chat thread: a campus spot (a key of MEETUP_SPOTS in lib/meetup-spots.ts)
+ * and a time. The invitee accepts or declines; either person cancels (backend/src/routes/meetups.js).
+ */
+export interface Meetup {
+  id: string;
+  listingId: string;
+  proposerId: string;
+  inviteeId: string;
+  spot: string;
+  meetAt: string;
+  status: MeetupStatus;
+  createdAt: string;
+  updatedAt: string;
+}
+
 /**
  * The API does not store conversations: a thread is every message between two users
  * about one listing. `id` is built from those two ids so a thread can have a URL.

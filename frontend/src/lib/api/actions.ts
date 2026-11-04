@@ -480,6 +480,57 @@ export async function sendMessage(listingId: string, receiverId: string, body: s
   return {};
 }
 
+/** Proposes a meetup in a chat thread. `meetAt` is an ISO time with its zone (toMeetupTime). */
+export async function planMeetup(
+  listingId: string,
+  partnerId: string,
+  spot: string,
+  meetAt: string,
+): Promise<ActionResult> {
+  try {
+    await apiFetch("/api/meetups", {
+      method: "POST",
+      body: JSON.stringify({ listingId, withUserId: partnerId, spot, meetAt }),
+    });
+  } catch (error) {
+    return toActionError(error);
+  }
+  refresh(); // re-render the thread so the meetup card shows
+  return {};
+}
+
+/**
+ * Accepts, declines or cancels a meetup. Not exported, so it is not a Server Action itself:
+ * `status` only ever comes from the three wrappers below, never from the browser.
+ */
+async function changeMeetup(meetupId: string, status: "accepted" | "declined" | "cancelled"): Promise<ActionResult> {
+  try {
+    await apiFetch(`/api/meetups/${encodeURIComponent(meetupId)}`, {
+      method: "PATCH",
+      body: JSON.stringify({ status }),
+    });
+  } catch (error) {
+    return toActionError(error);
+  }
+  refresh(); // re-render the thread so the card shows the new status
+  return {};
+}
+
+/** The invitee accepts a meetup. */
+export async function acceptMeetup(meetupId: string): Promise<ActionResult> {
+  return changeMeetup(meetupId, "accepted");
+}
+
+/** The invitee declines a meetup. */
+export async function declineMeetup(meetupId: string): Promise<ActionResult> {
+  return changeMeetup(meetupId, "declined");
+}
+
+/** Either person cancels a meetup (a proposal, or an accepted one). */
+export async function cancelMeetup(meetupId: string): Promise<ActionResult> {
+  return changeMeetup(meetupId, "cancelled");
+}
+
 /**
  * Marks an open thread read when a message arrives live (use-live-messages). No refresh(): the
  * message is already on screen. A failure is ignored; opening the thread again marks it read.

@@ -15,6 +15,7 @@ interface Thread {
  * - A message from the partner marks the thread read, so the inbox's unread count stays right.
  * - EventSource reconnects by itself after a network error; once it is back, one refresh()
  *   fills in anything sent while it was away.
+ * - A meetup change ("event: meetup") refreshes the page, which shows its card (MeetupCard).
  * - If the stream is refused (any error status), the thread works as before, just not live.
  */
 export function useLiveMessages(messages: Message[], { listingId, partnerId }: Thread): Message[] {
@@ -34,6 +35,9 @@ export function useLiveMessages(messages: Message[], { listingId, partnerId }: T
       setLive((current) => [...current, message]);
       if (message.senderId === partnerId) void markLiveThreadRead(listingId, partnerId);
     };
+    // A meetup proposed or answered in this thread: the page fetches the meetup again, so its
+    // card updates. A named event, so onmessage above never sees it.
+    source.addEventListener("meetup", () => router.refresh());
     source.onerror = () => {
       hadError = true;
     };
