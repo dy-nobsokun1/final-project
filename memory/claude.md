@@ -309,6 +309,8 @@ when `uniswap` has none, so an older `uniswap` database needs the upgrade SQL (b
   - **Contrast on the dark card `#314740`:** text 8.6:1, muted 6.1:1, field outline 3.2:1, focus ring
     3.5:1 (pale, drawn at 50%), stats slices at least 3.7:1 (cream first, red last; rose stays the Wanted tag's).
     The shadcn `dark:` fills on the outline and destructive buttons were removed so passed colours win.
+    Two `dark:` fixes (4 Nov): the inbox unread dot is pale (`dark:bg-foreground`, 8.6:1), and the
+    Telegram strip's icon is black on its pale circle (`dark:text-brand-ink`, 18.1:1).
 - **Recent purchases:** `GET /api/users/me/purchases` (`db/purchases.js`), shown on your own `/profile`
   as `RecentPurchases` + `PurchaseCard` (hidden until the first purchase).
   - **Who bought it:** it shares `CLOSED_DEALS_SQL` with the stats below, so the two always agree: the

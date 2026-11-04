@@ -4,6 +4,9 @@ Log of completed tasks, architecture decisions, and bug fixes for the UniSwap te
 
 ## 4 Nov 2026
 
+### Two items visible in dark mode
+- The inbox unread dot (`ConversationRow`) is pale in dark mode, 8.6:1 on the card (was 2.1:1), and the Telegram strip's icon (`TelegramPromo`) is black on its pale circle, 18.1:1 (was 1:1). Only `dark:` classes, so light mode is unchanged.
+
 ### Dark mode back to its 2 Nov design
 - Dark mode is back to how it looked on 2 Nov (`8a0c841`). The two redesigns stay in history (`49b90a6` depth, `e79a4c3` colour mix); revert the revert commits to bring one back.
 
