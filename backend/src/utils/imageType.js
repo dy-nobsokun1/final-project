@@ -1,5 +1,5 @@
-// Every image format starts with fixed bytes (its "magic bytes"). Checking them stops a file that only
-// claims to be an image in its Content-Type header, such as a renamed PDF or script.
+// Every image format starts with fixed bytes (its "magic bytes"). Reading them tells the real type of
+// a file, whatever its Content-Type header or file name says. A renamed PDF or script has none of them.
 
 /** The first bytes of each image type the upload route accepts. `null` = any byte at that place. */
 const SIGNATURES = {
@@ -14,10 +14,13 @@ const SIGNATURES = {
   ],
 };
 
-/** True when `bytes` (a Buffer) really starts like an image of `mimeType`. Unknown types are false. */
-export function hasImageSignature(bytes, mimeType) {
-  const signatures = SIGNATURES[mimeType];
-  if (!signatures || !Buffer.isBuffer(bytes)) return false;
-  return signatures.some((signature) =>
-    bytes.length >= signature.length && signature.every((byte, i) => byte === null || bytes[i] === byte));
+const startsWith = (bytes, signature) =>
+  bytes.length >= signature.length && signature.every((byte, i) => byte === null || bytes[i] === byte);
+
+/** The real image type of `bytes` (a Buffer), read from its first bytes: "image/png", ... or null. */
+export function detectImageType(bytes) {
+  if (!Buffer.isBuffer(bytes)) return null;
+  const match = Object.entries(SIGNATURES).find(([, signatures]) =>
+    signatures.some((signature) => startsWith(bytes, signature)));
+  return match ? match[0] : null;
 }

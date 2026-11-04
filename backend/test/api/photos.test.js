@@ -93,18 +93,25 @@ test("an edit can keep, reorder and remove the photos a listing already has, but
 
 test("a photo from POST /api/uploads can go straight into a listing", async () => {
   const seller = await api.createUser();
-  const upload = (token, contentType) => fetch(`${api.baseUrl}/api/uploads`, {
+  const upload = (token, contentType, body = ONE_PIXEL_PNG) => fetch(`${api.baseUrl}/api/uploads`, {
     method: "POST",
     headers: { "Content-Type": contentType, ...(token && { Authorization: `Bearer ${token}` }) },
-    body: ONE_PIXEL_PNG,
+    body,
   });
 
   assert.equal((await upload(null, "image/png")).status, 401);
   assert.equal((await upload(seller.token, "application/pdf")).status, 400);
-  // The PNG's bytes sent as a JPEG: the first bytes do not match the claimed type.
-  const mismatch = await upload(seller.token, "image/jpeg");
-  assert.equal(mismatch.status, 400);
-  assert.equal((await mismatch.json()).error, "That file is not a real image.");
+  // Bytes of no image type are refused, whatever the header says.
+  const notImage = await upload(seller.token, "image/jpeg", Buffer.from("%PDF-1.7 not a photo"));
+  assert.equal(notImage.status, 400);
+  assert.equal((await notImage.json()).error, "That file is not a real image.");
+
+  // A real PNG sent as image/jpeg (a PNG saved as "photo.jpg"): the bytes win, so it is saved as .png.
+  const renamed = await upload(seller.token, "image/jpeg");
+  assert.equal(renamed.status, 201);
+  const renamedUrl = (await renamed.json()).url;
+  await rm(`${UPLOAD_DIR}${renamedUrl.split("/").pop()}`, { force: true });
+  assert.ok(renamedUrl.endsWith(".png"), renamedUrl);
 
   const response = await upload(seller.token, "image/png");
   assert.equal(response.status, 201);
