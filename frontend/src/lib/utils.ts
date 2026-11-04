@@ -55,12 +55,14 @@ export function lowerPriceNote(listing: Pick<Listing, "price">, offerAmount: num
 
 /**
  * Where to go after signing in: `next` from /login?next=…, only if it is a path on this site.
- * "//evil.example" or "/\evil.example" would leave the site, so they (and anything else) give "/".
+ * One leading "/" not followed by another "/" or a backslash, and no backslash, space, tab or
+ * newline anywhere: browsers drop tabs and newlines and read a backslash as "/", so
+ * "/<tab>/evil.example" or "/<backslash>evil.example" would leave the site. Anything else gives "/".
  */
+const SAFE_NEXT_PATH = /^\/(?![/\\])[^\s\\]*$/;
+
 export function safeNextPath(next: unknown): string {
-  return typeof next === "string" && next.startsWith("/") && !next.startsWith("//") && !next.startsWith("/\\")
-    ? next
-    : "/";
+  return typeof next === "string" && SAFE_NEXT_PATH.test(next) ? next : "/";
 }
 
 const RELATIVE_UNITS: Array<[Intl.RelativeTimeFormatUnit, number]> = [
