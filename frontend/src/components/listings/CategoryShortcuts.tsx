@@ -43,9 +43,8 @@ export function CategoryShortcuts({ params, active }: CategoryShortcutsProps) {
                   isActive && "border-foreground bg-inset",
                 )}
               >
-                {/* Same colours as the category chip on each listing card. Dark mode: one mint icon
-                    for all six (3.6:1 on its circle). */}
-                <span className={cn("flex size-11 items-center justify-center rounded-full", accent, "dark:border-transparent dark:bg-brand-400/15 dark:text-brand-400")}>
+                {/* Same colours as the category chip on each listing card. */}
+                <span className={cn("flex size-11 items-center justify-center rounded-full", accent)}>
                   <Icon aria-hidden="true" className="size-5" />
                 </span>
                 {label}

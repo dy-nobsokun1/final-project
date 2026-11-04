@@ -31,7 +31,7 @@ export function StatsSection({ title, figures, barsTitle, months, ringTitle, cat
         {figures.map((figure) => (
           <div key={figure.label} className="flex flex-col">
             <dt className="text-xs font-semibold text-muted-foreground">{figure.label}</dt>
-            <dd className="font-heading text-2xl tracking-wide dark:text-brand-400">{figure.value}</dd>
+            <dd className="font-heading text-2xl tracking-wide">{figure.value}</dd>
           </div>
         ))}
       </dl>

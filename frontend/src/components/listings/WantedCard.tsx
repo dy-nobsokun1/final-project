@@ -20,8 +20,6 @@ interface WantedCardProps {
  * yet, so there is no photo. A dark card with a dashed border reads as a gap to fill, and the photo
  * area shows a large icon for the category instead, keeping the 4:3 shape so the card lines up
  * with the item cards beside it. Text contrast on #31443E: #E6F2DD is 8.9:1 and #B1D3B9 is 6.4:1.
- * Dark mode puts it on #1A2521 (see --wanted-card) with the Wanted tag's rose for the dashed
- * border: at 60% it is 3.9:1 on the page and 3.5:1 on the card's own fill.
  */
 export function WantedCard({ listing, saved }: WantedCardProps) {
   const category = CATEGORIES.find((item) => item.value === listing.category);
@@ -32,7 +30,7 @@ export function WantedCard({ listing, saved }: WantedCardProps) {
     <div className="relative h-full transition-transform hover:-translate-y-0.5">
       <Link
         href={`/listings/${listing.id}`}
-        className="group flex h-full flex-col overflow-hidden rounded-xl border-2 border-dashed border-brand-200/70 bg-wanted-card text-brand-50 transition-all hover:border-brand-50 hover:shadow-lg hover:shadow-brand-600/20 dark:border-brand-wanted/60 dark:hover:border-brand-wanted"
+        className="group flex h-full flex-col overflow-hidden rounded-xl border-2 border-dashed border-brand-200/70 bg-wanted-card text-brand-50 transition-all hover:border-brand-50 hover:shadow-lg hover:shadow-brand-600/20"
       >
         {/* Where an item card has its photo, with the status and type tags in the same corners. */}
         <div className="relative flex aspect-[4/3] items-center justify-center bg-brand-600/25">

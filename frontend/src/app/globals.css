@@ -161,9 +161,8 @@
 
 /* Dark mode, switched on by class="dark" on <html> (the navbar button; the root layout reads the
    uniswap_theme cookie). Screen only: a printed receipt keeps the light look. Hex, not oklch(),
-   for the same reason as :root. The page is a deep green-black, so the cards stand off it (card
-   on page 1.76:1); fields are one step darker than the card. Contrast on the card #314740: text
-   #E6F2DD 8.6:1, muted #B1D3B9 6.1:1. On the page #121B18: text 15.2:1, muted 10.8:1.
+   for the same reason as :root. The page keeps its deep green; cards are one step lighter, fields
+   one step darker. Contrast on the card #314740: text #E6F2DD 8.6:1, muted #B1D3B9 6.1:1.
    `.dark .light-surface` lists every token `.light-surface` re-points, so a card gets the dark
    values back. */
 @media screen {
@@ -172,7 +171,7 @@
   }
   .dark,
   .dark .light-surface {
-    --background: #121b18;
+    --background: #22312d;
     --foreground: #e6f2dd;
     --card: #314740;
     --card-foreground: #e6f2dd;
@@ -193,7 +192,7 @@
     --border: #b1d3b933;
     /* Field outlines: 3.2:1 against the card, 3.9:1 against the field. */
     --input: #b1d3b99e;
-    /* Pale, because the focus outline is drawn at 50%: 3.5:1 on the card, 4.7:1 on the page. */
+    /* Pale, because the focus outline is drawn at 50%: 3.5:1 on the card, 4.2:1 on the page. */
     --ring: #e6f2dd;
     --chart-1: #88bda4;
     --chart-2: #b1d3b9;
@@ -212,9 +211,7 @@
     --inset: #3c564d;
     --field: #263832;
     --label: #e6f2dd;
-    /* Just above the page and well below the item cards (1.58:1), so it reads as a slot to fill.
-       WantedCard adds a rose dashed border in dark mode. Text 13.6:1, muted #B1D3B9 9.7:1. */
-    --wanted-card: #1a2521;
+    --wanted-card: #18231f; /* darker than the page, so it stays apart from the lighter item cards */
     --hero-from: #3a5448;
     --hero-to: #2b4037;
     /* Each slice is at least 3:1 on the card. Cream goes first and red last, so where the last
@@ -226,30 +223,6 @@
     --slice-5: #c58ac9; /* 3.7:1 */
     --slice-6: #ff7a7a; /* 4.0:1 */
     --chart-bar: #88bda4;
-  }
-
-  /* The hero and profile header grid (brand-grid below): paler lines, and a soft mint glow at the
-     top right, behind the newest items and away from the heading. At its brightest the glow keeps
-     the pale text at 5.4:1. */
-  .dark .brand-grid {
-    background-image:
-      linear-gradient(to right, var(--brand-200) 1px, transparent 1px),
-      linear-gradient(to bottom, var(--brand-200) 1px, transparent 1px),
-      radial-gradient(ellipse 55% 75% at 85% 0%, #88bda44d, transparent 70%);
-    background-size: 56px 56px, 56px 56px, 100% 100%;
-  }
-}
-
-/* Dark mode depth: a pale top edge and a soft shadow lift every card off the darker page. In
-   `@layer components` on purpose, so utilities still win: a card's hover shadow or ring replaces
-   the drop shadow and keeps the edge, because they draw `--tw-inset-shadow` and `--tw-shadow`. */
-@layer components {
-  @media screen {
-    .dark .light-surface {
-      --tw-inset-shadow: inset 0 1px 0 0 #e6f2dd1f;
-      --tw-shadow: 0 18px 32px -20px #000000d9;
-      box-shadow: var(--tw-inset-shadow), var(--tw-shadow);
-    }
   }
 }
 

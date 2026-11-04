@@ -29,7 +29,7 @@ export function ProfileStats({ listings, averageRating, reviewCount, createdAt }
       {stats.map((stat) => (
         <div key={stat.label} className="flex flex-col">
           <dt className="text-xs font-semibold text-muted-foreground">{stat.label}</dt>
-          <dd className="font-heading text-2xl tracking-wide dark:text-brand-400">{stat.value}</dd>
+          <dd className="font-heading text-2xl tracking-wide">{stat.value}</dd>
         </div>
       ))}
       {/* No reviews yet: nothing to show, rather than five empty stars. */}
