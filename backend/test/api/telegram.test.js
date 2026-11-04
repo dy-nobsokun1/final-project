@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import { after, test } from "node:test";
+import { newLinkCode } from "../../src/utils/telegramLinkCode.js";
 import { startApi } from "./helpers.js";
 
 // Telegram is switched off in tests, so the bot only shows as off here.
@@ -64,7 +65,7 @@ function tap(chatId, data, telegram, { photo = false } = {}) {
 async function linkedUser(name) {
   const user = await api.createUser(name);
   const chatId = newChatId();
-  const code = randomUUID().replaceAll("-", "");
+  const code = newLinkCode();
   await api.sql("UPDATE users SET telegram_link_code = $2 WHERE id = $1", [user.id, code]);
   await sendText(chatId, `/start ${code}`, fakeTelegram());
   return { ...user, chatId };
@@ -90,7 +91,7 @@ test("an unlinked chat is only told how to connect, also when it taps a button",
 test("linking moves the chat to the new account, so one chat never shows two students", async () => {
   const first = await linkedUser("First Student");
   const second = await api.createUser("Second Student");
-  const code = randomUUID().replaceAll("-", "");
+  const code = newLinkCode();
   await api.sql("UPDATE users SET telegram_link_code = $2 WHERE id = $1", [second.id, code]);
 
   const telegram = fakeTelegram();
@@ -106,6 +107,18 @@ test("linking moves the chat to the new account, so one chat never shows two stu
   // The code works once.
   await sendText(newChatId(), `/start ${code}`, telegram);
   assert.match(lastScreen(telegram).text, /^That link has expired\./);
+});
+
+test("a link older than 30 minutes, or from before codes had a time, has expired", async () => {
+  const user = await api.createUser();
+  const telegram = fakeTelegram();
+  for (const code of [newLinkCode(Date.now() - 31 * 60 * 1000), randomUUID().replaceAll("-", "")]) {
+    await api.sql("UPDATE users SET telegram_link_code = $2 WHERE id = $1", [user.id, code]);
+    await sendText(newChatId(), `/start ${code}`, telegram);
+    assert.match(lastScreen(telegram).text, /^That link has expired\./);
+  }
+  const [row] = await api.sql("SELECT telegram_chat_id FROM users WHERE id = $1", [user.id]);
+  assert.equal(row.telegram_chat_id, null);
 });
 
 test("typing a word searches, and More shows the next page", async () => {

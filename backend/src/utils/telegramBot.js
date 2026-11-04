@@ -13,6 +13,7 @@ import {
   myListingsScreen, newestScreen, NOT_LINKED_TEXT, notLinkedScreen, publicSiteUrl, resultsScreen,
   savedScreen, searchPromptScreen,
 } from "./telegramScreens.js";
+import { isLinkCodeFresh } from "./telegramLinkCode.js";
 
 // The Telegram bot: a menu for browsing UniSwap and seeing your own things, in a chat linked to
 // your account from Settings. Who the student is always comes from the chat (findChatUser), on
@@ -105,9 +106,12 @@ async function onMessage(message, telegram) {
   return show(chat, menuScreen());
 }
 
-/** Links the chat to the account whose one-time code this is, with a single plain confirmation. */
+/**
+ * Links the chat to the account whose one-time code this is, with a single plain confirmation.
+ * A code older than 30 minutes (or without its time part) is not even looked up.
+ */
 async function linkAndGreet(chat, code) {
-  const name = /^\w+$/.test(code) ? await linkChat(code, chat.id) : null;
+  const name = isLinkCodeFresh(code) ? await linkChat(code, chat.id) : null;
   if (!name) return show(chat, { text: `That link has expired. ${NOT_LINKED_TEXT}`, buttons: [] });
   return show(chat, { text: `Connected as ${name}. UniSwap notifications will now arrive here too.`, buttons: [] });
 }
