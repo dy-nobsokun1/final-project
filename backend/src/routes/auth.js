@@ -5,6 +5,7 @@ import { requireAuth } from "../middleware/auth.js";
 import { siteOrigin } from "../services/tunnel.js";
 import { isEmailConfigured, sendPasswordResetEmail, sendVerificationEmail } from "../utils/email.js";
 import { HttpError } from "../utils/httpError.js";
+import { createLoginLimiter } from "../utils/loginLimit.js";
 import { notifyPasswordChanged } from "../utils/notify.js";
 import { hashPassword, verifyPassword } from "../utils/password.js";
 import { toUser } from "../utils/serializers.js";
@@ -61,15 +62,26 @@ async function deliverResetLink(user, token) {
   }
 }
 
+// 10 wrong passwords per account in 15 minutes, for login and resend-verification (both use the
+// function below). Unknown emails count too, so the 429 does not reveal which accounts exist.
+const loginLimiter = createLoginLimiter({ limit: 10, windowMs: 15 * 60 * 1000 });
+
 // Looks up an account by email and password. Same error for "no such user" and "wrong password",
 // so attackers cannot probe for which emails have accounts.
 async function findUserByCredentials(body) {
   const email = String(body.email ?? "").trim().toLowerCase();
+  // Checked before the password, so after 10 wrong tries even the right one must wait.
+  const waitMs = loginLimiter.begin(email);
+  if (waitMs > 0) {
+    const minutes = Math.ceil(waitMs / 60000);
+    throw new HttpError(429, `Too many wrong passwords. Try again in ${minutes} minute${minutes === 1 ? "" : "s"}.`);
+  }
   const { rows } = await query("SELECT * FROM users WHERE email = $1", [email]);
   const user = rows[0];
   if (!user || !(await verifyPassword(String(body.password ?? ""), user.password_hash))) {
     throw new HttpError(401, "Email or password is incorrect.");
   }
+  loginLimiter.succeed(email);
   return user;
 }
 
