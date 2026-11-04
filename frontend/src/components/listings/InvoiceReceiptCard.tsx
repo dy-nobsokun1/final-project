@@ -18,7 +18,7 @@ export function InvoiceReceiptCard({ receipt, listing }: InvoiceReceiptCardProps
   });
 
   return (
-    <div className="relative overflow-hidden rounded-2xl border-2 border-primary/30 bg-card p-6 shadow-md transition-all">
+    <div className="light-surface relative overflow-hidden rounded-2xl border-2 border-primary/30 bg-card p-6 shadow-md transition-all">
       {/* Close button to dismiss invoice view */}
       <Link
         href={`/listings/${listing.id}`}
@@ -31,7 +31,7 @@ export function InvoiceReceiptCard({ receipt, listing }: InvoiceReceiptCardProps
 
       <div className="flex flex-col gap-6">
         {/* Header */}
-        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-border pb-4">
+        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-border pr-8 pb-4">
           <div className="flex items-center gap-3">
             <div className="flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
               <CheckCircle2 className="size-6" />
@@ -77,7 +77,7 @@ export function InvoiceReceiptCard({ receipt, listing }: InvoiceReceiptCardProps
           </div>
           <div>
             <span className="block text-xs text-muted-foreground">Total Paid</span>
-            <span className="font-mono text-base font-bold text-primary">
+            <span className="font-mono text-base font-bold text-foreground">
               ${receipt.amount.toFixed(2)} USD
             </span>
           </div>
@@ -118,7 +118,7 @@ export function InvoiceReceiptCard({ receipt, listing }: InvoiceReceiptCardProps
               variant="outline"
               size="sm"
               onClick={() => window.print()}
-              className="gap-1.5"
+              className="gap-1.5 border-border bg-brand-50 text-brand-ink hover:bg-brand-200 hover:text-brand-ink"
             >
               <Download className="size-4" />
               <span>Download</span>
