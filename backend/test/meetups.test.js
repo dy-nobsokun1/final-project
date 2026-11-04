@@ -19,7 +19,9 @@ test("a meetup time must be in the future and within 14 days", () => {
 });
 
 test("meetup times are shown in Phnom Penh time (UTC+7)", () => {
-  assert.equal(formatMeetupTime("2026-11-06T08:30:00Z"), "Fri, Nov 6, 2026, 3:30 PM");
+  // Some Node versions put a narrow no-break space before "PM", so spaces are compared as plain ones.
+  const shown = (iso) => formatMeetupTime(iso).replace(/\s/g, " ");
+  assert.equal(shown("2026-11-06T08:30:00Z"), "Fri, Nov 6, 2026, 3:30 PM");
   // 20:00 UTC is already the next morning in Phnom Penh.
-  assert.equal(formatMeetupTime("2026-11-06T20:00:00Z"), "Sat, Nov 7, 2026, 3:00 AM");
+  assert.equal(shown("2026-11-06T20:00:00Z"), "Sat, Nov 7, 2026, 3:00 AM");
 });

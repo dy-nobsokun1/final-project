@@ -6,6 +6,8 @@ import { startApi, waitFor } from "./helpers.js";
 const api = await startApi();
 // Imported after startApi, so it uses the test database.
 const { claimDueReminders } = await import("../../src/db/meetups.js");
+const { toMeetup } = await import("../../src/utils/meetups.js");
+const { notifyMeetupReminder } = await import("../../src/utils/notify.js");
 after(() => api.close());
 
 const inHours = (hours) => new Date(Date.now() + hours * 60 * 60 * 1000).toISOString();
@@ -137,6 +139,9 @@ test("the other person is told about each change by email", async () => {
   await waitFor(() => emailed("accepted your meetup", buyer));
   await answer(owner, meetup, "cancelled");
   await waitFor(() => emailed("cancelled the meetup", buyer));
+  const next = (await propose(buyer, owner, listing)).body.meetup;
+  await answer(owner, next, "declined");
+  await waitFor(() => emailed("declined your meetup", buyer));
 });
 
 test("each accepted meetup gets one reminder, 30 minutes before", async () => {
@@ -149,8 +154,14 @@ test("each accepted meetup gets one reminder, 30 minutes before", async () => {
   assert.ok(!(await claimDueReminders()).some((row) => row.id === meetup.id));
   // 20 minutes away: due, and claimed only once.
   await api.sql("UPDATE meetups SET meet_at = now() + interval '20 minutes' WHERE id = $1", [meetup.id]);
-  assert.ok((await claimDueReminders()).some((row) => row.id === meetup.id));
+  const due = (await claimDueReminders()).find((row) => row.id === meetup.id);
+  assert.ok(due);
   assert.ok(!(await claimDueReminders()).some((row) => row.id === meetup.id));
+  // What server.js does with each claimed row: both people get the reminder.
+  notifyMeetupReminder(toMeetup(due));
+  const reminded = (user) => api.skippedEmails().some((line) =>
+    line.includes("Reminder:") && line.includes(title) && line.endsWith(` to ${user.email}`));
+  await waitFor(() => reminded(owner) && reminded(buyer));
   const [{ reminded_at: remindedAt }] = await api.sql("SELECT reminded_at FROM meetups WHERE id = $1", [meetup.id]);
   assert.ok(remindedAt);
 
