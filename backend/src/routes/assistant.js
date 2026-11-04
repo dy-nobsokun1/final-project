@@ -24,6 +24,11 @@ assistantRouter.get("/config", (req, res) => {
   res.json({ enabled: Boolean(assistantModel) });
 });
 
+// The free tier answers about 80 questions a day for the whole app, so one student may ask at most
+// 20 an hour (in memory, like Fill in from photo below). Only questions that pass the checks count.
+const QUESTIONS_PER_HOUR = 20;
+const questionLimit = createRateLimiter({ limit: QUESTIONS_PER_HOUR, windowMs: 60 * 60 * 1000 });
+
 // POST /api/assistant  (logged in)  { messages: [{ role: "user" | "assistant", text }] }
 // -> { reply, listings, wantedDraft }. The frontend keeps the conversation and sends it with every
 // question, so nothing about it is stored here.
@@ -31,6 +36,11 @@ assistantRouter.post("/", requireAuth, async (req, res) => {
   if (!assistantModel) throw new HttpError(503, "The shopping assistant is switched off.");
   const problem = validateAssistantMessages(req.body?.messages);
   if (problem) throw new HttpError(400, problem);
+  const waitMs = questionLimit.take(req.userId);
+  if (waitMs > 0) {
+    const minutes = Math.ceil(waitMs / 60000);
+    throw new HttpError(429, `You have asked ${QUESTIONS_PER_HOUR} questions this hour. Try again in ${minutes} min, or search yourself.`);
+  }
 
   try {
     res.json(await askAssistant(req.body.messages, { ask: assistantModel.ask, searchListings }));

@@ -88,3 +88,17 @@ test("when Groq's free limit is used up, students are told when to try again", a
     groq.limit = null;
   }
 });
+
+test("one student may ask 20 questions an hour; others can still ask", async () => {
+  const [student, other] = await Promise.all([api.createUser(), api.createUser()]);
+  for (let i = 0; i < 20; i += 1) {
+    const answered = await ask(student, `question ${i}`);
+    assert.equal(answered.status, 200, JSON.stringify(answered.body));
+  }
+  const calls = groq.requests.length;
+  const refused = await ask(student, "one more");
+  assert.equal(refused.status, 429);
+  assert.match(refused.body.error, /^You have asked 20 questions this hour\. Try again in 60 min/);
+  assert.equal(groq.requests.length, calls, "a refused question never reaches Groq");
+  assert.equal((await ask(other, "a lamp")).status, 200);
+});
