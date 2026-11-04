@@ -34,7 +34,14 @@ export function PhotoPicker({ photos, error }: { photos: ListingPhotos; error?: 
               key={photo.key}
               photo={photo}
               position={index + 1}
-              onRemove={() => photos.remove(photo.key)}
+              onRemove={() => {
+                photos.remove(photo.key);
+                // The removed photo's button goes with it. Focus stays in the photos: on the list, or
+                // on the add box when this was the last photo (the list then disappears).
+                const list = listRef.current;
+                if (photos.items.length > 1) list?.focus();
+                else list?.parentElement?.querySelector<HTMLInputElement>("input[type=file]")?.focus();
+              }}
               onMakeCover={() => {
                 photos.makeCover(photo.key);
                 listRef.current?.focus();
