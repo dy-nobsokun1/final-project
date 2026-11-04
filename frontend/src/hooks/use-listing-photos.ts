@@ -7,6 +7,8 @@ export interface FormPhoto {
   key: string;
   name: string;
   url: string | null;
+  /** The picked file, kept for "Fill in from photo" (use-photo-draft.ts). Missing for photos already on the server. */
+  file?: File;
 }
 
 /**
@@ -40,7 +42,7 @@ export function useListingPhotos(initialUrls: string[]) {
     setErrors(problems);
 
     const added = accepted.map((file) => ({ file, key: `new-${nextKey.current++}` }));
-    setItems((current) => [...current, ...added.map(({ file, key }) => ({ key, name: file.name, url: null }))]);
+    setItems((current) => [...current, ...added.map(({ file, key }) => ({ key, name: file.name, url: null, file }))]);
 
     const saved: string[] = [];
     // One at a time and in order: Next.js sends Server Actions one after another anyway.

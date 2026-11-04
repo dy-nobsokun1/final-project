@@ -7,6 +7,7 @@ import { CashTopupField } from "@/components/forms/CashTopupField";
 import { Field, FieldInput, FieldTextarea } from "@/components/forms/Field";
 import { FieldSelect } from "@/components/forms/FieldSelect";
 import { ListingTypeTiles } from "@/components/forms/ListingTypeTiles";
+import { PhotoDraftButton } from "@/components/forms/PhotoDraftButton";
 import { PhotoPicker } from "@/components/forms/PhotoPicker";
 import { Button } from "@/components/ui/button";
 import { useDemoPresets } from "@/hooks/use-demo-presets";
@@ -155,6 +156,7 @@ export function NewListingForm({ listing, draft }: { listing?: Listing; draft?: 
       ) : null}
 
       <PhotoPicker photos={photos} error={errors.imageUrls} />
+      {!listing ? <PhotoDraftButton formRef={formRef} photos={photos} /> : null}
 
       <div className="flex items-center gap-2">
         <Button type="submit" size="lg" disabled={isSubmitting || photos.isUploading}>
