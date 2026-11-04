@@ -1,7 +1,8 @@
 import { ArrowLeft, MapPin } from "lucide-react";
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Suspense } from "react";
+import { cache, Suspense } from "react";
 import { AuctionPanel } from "@/components/listings/AuctionPanel";
 import { BuyerOfferPanel } from "@/components/listings/BuyerOfferPanel";
 import { ListingBuyBar } from "@/components/listings/ListingBuyBar";
@@ -40,6 +41,15 @@ const PAYMENT_BANNERS = {
   unconfirmed: "We could not check your payment just now. Do not pay again: refresh this page in a moment.",
 } as const;
 
+/** One API call per page view: the tab title and the page share it (React `cache`). */
+const getListing = cache(getListingById);
+
+/** The browser tab shows the listing's title. A missing listing gets a plain title; the page answers 404. */
+export async function generateMetadata({ params }: PageProps<"/listings/[id]">): Promise<Metadata> {
+  const listing = await getListing((await params).id);
+  return { title: listing ? `${listing.title} | UniSwap` : "Listing not found | UniSwap" };
+}
+
 /** Detail view for a single listing. */
 export default async function ListingDetailPage({ params, searchParams }: PageProps<"/listings/[id]">) {
   const { id } = await params;
@@ -54,7 +64,7 @@ export default async function ListingDetailPage({ params, searchParams }: PagePr
     : null;
   // For "Paid with Mastercard •••• 4444" under the banner. Stripe tells the API; nothing is stored.
   const paidCard = cardResult !== "unconfirmed" && cardResult?.status === "paid" ? cardResult.card : undefined;
-  const [listing, paymentOptions] = await Promise.all([getListingById(id), getPaymentOptions()]);
+  const [listing, paymentOptions] = await Promise.all([getListing(id), getPaymentOptions()]);
   // A receipt link (?invoice=) only asks to see it: the card shows if the API says this is your paid deal.
   const wantsReceipt = typeof invoiceParam === "string" && invoiceParam !== "";
   const receipt = user && wantsReceipt && listing ? await getReceipt(listing.id) : null;

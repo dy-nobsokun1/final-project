@@ -1,6 +1,8 @@
 import { ArrowLeft } from "lucide-react";
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { cache } from "react";
 import { LiveMessageList } from "@/components/chat/LiveMessageList";
 import { MeetupCard } from "@/components/chat/MeetupCard";
 import { MeetupPlanner } from "@/components/chat/MeetupPlanner";
@@ -21,6 +23,16 @@ import {
 } from "@/lib/api";
 import { isMeetupPast } from "@/lib/meetup-spots";
 
+/** One API call per page view: the tab title and the page share it (React `cache`). */
+const getListing = cache(getListingById);
+
+/** The browser tab says which listing the chat is about (listing titles are public anyway). */
+export async function generateMetadata({ params }: PageProps<"/messages/[id]">): Promise<Metadata> {
+  const ids = parseConversationId((await params).id);
+  const listing = ids ? await getListing(ids.listingId) : null;
+  return { title: listing ? `Chat about ${listing.title} | UniSwap` : "Messages | UniSwap" };
+}
+
 /**
  * A single message thread: the signed-in user and one other person, about one listing.
  * "Message seller" links here too, so the thread may not have any messages yet.
@@ -34,7 +46,7 @@ export default async function MessageThreadPage({
   if (!ids) notFound();
 
   const [listing, partner] = await Promise.all([
-    getListingById(ids.listingId),
+    getListing(ids.listingId),
     getUserById(ids.partnerId),
   ]);
   // Every thread is between the listing's owner and one other person.
