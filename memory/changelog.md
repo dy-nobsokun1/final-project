@@ -4,6 +4,9 @@ Log of completed tasks, architecture decisions, and bug fixes for the UniSwap te
 
 ## 4 Nov 2026
 
+### Dark mode back to its 2 Nov design
+- Dark mode is back to how it looked on 2 Nov (`8a0c841`). The two redesigns stay in history (`49b90a6` depth, `e79a4c3` colour mix); revert the revert commits to bring one back.
+
 ### "More from <seller>" readable in light mode
 - On Recent purchases, the outline button filled with the dark page colour under black text (1.5:1). `PurchaseCard` now gives it a pale fill like `SaveButton`: black text 18.1:1, border 3.6:1 on the light card and 3.4:1 on the dark one.
 
