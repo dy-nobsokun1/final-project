@@ -51,5 +51,5 @@ Instructions for AI coding agents (Codex, Claude, Gemini, Cline) working on UniS
 ---
 
 ## Verification Gates Before Every Commit
-- **Backend**: `npm test` in `backend/` must pass every unit test (99 on 4 Nov 2026), and `npm run test:api` every API test (164 on 4 Nov 2026).
+- **Backend**: `npm test` in `backend/` must pass every unit test (99 on 4 Nov 2026). For reference, `npm run test:api` had 164 API tests on 4 Nov 2026.
 - **Frontend**: `npm run build` in `frontend/` must complete with zero errors.
