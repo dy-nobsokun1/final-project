@@ -3,6 +3,7 @@ import { query } from "../db/pool.js";
 import { isTelegramConfigured, sendTelegramMessage } from "../services/telegram.js";
 import { siteOrigin } from "../services/tunnel.js";
 import { isEmailConfigured, sendEmail } from "./email.js";
+import { formatMeetupTime, MEETUP_SPOTS } from "./meetups.js";
 import { renderEmail } from "./notificationEmail.js";
 import { renderTelegram } from "./notificationTelegram.js";
 import { invoiceNumber } from "./payments.js";
@@ -457,5 +458,91 @@ export function notifyOfferCancelled(offer) {
         action: { label: `Message ${seller.name}`, link: threadLink(offer.listing_id, listing.user_id) },
       },
     });
+  });
+}
+
+/** The listing and both people a meetup notification is about (`meetup` as toMeetup returns it), or null. */
+async function findMeetupPeople({ listingId, proposerId, inviteeId }) {
+  const { rows: [listing] } = await query("SELECT title FROM listings WHERE id = $1", [listingId]);
+  if (!listing) return null;
+  const [proposer, invitee] = await Promise.all([findUser(proposerId), findUser(inviteeId)]);
+  return proposer && invitee ? { title: listing.title, proposer, invitee } : null;
+}
+
+/** "Where" and "When" lines for a meetup, the time in Phnom Penh. */
+function meetupDetails(meetup, title) {
+  return [["Item", title], ["Where", MEETUP_SPOTS[meetup.spot] ?? meetup.spot], ["When", formatMeetupTime(meetup.meetAt)]];
+}
+
+const MEETUP_SAFETY = "Meet in a busy, public spot on campus, and check the item before you pay.";
+
+/**
+ * A meetup was proposed, accepted, declined or cancelled (its new status says which) by `actorId`:
+ * tell the other person. routes/meetups.js skips this while that person has the thread open,
+ * because the card there changes live (the same rule as chat messages).
+ */
+export function notifyMeetupChanged(meetup, actorId) {
+  inBackground(async () => {
+    const people = await findMeetupPeople(meetup);
+    if (!people) return;
+    const { title, proposer, invitee } = people;
+    const [actor, other] = actorId === meetup.proposerId ? [proposer, invitee] : [invitee, proposer];
+    const chat = { label: `Open the chat with ${actor.name}`, link: threadLink(meetup.listingId, actorId) };
+    const texts = {
+      proposed: {
+        subject: `${actor.name} wants to meet about ${quoted(title)}`,
+        emoji: "📍",
+        heading: `${actor.name} planned a meetup`,
+        intro: `${actor.name} wants to meet you on campus about "${title}". Accept or decline it in your chat.`,
+        action: { label: "Answer in the chat", link: chat.link },
+        note: MEETUP_SAFETY,
+      },
+      accepted: {
+        subject: `${actor.name} accepted your meetup about ${quoted(title)}`,
+        emoji: "✅",
+        heading: "Your meetup is on",
+        intro: `${actor.name} accepted. You both get a reminder 30 minutes before.`,
+        action: chat,
+        note: MEETUP_SAFETY,
+      },
+      declined: {
+        subject: `${actor.name} declined your meetup about ${quoted(title)}`,
+        emoji: "ℹ️",
+        heading: "Your meetup was declined",
+        intro: `${actor.name} cannot make it. Message them to find another time or place.`,
+        action: chat,
+      },
+      cancelled: {
+        subject: `${actor.name} cancelled the meetup about ${quoted(title)}`,
+        emoji: "ℹ️",
+        heading: "Your meetup was cancelled",
+        intro: `${actor.name} cancelled it. Message them if you still want to meet.`,
+        action: chat,
+      },
+    };
+    if (!texts[meetup.status]) return;
+    await deliver({ to: other, notification: { ...texts[meetup.status], details: meetupDetails(meetup, title) } });
+  });
+}
+
+/** An accepted meetup starts in about 30 minutes (claimDueReminders in db/meetups.js): remind both people. */
+export function notifyMeetupReminder(meetup) {
+  inBackground(async () => {
+    const people = await findMeetupPeople(meetup);
+    if (!people) return;
+    const { title, proposer, invitee } = people;
+    const remind = (to, other, otherId) => deliver({
+      to,
+      notification: {
+        subject: `Reminder: you meet ${other.name} soon about ${quoted(title)}`,
+        emoji: "⏰",
+        heading: "Your meetup starts in 30 minutes",
+        intro: `You are meeting ${other.name} at ${MEETUP_SPOTS[meetup.spot] ?? meetup.spot} about "${title}".`,
+        details: meetupDetails(meetup, title),
+        action: { label: `Message ${other.name}`, link: threadLink(meetup.listingId, otherId) },
+        note: MEETUP_SAFETY,
+      },
+    });
+    await Promise.all([remind(proposer, invitee, meetup.inviteeId), remind(invitee, proposer, meetup.proposerId)]);
   });
 }

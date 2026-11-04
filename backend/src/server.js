@@ -4,6 +4,7 @@ dns.setDefaultResultOrder("ipv4first");
 import { app } from "./app.js";
 import { config } from "./config.js";
 import { closeEndedAuctions } from "./db/auctions.js";
+import { claimDueReminders } from "./db/meetups.js";
 import { findOpenKhqrPayments, markPaid } from "./db/payments.js";
 import { assistantModel } from "./services/assistantModel.js";
 import { isBakongConfigured, isKhqrPaid } from "./services/bakong.js";
@@ -12,7 +13,8 @@ import { isStripeConfigured } from "./services/stripe.js";
 import { isTelegramConfigured, startTelegramPolling } from "./services/telegram.js";
 import { startTunnelWatch } from "./services/tunnel.js";
 import { isEmailConfigured } from "./utils/email.js";
-import { notifyAuctionClosed } from "./utils/notify.js";
+import { toMeetup } from "./utils/meetups.js";
+import { notifyAuctionClosed, notifyMeetupReminder } from "./utils/notify.js";
 import { handleBotUpdate, setUpBotCommands } from "./utils/telegramBot.js";
 
 app.listen(config.port, () => {
@@ -52,6 +54,22 @@ async function runAuctionCheck() {
 
 void runAuctionCheck();
 setInterval(runAuctionCheck, AUCTION_CHECK_MS);
+
+// Also once a minute, remind both people of each accepted meetup that starts within 30 minutes.
+// claimDueReminders marks each one as reminded in the same statement that picks it, so a restart
+// or a slow run never sends a reminder twice.
+const MEETUP_CHECK_MS = 60 * 1000;
+
+async function runMeetupReminders() {
+  try {
+    for (const meetup of await claimDueReminders()) notifyMeetupReminder(toMeetup(meetup));
+  } catch (error) {
+    console.error("[meetups] could not send reminders:", error.message);
+  }
+}
+
+void runMeetupReminders();
+setInterval(runMeetupReminders, MEETUP_CHECK_MS);
 
 // Also once a minute, ask Bakong about KHQR payments still waiting. The QR screen already checks
 // every few seconds; this covers a buyer who pays and then closes the page. The first run and every

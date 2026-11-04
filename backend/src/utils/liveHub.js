@@ -22,11 +22,24 @@ export function addStream(userId, stream) {
  * A stream that watches one thread only gets that thread's messages.
  */
 export function publishMessage(message) {
-  const frame = `event: message\ndata: ${JSON.stringify(message)}\n\n`;
-  const sides = [[message.senderId, message.receiverId], [message.receiverId, message.senderId]];
-  for (const [userId, partnerId] of sides) {
-    for (const stream of streams.get(String(userId)) ?? []) {
-      if (stream.listingId && !isThread(stream, message.listingId, partnerId)) continue;
+  publish("message", message, message.listingId, message.senderId, message.receiverId);
+}
+
+/**
+ * Sends a new or changed meetup (as toMeetup returns it) to both people's streams, as
+ * "event: meetup". EventSource's onmessage only sees "message" events, so the message code
+ * (use-live-messages, LiveInboxRefresh) ignores it; the thread page listens for it by name.
+ */
+export function publishMeetup(meetup) {
+  publish("meetup", meetup, meetup.listingId, meetup.proposerId, meetup.inviteeId);
+}
+
+/** Writes one event to the open streams of the two people in a thread (inbox streams included). */
+function publish(event, data, listingId, userId, otherUserId) {
+  const frame = `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
+  for (const [user, partner] of [[userId, otherUserId], [otherUserId, userId]]) {
+    for (const stream of streams.get(String(user)) ?? []) {
+      if (stream.listingId && !isThread(stream, listingId, partner)) continue;
       if (!stream.res.destroyed) stream.res.write(frame);
     }
   }
