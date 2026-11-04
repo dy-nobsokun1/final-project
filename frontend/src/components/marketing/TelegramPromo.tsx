@@ -32,9 +32,9 @@ export async function TelegramPromo() {
   return (
     <DismissibleTip
       hideLabel="Hide Telegram tip"
-      className="light-surface flex items-center gap-3 rounded-xl border border-border bg-card px-3 py-2.5 dark:bg-panel sm:px-4"
+      className="light-surface flex items-center gap-3 rounded-xl border border-border bg-card px-3 py-2.5 sm:px-4"
     >
-      <span aria-hidden="true" className="flex size-9 shrink-0 items-center justify-center rounded-full bg-brand-50 dark:bg-tone-olive dark:text-brand-50">
+      <span aria-hidden="true" className="flex size-9 shrink-0 items-center justify-center rounded-full bg-brand-50 dark:bg-brand-400/15 dark:text-brand-400">
         <Send className="size-4" />
       </span>
       <div className="min-w-0 flex-1">
@@ -47,7 +47,7 @@ export async function TelegramPromo() {
         href={promo.href}
         target={external ? "_blank" : undefined}
         rel={external ? "noopener" : undefined}
-        className="shrink-0 rounded-lg bg-deep-fill px-3 py-2 text-sm font-semibold text-brand-50 transition-colors hover:bg-deep-fill-hover"
+        className="shrink-0 rounded-lg bg-brand-deep px-3 py-2 text-sm font-semibold text-brand-50 transition-colors hover:bg-brand-900"
       >
         {promo.label}
         <span className="max-sm:sr-only">{promo.rest}</span>

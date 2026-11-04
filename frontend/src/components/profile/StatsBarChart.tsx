@@ -29,7 +29,7 @@ export function StatsBarChart({ title, months }: StatsBarChartProps) {
   return (
     <figure className="flex flex-col gap-2">
       <figcaption className="text-sm font-semibold">{title}</figcaption>
-      <div aria-hidden="true" className="flex h-36 items-end gap-2 border-b border-brand-ink/60 dark:border-foreground/60">
+      <div aria-hidden="true" className="flex h-36 items-end gap-2 border-b border-brand-ink/60">
         {months.map(({ month, amount }) => (
           <div key={month} className="flex flex-1 flex-col items-center justify-end gap-1">
             <span className="text-xs font-semibold tabular-nums">{formatPrice(amount)}</span>

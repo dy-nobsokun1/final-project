@@ -50,7 +50,7 @@ export function StatsRingChart({ title, categories }: StatsRingChartProps) {
           className="relative size-32 shrink-0 rounded-full"
           style={{ background: ringGradient(categories, total) }}
         >
-          <div className="absolute inset-5 flex flex-col items-center justify-center rounded-full bg-brand-50 dark:bg-stats-card">
+          <div className="absolute inset-5 flex flex-col items-center justify-center rounded-full bg-brand-50 dark:bg-card">
             <span className="font-heading text-2xl leading-none">{total}</span>
             <span className="text-xs text-muted-foreground">{total === 1 ? "item" : "items"}</span>
           </div>

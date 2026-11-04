@@ -25,7 +25,7 @@ export function FilterToggle({ count, isOpen, controls, onToggle }: FilterToggle
       <SlidersHorizontal aria-hidden="true" className="size-4" />
       Filters
       {count > 0 ? (
-        <span className="flex size-5 items-center justify-center rounded-full bg-deep-fill text-xs text-brand-50">
+        <span className="flex size-5 items-center justify-center rounded-full bg-brand-deep text-xs text-brand-50">
           {count}
           <span className="sr-only"> active</span>
         </span>

@@ -86,7 +86,7 @@ export function FilterPanel() {
         id={panelId}
         aria-label="Filters"
         className={cn(
-          "light-surface flex-col gap-4 rounded-xl border bg-card p-4 dark:bg-panel sm:flex sm:flex-row sm:flex-wrap sm:items-end",
+          "light-surface flex-col gap-4 rounded-xl border bg-card p-4 sm:flex sm:flex-row sm:flex-wrap sm:items-end",
           isOpen ? "flex" : "hidden",
         )}
       >

@@ -91,7 +91,7 @@ export function AssistantQuestionBox({ value, onChange, onAsk, isAsking, error }
           size="icon-lg"
           disabled={!value.trim() || isAsking}
           aria-label="Ask"
-          className="rounded-full bg-deep-fill text-brand-50 [--ripple-button-ripple-color:var(--brand-50)] hover:bg-deep-fill-hover disabled:opacity-60"
+          className="rounded-full bg-brand-deep text-brand-50 [--ripple-button-ripple-color:var(--brand-50)] hover:bg-brand-900 disabled:opacity-60"
         >
           <Send aria-hidden="true" />
         </Button>

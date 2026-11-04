@@ -21,17 +21,6 @@
   --color-hero-from: var(--hero-from);
   --color-hero-to: var(--hero-to);
   --color-chart-bar: var(--chart-bar);
-  --color-panel: var(--panel);
-  --color-deep-fill: var(--deep-fill);
-  --color-deep-fill-hover: var(--deep-fill-hover);
-  --color-stats-card: var(--stats-card);
-  --color-star: var(--star);
-  --color-tone-olive: var(--tone-olive);
-  --color-tone-teal: var(--tone-teal);
-  --color-tone-forest: var(--tone-forest);
-  --color-tone-jade: var(--tone-jade);
-  --color-tone-wine: var(--tone-wine);
-  --color-tone-wine-hover: var(--tone-wine-hover);
   --color-foreground: var(--foreground);
   /* Bebas Neue drives the big condensed headings, Nunito everything else. */
   --font-sans: var(--font-nunito), ui-sans-serif, system-ui, sans-serif;
@@ -127,19 +116,6 @@
   --wanted-card: var(--brand-deep-2); /* the Wanted card */
   --hero-from: var(--brand-200); /* hero and profile header gradient */
   --hero-to: var(--brand-50);
-  --panel: var(--brand-200); /* the filter panel and the Telegram strip (dark mode only: `dark:bg-panel`) */
-  --deep-fill: var(--brand-deep); /* dark buttons, the hero points' circles, the Auction tag */
-  --deep-fill-hover: var(--brand-900);
-  --stats-card: var(--brand-50); /* the profile's Selling and Buying sections */
-  --star: var(--brand-600); /* filled rating stars */
-  /* Dark mode's own deep tone for each light accent (dark mode only: `dark:bg-tone-*`), one per
-     light colour, so dark mode keeps light mode's mix: cream, sage, forest, mint and wine. */
-  --tone-olive: var(--brand-50);
-  --tone-teal: var(--brand-600);
-  --tone-forest: var(--brand-900);
-  --tone-jade: var(--brand-400);
-  --tone-wine: var(--brand-danger);
-  --tone-wine-hover: var(--brand-danger);
 
   /* The page is the dark #22312D field, so page-level text is white. Cards,
      panels and the auth card are the light #B1D3B9 / #E6F2DD surfaces, and
@@ -233,44 +209,16 @@
     --sidebar-border: #b1d3b933;
     --sidebar-ring: #e6f2dd;
 
-    /* Light mode's inset is cream, so dark mode's is a deep olive: text 7.2:1, muted 5.1:1, field
-       outline 3.0:1. */
-    --inset: #47513c;
+    --inset: #3c564d;
     --field: #263832;
     --label: #e6f2dd;
     /* Just above the page and well below the item cards (1.58:1), so it reads as a slot to fill.
        WantedCard adds a rose dashed border in dark mode. Text 13.6:1, muted #B1D3B9 9.7:1. */
     --wanted-card: #1a2521;
-    /* Like light mode's mint-to-cream, a hue shift: deep green to deep olive. Text 7.9:1 and 8.0:1,
-       muted 5.7:1, the mint "On Campus" 4.3:1 (5.9:1 and 3.2:1 under the glow's brightest point). */
-    --hero-from: #1f5040;
-    --hero-to: #3f4b2b;
-    /* The filter panel and Telegram strip sit a step below the cards (1.19:1), a tray for the wine
-       selects and buttons. Text 10.2:1, muted 7.3:1, field outline 3.8:1, focus ring 3.9:1. */
-    --panel: #293b33;
-    /* Light mode's dark buttons are the darkest thing on the brightest panel; so here: near-black
-       green, at least 1.5:1 against every surface it sits on (hero 1.95:1, card 1.82:1, panel
-       1.53:1, hero point card 2.1:1). Text 15.7:1, on hover 12.2:1. */
-    --deep-fill: #0b1813;
-    --deep-fill-hover: #173026;
-    /* Cream in light mode, a deep olive here. Text 11.0:1, muted 7.8:1, mint numbers 6.0:1, the
-       ring's slices at least 4.8:1, the bars' axis (pale at 60%) 5.0:1. */
-    --stats-card: #2d3527;
-    /* A lighter sage: 4.5:1 on the card, 3.8:1 on the inset. */
-    --star: #8db8a9;
-    /* One deep tone per light accent, each with pale #E6F2DD icons or text, and each at least
-       1.5:1 against the card so the chips stand off it:
-       olive (cream) 5.4:1, grey-teal (sage) 4.7:1, near-black green (forest) 14.9:1, jade (mint)
-       5.6:1, wine 11.0:1 (9.3:1 on hover). */
-    --tone-olive: #5b6539;
-    --tone-teal: #4c706c;
-    --tone-forest: #0d1e15;
-    --tone-jade: #1d6b48;
-    --tone-wine: #5e1a23;
-    --tone-wine-hover: #6f222c;
-    /* Each slice is at least 3:1 on the card (numbers below), and at least 4.8:1 on the stats
-       card #2D3527 where the ring sits. Cream goes first and red last, so where the last slice
-       meets the first they differ in lightness as well as hue. */
+    --hero-from: #3a5448;
+    --hero-to: #2b4037;
+    /* Each slice is at least 3:1 on the card. Cream goes first and red last, so where the last
+       slice meets the first they differ in lightness as well as hue. */
     --slice-1: #e6f2dd; /* 8.6:1 */
     --slice-2: #e0a63a; /* 4.6:1 */
     --slice-3: #7fa8e8; /* 4.1:1 */
@@ -279,8 +227,8 @@
     --slice-6: #ff7a7a; /* 4.0:1 */
     --chart-bar: #88bda4;
     /* Mint text in dark mode (`dark:text-brand-400` on prices and stats numbers): 4.7:1 on the card,
-       8.3:1 on the page, at least 4.3:1 on the hero gradient (large type only there). It is one
-       accent among the tones above, not the only one. */
+       8.3:1 on the page, at least 3.9:1 on the hero gradient (large type only there). Mint icons on
+       their `bg-brand-400/15` circles (category tiles, Telegram strip): 3.6:1. */
   }
 
   /* The hero and profile header grid (brand-grid below): paler lines, and a soft mint glow at the

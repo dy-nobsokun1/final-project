@@ -24,7 +24,7 @@ export function StatsSection({ title, figures, barsTitle, months, ringTitle, cat
   return (
     <section
       aria-label={title}
-      className="light-surface flex flex-col gap-5 rounded-3xl border border-border bg-brand-50 p-5 dark:bg-stats-card sm:p-6"
+      className="light-surface flex flex-col gap-5 rounded-3xl border border-border bg-brand-50 p-5 dark:bg-card sm:p-6"
     >
       <h3 className="text-lg font-semibold">{title}</h3>
       <dl className="flex flex-wrap gap-x-10 gap-y-3">
