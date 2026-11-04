@@ -80,6 +80,10 @@ when `uniswap` has none, so an older `uniswap` database needs the upgrade SQL (b
   unverified email replaces that account; a verified one gets 409. Login is blocked (403) until
   verified. `resend-verification` takes `{ email, password }`. `requireAuth` re-checks in the
   database that the account exists and is verified.
+  - **Login limit (5 Nov):** 10 wrong passwords per lowercased email in 15 minutes, then 429 "Too many
+    wrong passwords. Try again in N minutes." even for the right one (`utils/loginLimit.js`, in
+    `findUserByCredentials`, so login and resend share it). A right password clears it; unknown emails
+    count too. Per account, in memory (restart clears it), because the API only sees the Next.js IP.
   - **Sign-up code, not a link:** the email holds a 6-digit code and no link or URL at all
     (`utils/verificationCode.js`).
     - **Why:** a link to a `trycloudflare.com` address sent it to school Outlook's Junk.
@@ -479,6 +483,8 @@ test payments, KHQR, the Telegram bot, email and Groq. Still not done: the Rende
 ### Picking up on another machine
 
 Everything above is pushed to `implement_backend`. Last full check (4 Nov):
+- 5 Nov: `npm test` (107) and `npm run test:api` (170) pass; Next.js is 16.4.5 (security update), and
+  lint, `tsc --noEmit` and `next build` are clean on it.
 - `npm test` (99) and `npm run test:api` (164) pass (4 Nov, after the second test round).
 - A fresh clone set up by following only the root README ran (4 Nov): setup scripts, both test sets,
   API and website; its lint and `tsc --noEmit` were clean. `next build` was last checked on 2 Nov.

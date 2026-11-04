@@ -103,6 +103,11 @@ All pass on 4 Nov 2026.
 
 ### Known limitations (by design)
 
+- **The wrong-password limit is per account, not per device.** After 10 wrong passwords in 15 minutes
+  an account must wait, even with the right password. Only the website's server calls the API, so the
+  API sees one address for everyone and cannot tell devices apart. Someone could lock a demo account
+  for 15 minutes on purpose; restarting the API clears it (the count is kept in memory only).
+
 - **One buyer pays at a time.** While someone has a card checkout or KHQR open for an item (up to
   30 minutes), other buyers are told someone is paying. This is what stops two people paying for
   the same item, but it also means any signed-in student can hold an item for 30 minutes without
