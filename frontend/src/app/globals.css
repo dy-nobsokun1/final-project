@@ -226,6 +226,9 @@
     --slice-5: #c58ac9; /* 3.7:1 */
     --slice-6: #ff7a7a; /* 4.0:1 */
     --chart-bar: #88bda4;
+    /* Mint text in dark mode (`dark:text-brand-400` on prices and stats numbers): 4.7:1 on the card,
+       8.3:1 on the page, at least 3.9:1 on the hero gradient (large type only there). Mint icons on
+       their `bg-brand-400/15` circles (category tiles, Telegram strip): 3.6:1. */
   }
 
   /* The hero and profile header grid (brand-grid below): paler lines, and a soft mint glow at the
