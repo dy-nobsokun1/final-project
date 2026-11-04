@@ -483,7 +483,7 @@ test payments, KHQR, the Telegram bot, email and Groq. Still not done: the Rende
 ### Picking up on another machine
 
 Everything above is pushed to `implement_backend`. Last full check (4 Nov):
-- 5 Nov: `npm test` (107) and `npm run test:api` (170) pass; Next.js is 16.4.5 (security update), and
+- 5 Nov: `npm test` (107) and `npm run test:api` (171) pass; Next.js is 16.4.5 (security update), and
   lint, `tsc --noEmit` and `next build` are clean on it.
 - `npm test` (99) and `npm run test:api` (164) pass (4 Nov, after the second test round).
 - A fresh clone set up by following only the root README ran (4 Nov): setup scripts, both test sets,
