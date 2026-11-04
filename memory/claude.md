@@ -309,18 +309,6 @@ when `uniswap` has none, so an older `uniswap` database needs the upgrade SQL (b
   - **Contrast on the dark card `#314740`:** text 8.6:1, muted 6.1:1, field outline 3.2:1, focus ring
     3.5:1 (pale, drawn at 50%), stats slices at least 3.7:1 (cream first, red last; rose stays the Wanted tag's).
     The shadcn `dark:` fills on the outline and destructive buttons were removed so passed colours win.
-  - **Depth (4 Nov):** the dark page is `#121b18` (was `#22312d`), so cards stand off it (card on page
-    1.76:1; page text 15.2:1, focus ring 4.7:1). `--card` is unchanged, so the numbers above still hold.
-    - **Card edge and shadow:** one `.dark .light-surface` rule in `@layer components` sets
-      `--tw-inset-shadow` (a pale top line) and `--tw-shadow`. It is layered on purpose: hover shadows
-      and the shadcn Card's ring are utilities, so they still win and keep the edge.
-    - **Hero and profile header:** `.dark .brand-grid` draws paler grid lines and a mint glow at the top
-      right (pale text there 5.4:1), and the sections get a mint border (`dark:border-brand-400/35`).
-      "On Campus" is mint, 3.9:1 (large text).
-    - **Wanted card:** `--wanted-card` is `#1a2521`, just above the page, with a rose dashed border
-      (`dark:border-brand-wanted/60`, 3.9:1 on the page).
-    - **Mint accents** (`dark:text-brand-400`, 4.7:1 on the card): card and listing prices, stats numbers,
-      category tile icons and the Telegram strip's icon (3.6:1 on their `bg-brand-400/15` circles).
 - **Recent purchases:** `GET /api/users/me/purchases` (`db/purchases.js`), shown on your own `/profile`
   as `RecentPurchases` + `PurchaseCard` (hidden until the first purchase).
   - **Who bought it:** it shares `CLOSED_DEALS_SQL` with the stats below, so the two always agree: the
