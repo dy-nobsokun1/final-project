@@ -14,7 +14,8 @@ const WORD_QUERY = "plainto_tsquery('english', w.word)";
  * { low, high, count, sold } from the closest similar listings, or null with fewer than 2.
  * Similar: same category, and its TITLE has words of the AI's title (with the same stemming as search,
  * so "laptops" counts as "laptop"). Descriptions, related words and typos are left out on purpose:
- * they found laptop RAM for a MacBook. Then only the rows sharing the most words count (closestMatches).
+ * they found laptop RAM for a MacBook. Then only the rows sharing the most words, and at least 2, count
+ * (closestMatches).
  * Only "sale" listings with a price count: not wanted posts or giveaways, and not auctions, whose price
  * is only the starting bid. Sold ones are used when there are 2 or more, at the amount really paid
  * (else the accepted offer, else the asking price); otherwise sold and active together.
@@ -41,13 +42,7 @@ export async function findPriceHint({ category, title }) {
      LIMIT 40`,
     [category, words],
   );
-  // How many of the title's words are real words, not stop words: closestMatches needs 2 in common
-  // when there are 3 or more.
-  const { rows: [{ count }] } = await query(
-    `SELECT count(*) FROM unnest($1::text[]) AS w(word) WHERE numnode(${WORD_QUERY}) > 0`,
-    [words],
-  );
-  const closest = closestMatches(rows, Number(count));
+  const closest = closestMatches(rows);
   const amount = (row) => Number(row.status === "sold"
     ? row.paid_amount ?? Math.min(Number(row.agreed_price ?? Infinity), Number(row.price))
     : row.price);

@@ -700,8 +700,8 @@ service's web API with `fetch`.
   logged. Each student may use it 10 times an hour (in memory).
   **Price hint, from UniSwap only, never from the model:** "sale" listings of the same category whose
   TITLE shares words with the model's title (full-text stemming, no descriptions, related words or
-  typo test). Only the listings sharing the most words count, and at least 2 words when the title has
-  3 or more real words, so a MacBook is never priced from laptop RAM. Sold ones at the amount really
+  typo test). Only the listings sharing the most words count, and at least 2 words, so a MacBook or
+  "Silver laptop" is never priced from laptop RAM; weaker matches are never used instead. Sold ones at the amount really
   paid when there are 2 or more, else sold and active together; fewer than 2 = no hint. When the price
   box is empty, the form fills the middle of the range and says so.
   **Which model:** Gemini `gemini-3.1-flash-lite` (`VISION_GEMINI_MODEL`, the same `GEMINI_API_KEY`),

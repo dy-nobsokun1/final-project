@@ -6,7 +6,7 @@ Log of completed tasks, architecture decisions, and bug fixes for the UniSwap te
 
 ### Snap to list ("Fill in from photo")
 - On a new listing, after a photo is picked, "Fill in from photo" sends the shrunk photo (only the photo) to Gemini `gemini-3.1-flash-lite`, with Groq `qwen/qwen3.8-27b` once when Gemini is busy (at most 20 photos a day, since it shares Ask UniSwap's quota). It fills only empty fields (title, category, condition, description) and never posts. 10 photos an hour per student; nothing stored or logged.
-- The price hint comes only from similar UniSwap listings. Tightened the same day: a MacBook photo gave "$12–$550" because laptop RAM and an iPad Pro shared one word. Now only titles sharing the most words count, at least 2 for a 3+ word title, and weaker matches are never used instead. On the demo data the MacBook, ThinkPad, GPU and bike get no hint (one or no close match); "Calculus textbook" gets $18–$22.
+- The price hint comes only from similar UniSwap listings. Tightened the same day: a MacBook photo gave "$12–$550" because laptop RAM and an iPad Pro shared one word. Now only titles sharing the most words count, at least 2 words, and weaker matches are never used instead: no hint is better than a wrong one. On the demo data the MacBook, ThinkPad, GPU, mouse, textbooks and bike get no hint (one or no close match; every bike is an auction or a trade); "Samsung SSD" gets $30–$45.
 - Checked in the browser at 1280×800 and 1024×768 (light, no side scroll) and in dark mode (pale button with black text; the note 6.1:1). Tests: 97 unit, 160 API.
 - Open: one lint warning in `NewListingForm.tsx` (`description` unused since it became optional on 2 Nov), not from this feature.
 

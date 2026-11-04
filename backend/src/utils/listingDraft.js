@@ -77,17 +77,19 @@ export function titleWords(title) {
   return [...new Set(words)].filter((word) => word.length > 1).slice(0, 8);
 }
 
+/** How many title words a similar listing must share with the AI's title. */
+const MIN_SHARED_WORDS = 2;
+
 /**
  * Rows of similar listings, best first, each with `shared` (how many of the AI title's words its own
- * title has) -> only the closest ones: those sharing as many words as the best row, and at least 2
- * when the AI title has 3 or more real words (`titleWordCount`, stop words not counted).
- * Why: "Apple MacBook Pro Laptop" must not be priced from laptop RAM or an iPad Pro, which share only
- * one word. Weaker rows are never used instead, so with no close match there is no hint at all.
+ * title has) -> only the closest ones: those sharing as many words as the best row, and at least 2.
+ * Why: "Apple MacBook Pro Laptop", "Silver laptop" or just "Laptop" must not be priced from laptop RAM
+ * or an iPad Pro, which share only one word. Weaker rows are never used instead, so with no close
+ * match there is no hint at all: no hint is better than a wrong one.
  */
-export function closestMatches(rows, titleWordCount) {
-  const needed = titleWordCount >= 3 ? 2 : 1;
+export function closestMatches(rows) {
   const best = Math.max(0, ...rows.map((row) => Number(row.shared)));
-  if (best < needed) return [];
+  if (best < MIN_SHARED_WORDS) return [];
   return rows.filter((row) => Number(row.shared) === best);
 }
 

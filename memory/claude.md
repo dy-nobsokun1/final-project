@@ -303,11 +303,11 @@ when `uniswap` has none, so an older `uniswap` database needs the upgrade SQL (b
     never picked) and never posts; a note says to check it. Demo presets still work.
   - **Price hint, from UniSwap only** (`db/priceHints.js`): same category, "sale" with a price, active or
     sold, matched on the TITLE only (full-text stemming; no descriptions, related words or typo test).
-    `closestMatches` keeps only the rows sharing the most title words, and needs 2 in common when the
-    AI title has 3+ real words; weaker rows are never used instead (4 Nov fix: a MacBook got "$12–$550"
-    from laptop RAM). Sold ones first when 2+, at the amount paid. Fewer than 2 = no hint. An empty
-    price box gets the middle of the range. On today's demo data most items get no hint (one MacBook,
-    one ThinkPad, one GPU for sale); "Calculus textbook" gets $18–$22.
+    `closestMatches` keeps only the rows sharing the most title words, at least 2 (so a one-word title
+    never gets a hint); weaker rows are never used instead (4 Nov fix: a MacBook got "$12–$550", and
+    "Silver laptop" "$12–$85", from laptop RAM). Sold ones first when 2+, at the amount paid. Fewer
+    than 2 = no hint. An empty price box gets the middle of the range. On today's demo data most items
+    get no hint (one MacBook, one ThinkPad, one GPU for sale); "Samsung SSD" gets $30–$45.
 - **Receipts:** `GET /api/payments/receipt/:listingId` (`routes/payments.js`) answers only the buyer and
   seller of a listing with a `paid` payment (404 for anyone else, unpaid, or `refund_due`): the invoice
   number (`invoiceNumber()` in `utils/payments.js`, also used by `notifyPaid`), the amount really paid,

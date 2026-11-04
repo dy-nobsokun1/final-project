@@ -49,14 +49,13 @@ test("turns a title into its distinct words, without operators", () => {
   assert.equal(titleWords("one two three four five six seven eight nine ten").length, 8);
 });
 
-test("only the closest matches count, never weaker ones instead", () => {
+test("only the closest matches count, with 2 words in common, never weaker ones instead", () => {
   const rows = [{ shared: "3", price: 550 }, { shared: "3", price: 500 }, { shared: "1", price: 12 }];
-  assert.deepEqual(closestMatches(rows, 4).map((row) => row.price), [550, 500]);
-  // A 3-word title needs 2 words in common: one shared word ("laptop") is not enough.
-  assert.deepEqual(closestMatches([{ shared: "1" }, { shared: "1" }], 3), []);
-  // A 1- or 2-word title ("Calculus textbook") needs only 1.
-  assert.equal(closestMatches([{ shared: "1" }, { shared: "1" }], 2).length, 2);
-  assert.deepEqual(closestMatches([], 2), []);
+  assert.deepEqual(closestMatches(rows).map((row) => row.price), [550, 500]);
+  // One shared word ("laptop") is never enough, however short the title.
+  assert.deepEqual(closestMatches([{ shared: "1" }, { shared: "1" }]), []);
+  assert.equal(closestMatches([{ shared: "2" }, { shared: "2" }]).length, 2);
+  assert.deepEqual(closestMatches([]), []);
 });
 
 test("a price hint needs at least 2 prices", () => {

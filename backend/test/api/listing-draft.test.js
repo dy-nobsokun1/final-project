@@ -76,9 +76,10 @@ test("sends Gemini only the photo, and returns a checked draft", async () => {
 });
 
 test("the price hint comes from similar sale listings, sold ones first", async () => {
-  const word = `pangolin${randomUUID().slice(0, 6)}`;
+  // Two made-up words, so every title below shares 2 words with the AI's (closestMatches needs 2).
+  const id = randomUUID().slice(0, 6);
+  const word = `pangolin${id} wombat${id}`;
   const [seller, buyer, student] = await Promise.all([api.createUser(), api.createUser(), api.createUser()]);
-  // Two words, so one word in common is enough (closestMatches).
   answerWith({ title: `${word} backpack`, category: "other" });
 
   // Only one match: no hint.
