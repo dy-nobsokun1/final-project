@@ -4,6 +4,12 @@ Log of completed tasks, architecture decisions, and bug fixes for the UniSwap te
 
 ## 4 Nov 2026
 
+### Snap to list ("Fill in from photo")
+- On a new listing, after a photo is picked, "Fill in from photo" sends the shrunk photo (only the photo) to Gemini `gemini-3.1-flash-lite`, with Groq `qwen/qwen3.8-27b` once when Gemini is busy (at most 20 photos a day, since it shares Ask UniSwap's quota). It fills only empty fields (title, category, condition, description) and never posts. 10 photos an hour per student; nothing stored or logged.
+- The price hint comes only from similar UniSwap listings. Tightened the same day: a MacBook photo gave "$12–$550" because laptop RAM and an iPad Pro shared one word. Now only titles sharing the most words count, at least 2 for a 3+ word title, and weaker matches are never used instead. On the demo data the MacBook, ThinkPad, GPU and bike get no hint (one or no close match); "Calculus textbook" gets $18–$22.
+- Checked in the browser at 1280×800 and 1024×768 (light, no side scroll) and in dark mode (pale button with black text; the note 6.1:1). Tests: 97 unit, 160 API.
+- Open: one lint warning in `NewListingForm.tsx` (`description` unused since it became optional on 2 Nov), not from this feature.
+
 ### Meetup planner in chat
 - In a chat thread, either person taps "Plan meetup" and picks a campus spot, a date and a time (Phnom Penh time). A card under the thread's header shows it at once for both people (live, `event: meetup`). The other person accepts or declines; either can cancel. Both get an email + Telegram reminder 30 minutes before (`server.js`, once a minute, one `UPDATE … RETURNING` so it is sent once).
 - Only the owner and someone who already chatted with them may plan one (checked in the database). One open meetup per thread: a new proposal replaces the waiting one; refused while an accepted one is still to come.

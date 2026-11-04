@@ -690,6 +690,26 @@ service's web API with `fetch`.
   not answer at all. Google may read free-tier requests.
   A 429 from either (after any retry) becomes our 429 with "try again in a minute", or "try again
   tomorrow" when its message says a daily limit is used up.
+- **Fill in from photo ("Snap to list")** (`routes/assistant.js`, `services/vision.js`,
+  `utils/listingDraft.js`, `db/priceHints.js`). On a new listing, after a photo is picked, the sell form
+  shows "Fill in from photo". The browser shrinks the photo to a 1,024 px JPEG and sends it (only the
+  photo) to a vision model, which suggests a title, category, condition and description as JSON. Our
+  code keeps only those four fields, only our own category and condition values, and cuts the text to
+  the form's lengths: text in a photo can try to steer the model, so this check and the student's own
+  review are the defence. The form fills only EMPTY fields and never posts. Nothing is stored or
+  logged. Each student may use it 10 times an hour (in memory).
+  **Price hint, from UniSwap only, never from the model:** "sale" listings of the same category whose
+  TITLE shares words with the model's title (full-text stemming, no descriptions, related words or
+  typo test). Only the listings sharing the most words count, and at least 2 words when the title has
+  3 or more real words, so a MacBook is never priced from laptop RAM. Sold ones at the amount really
+  paid when there are 2 or more, else sold and active together; fewer than 2 = no hint. When the price
+  box is empty, the form fills the middle of the range and says so.
+  **Which model:** Gemini `gemini-3.1-flash-lite` (`VISION_GEMINI_MODEL`, the same `GEMINI_API_KEY`),
+  a different model from the assistant's, because Gemini's free limits count per model. When Gemini
+  is busy (429, 5xx, or no answer in 8 s), the photo goes once to Groq `qwen/qwen3.8-27b`
+  (`VISION_GROQ_MODEL`, 10 s). That is the assistant's own model and quota, so at most
+  `VISION_FALLBACK_PER_DAY` photos a day (20) go there; `VISION_FALLBACK=off` turns it off and
+  `VISION_PROVIDER=groq` swaps the two. The button is hidden when the chosen provider has no key.
 
 **Upgrading a database created before payments and Telegram?** Run this once. It keeps your data and is safe to re-run:
 
@@ -796,6 +816,8 @@ A token issued before the account's last password change or reset is refused (40
 | POST 🔒 | `/api/voice/transcribe` | Raw audio bytes with `Content-Type: audio/webm`, `ogg`, `mp4`, `mpeg` or `wav` (max 2 MB, about 60 s) → `{ text }` from Groq's Whisper (`GROQ_API_KEY`). Nothing is stored or logged. `415` wrong type, `503` while off or while Groq's free limit is used up, `502` if Groq fails |
 | GET | `/api/assistant/config` | `{ enabled }`: whether the shopping assistant is switched on (`GROQ_API_KEY` or `GEMINI_API_KEY` set) |
 | POST 🔒 | `/api/assistant` | `{ messages: [{ role: "user" \| "assistant", text }] }`, oldest first, at most 20, each 1 to 1000 characters, the last one the student's → `{ reply, listings, wantedDraft }`. `listings`: up to 4 full listings to show as cards. `wantedDraft`: `null` or `{ title, description, category, budget }` to fill in the new-listing form. `503` while switched off, `429` while the model's free limit for the minute or the day is used up, `502` if the model fails (see Ask UniSwap above) |
+| GET | `/api/assistant/listing-draft` | `{ enabled }`: whether the sell form shows "Fill in from photo" (the vision provider has its key) |
+| POST 🔒 | `/api/assistant/listing-draft` | Raw photo bytes with `Content-Type: image/jpeg`, `png` or `webp` (max 2 MB) → `{ draft: { title, category, condition, description }, priceHint: { low, high, count, sold } \| null }`. A draft field is `""` when the model left it out or gave a value we do not allow. The price hint comes from similar UniSwap listings only (see Fill in from photo above). Nothing is stored or logged. `415` wrong type, `429` after 10 photos in an hour, `503` while off or busy, `502` if the answer cannot be read |
 
 Uploaded photos are saved in `backend/uploads/` (git-ignored) and served at `/uploads/<file>`.
 Put the returned `url` in a listing's `imageUrls` (at most 6; only URLs from this route are accepted).
@@ -808,14 +830,17 @@ Errors always look like `{ "error": "message", "details": { "field": "message" }
 - `npm test` runs the unit tests in `test/*.test.js`: validation, the search query builder, the
   payment amount rules, the Stripe and Cloudinary helpers, the KHQR builder and Bakong answers, and
   the shopping assistant's tool loop (with a scripted fake model) and its Groq and Gemini adapters
-  (with `fetch` replaced), and the tunnel address watcher. No database or network needed.
+  (with `fetch` replaced), the photo draft checks and closest-match rule of Fill in from photo, and the
+  tunnel address watcher. No database or network needed.
 - `npm run test:api` runs the API tests in `test/api/`. Each file starts the real app on a free port
   and sends it real HTTP requests, so routes, SQL and database rules are tested together: sign-up and
   verification, password reset and change, owner-only changes, messaging, bidding (including five
   bids at the same moment), payments with Stripe switched off, KHQR payments (with Bakong replaced by
   a fake), reviews, saved listings (including who gets a price-drop alert), listing photo rules,
   wanted-post matching and alerts, offers (including two accepted at the same moment), and the
-  shopping assistant (with Groq replaced by a fake that also checks no seller details are sent).
+  shopping assistant (with Groq replaced by a fake that also checks no seller details are sent), and
+  Fill in from photo (Gemini and Groq replaced by fakes: the checks, the rate limit, the fallback and
+  its cap, and the price hint).
 
 The API tests need their own database, because `test/api/reset-db.js` wipes it before every run.
 Create it once, then put its URL in `.env` as `TEST_DATABASE_URL` (see `.env.example`):
@@ -851,6 +876,9 @@ can check who would have been emailed, waiting with `waitFor` because notificati
   is only filled into the form for the student to check. Its instructions say listing text is data,
   never instructions, and its cards can only be listings its own searches returned. Neither Groq
   nor Gemini ever gets seller names or emails.
+- **Fill in from photo:** only the photo goes to the model. Its answer is checked in code (four fields,
+  our own category and condition values, cut to length), only fills empty fields, and is never posted
+  without the student. The price hint never comes from the model.
 - **Secrets:** live in `.env` (git-ignored). Nothing secret is committed.
 
 ## Progress

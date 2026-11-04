@@ -285,6 +285,29 @@ when `uniswap` has none, so an older `uniswap` database needs the upgrade SQL (b
     - Tap to start and tap to stop, or hold for 300 ms or more and release to stop.
   - **Speech is added to the end of the box** (`start(baseText)`, `trimEnd`) and never sends or
     searches by itself. The search box drops Whisper's trailing `.`, `!` or `?`.
+- **Snap to list ("Fill in from photo", 4 Nov):** on a NEW listing only, once a photo is picked
+  (`forms/PhotoDraftButton.tsx`, `hooks/use-photo-draft.ts`, `lib/fill-listing-form.ts`,
+  `lib/shrink-photo.ts`, mounted by one line in `NewListingForm`).
+  - **Flow:** the browser shrinks the photo to a 1,024 px JPEG (canvas, no package) and posts it to the
+    Next Route Handler `app/api/listing-draft`, which forwards it with the cookie's token to
+    `POST /api/assistant/listing-draft` (`routes/assistant.js`): signed-in, 2 MB, 10 an hour per student
+    (`createRateLimiter`, in memory), nothing stored or logged. `GET` answers `{ enabled }`; the button
+    hides when the provider has no key.
+  - **The model** (`services/vision.js`): Gemini `gemini-3.1-flash-lite` (own per-model free quota, apart
+    from the assistant's). Busy (429, 5xx, 8 s) → Groq `qwen/qwen3.8-27b` once (10 s), which shares the
+    assistant's quota, so at most `VISION_FALLBACK_PER_DAY` (20) a day for the whole app. It gets only the
+    photo, never a name or an email.
+  - **Only a suggestion** (`utils/listingDraft.js`, `toListingDraft`): four fields, category and condition
+    from our own lists, text cut to the form's lengths. Text in a photo can try to steer the model; these
+    checks and the student's review are the defence. The form fills only EMPTY fields (a select only if
+    never picked) and never posts; a note says to check it. Demo presets still work.
+  - **Price hint, from UniSwap only** (`db/priceHints.js`): same category, "sale" with a price, active or
+    sold, matched on the TITLE only (full-text stemming; no descriptions, related words or typo test).
+    `closestMatches` keeps only the rows sharing the most title words, and needs 2 in common when the
+    AI title has 3+ real words; weaker rows are never used instead (4 Nov fix: a MacBook got "$12–$550"
+    from laptop RAM). Sold ones first when 2+, at the amount paid. Fewer than 2 = no hint. An empty
+    price box gets the middle of the range. On today's demo data most items get no hint (one MacBook,
+    one ThinkPad, one GPU for sale); "Calculus textbook" gets $18–$22.
 - **Receipts:** `GET /api/payments/receipt/:listingId` (`routes/payments.js`) answers only the buyer and
   seller of a listing with a `paid` payment (404 for anyone else, unpaid, or `refund_due`): the invoice
   number (`invoiceNumber()` in `utils/payments.js`, also used by `notifyPaid`), the amount really paid,
@@ -435,6 +458,8 @@ Done (week 6, 26–27 Oct):
   without a reload. No email or Telegram while they have that thread open.
 - **Meetup planner (4 Nov):** plan a campus meetup from a chat; the card updates live for both people,
   and both get an email + Telegram reminder 30 minutes before. Spot names are placeholders to rename.
+- **Snap to list (4 Nov):** "Fill in from photo" on the sell form fills the title, category, condition
+  and description from a photo, with a price hint from similar UniSwap listings.
 - **Sign-up by code (28 Oct):** the sign-up email carries a 6-digit code instead of a link, so school
   Outlook stops filing it as Junk. Links in other emails use one fixed site address.
 
