@@ -1,5 +1,6 @@
 "use client";
 
+import { useRef } from "react";
 import { Field } from "@/components/forms/Field";
 import { PhotoAddBox } from "@/components/forms/PhotoAddBox";
 import { PhotoThumb } from "@/components/forms/PhotoThumb";
@@ -13,6 +14,10 @@ import { MAX_LISTING_PHOTOS } from "@/lib/constants";
  * and the Server Action sends those URLs to the API.
  */
 export function PhotoPicker({ photos, error }: { photos: ListingPhotos; error?: string }) {
+  // "Make cover" disappears once its photo is the cover, so focus moves to the list instead of
+  // being lost: keyboard users carry on from the photos.
+  const listRef = useRef<HTMLUListElement>(null);
+
   return (
     <Field
       label="Photos (optional)"
@@ -23,14 +28,17 @@ export function PhotoPicker({ photos, error }: { photos: ListingPhotos; error?: 
         onFiles={(files) => void photos.addFiles(files)}
       />
       {photos.items.length > 0 ? (
-        <ul aria-label="Chosen photos" className="grid grid-cols-3 gap-2 sm:grid-cols-4">
+        <ul ref={listRef} tabIndex={-1} aria-label="Chosen photos" className="grid grid-cols-3 gap-2 sm:grid-cols-4">
           {photos.items.map((photo, index) => (
             <PhotoThumb
               key={photo.key}
               photo={photo}
               position={index + 1}
               onRemove={() => photos.remove(photo.key)}
-              onMakeCover={() => photos.makeCover(photo.key)}
+              onMakeCover={() => {
+                photos.makeCover(photo.key);
+                listRef.current?.focus();
+              }}
             />
           ))}
         </ul>

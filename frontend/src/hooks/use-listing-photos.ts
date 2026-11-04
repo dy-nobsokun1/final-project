@@ -76,6 +76,8 @@ export function useListingPhotos(initialUrls: string[]) {
 
   function remove(key: string) {
     setItems((current) => current.filter((photo) => photo.key !== key));
+    // The messages were about the last photos picked ("only 6 fit", "over 4 MB"); after a change they are stale.
+    setErrors([]);
   }
 
   /** Moves a photo to the front, which makes it the cover. */
