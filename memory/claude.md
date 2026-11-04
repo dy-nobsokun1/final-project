@@ -512,11 +512,7 @@ After `git pull origin implement_backend`:
      shows words live; Firefox needs you signed in and uses the Groq quota.
    - Before the demo, try the room: the screen size macOS picks, the HDMI adapter, and how the pale greens look on the projector.
 5. **Frontend follow-ups for Dy** (found in browser testing, not fixed yet):
-   - a heart tapped while signed out should return to the listing after login;
-   - `PhotoPicker` does not clear its error, and focus is lost after "Make cover";
-   - `forms/NewListingForm.tsx` is 155 lines, over the ~100-line rule;
-   - the offer panels still show the agreed amount after the seller cuts the price below it. The
-     buyer pays the lower price, so only the text is wrong.
+   - `forms/NewListingForm.tsx` is 176 lines, over the ~100-line rule (leave it until after the demo);
    - Phone sizes, paused until after the demo:
      - the navbar is too wide at about 768 px;
      - the hero fills the first screen, so no items show without scrolling;

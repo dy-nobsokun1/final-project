@@ -4,6 +4,18 @@ Log of completed tasks, architecture decisions, and bug fixes for the UniSwap te
 
 ## 4 Nov 2026
 
+### Demo check: small fixes found by clicking through the demo
+- **Receipt readable:** the payment receipt card had no `light-surface`, so its labels were the card's own colour (invisible); the total and the Download button were 1.3:1 and 1.6:1. Now all text is readable, and the header no longer runs under the close button.
+- **Rating stars:** filled stars (1.9:1) looked like the empty ones, so a 5-star rating read as empty. They now use the text colour.
+- **Bid and offer boxes** select their number on focus, so typing replaces it (typing 11 after the prefilled 10 placed a $1,011 bid).
+- **Offers:** when the seller cuts the price below an accepted offer, both panels now say "The price is now $X, so you/they pay that."
+- **Meetups:** an accepted meetup whose time has passed says "Meetup time has passed" (an unanswered one "Meetup request expired"), without buttons, and "Plan meetup" shows again. API test added.
+- **Sign in returns to the listing** (heart, "Sign in to message the seller", receipt link) through `/login?next=`, checked by `safeNextPath` (no other sites).
+- **Photo picker:** removing a photo clears stale errors; focus stays on the photo list after "Make cover".
+- **Seed chat order:** the two seed messages had the same time, so the reply could show above the question. Fixed in `db:seed` and in the Supabase demo row.
+- Text: "1 chat" (was "1 chats"), and the Ask UniSwap example says "under $5".
+- Checked at 1280×800 and 1024×768 (light, no side scroll) and in dark mode. Tests: 97 unit, 161 API.
+
 ### Snap to list ("Fill in from photo")
 - On a new listing, after a photo is picked, "Fill in from photo" sends the shrunk photo (only the photo) to Gemini `gemini-3.1-flash-lite`, with Groq `qwen/qwen3.8-27b` once when Gemini is busy (at most 20 photos a day, since it shares Ask UniSwap's quota). It fills only empty fields (title, category, condition, description) and never posts. 10 photos an hour per student; nothing stored or logged.
 - The price hint comes only from similar UniSwap listings. Tightened the same day: a MacBook photo gave "$12–$550" because laptop RAM and an iPad Pro shared one word. Now only titles sharing the most words count, at least 2 words, and weaker matches are never used instead: no hint is better than a wrong one. On the demo data the MacBook, ThinkPad, GPU, mouse, textbooks and bike get no hint (one or no close match; every bike is an auction or a trade); "Samsung SSD" gets $30–$45.
