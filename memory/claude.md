@@ -169,8 +169,9 @@ when `uniswap` has none, so an older `uniswap` database needs the upgrade SQL (b
     /inbox /help` (`setMyCommands` at start-up). An item card has its photo when the cover is https, and
     Save / Unsave.
   - **Linking and silence:** `/start <code>` sends one plain `Connected as <name>. UniSwap notifications
-    will now arrive here too.` with no buttons; a bad or used code gets `That link has expired. ` plus
-    the connect instructions. An unlinked chat gets `notLinkedScreen()` for text and for buttons. A plain
+    will now arrive here too.` with no buttons; a bad, used or old code gets `That link has expired. ` plus
+    the connect instructions. Codes work 30 minutes with no extra column: `<32 hex>_<Date.now() base 36>`
+    (`utils/telegramLinkCode.js`; the lookup still matches the whole code; codes without a time count as expired). An unlinked chat gets `notLinkedScreen()` for text and for buttons. A plain
     `/start` from a linked chat stays quiet. An unknown command shows the menu (never a search), and so
     does a photo or sticker.
   - The student always comes from `telegram_chat_id` (`findChatUser`, verified accounts only), never
@@ -401,12 +402,12 @@ when `uniswap` has none, so an older `uniswap` database needs the upgrade SQL (b
     messages) and `notifyMeetupReminder` (always, both people). `server.js` runs `claimDueReminders()`
     once a minute: one `UPDATE … RETURNING`, so no reminder goes out twice.
   - **UI:** `MeetupCard` under the thread header (Accept / Decline for the invitee, Cancel meetup for
-    either), `MeetupPlanner` + `MeetupForm` above the chat box (hidden until the thread has a message and
+    either, after a `window.confirm`), `MeetupPlanner` + `MeetupForm` above the chat box (hidden until the thread has a message and
     while an accepted meetup is still to come). Once its time passes, the card says "Meetup time has
     passed" (or "Meetup request expired"), loses its buttons, and the planner shows again (`isMeetupPast`).
 - **Uploads:** `POST /api/uploads` with raw image bytes (max 5 MB; the form takes 4 MB, `MAX_PHOTO_MB`,
   because Vercel refuses requests over 4.5 MB), saved to `backend/uploads/`
-  (git-ignored). Must move to Cloudinary before deploying, because Render wipes the disk on restart.
+  (git-ignored). The first bytes must match the `Content-Type` (`hasImageSignature` in `utils/imageType.js`), else 400. Must move to Cloudinary before deploying, because Render wipes the disk on restart.
   A listing has up to 6 photos; `imageUrls[0]` is the cover. `validateListing` enforces `MAX_PHOTOS`,
   no duplicates and own-upload URLs only (`uploadedPhotoPrefix` in `routes/uploads.js`), but keeps
   photos the listing already has; a DB `CHECK` limits it to 6 too. The form uploads each photo when it
