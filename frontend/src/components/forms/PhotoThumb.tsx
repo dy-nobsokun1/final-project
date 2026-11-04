@@ -36,16 +36,19 @@ export function PhotoThumb({ photo, position, onRemove, onMakeCover }: PhotoThum
           className="aspect-square w-full rounded-lg border border-border"
         />
         {position === 1 ? <Badge className="absolute left-1 top-1">Cover</Badge> : null}
-        <Button
-          type="button"
-          size="icon-xs"
-          variant="secondary"
-          aria-label={`Remove photo ${position}`}
-          onClick={onRemove}
-          className="absolute right-1 top-1"
-        >
-          <X aria-hidden="true" />
-        </Button>
+        {/* The span does the positioning: Button's ripple sets an inline position: relative, which
+            beats an `absolute` class on the Button itself (it showed under the photo). */}
+        <span className="absolute right-1 top-1">
+          <Button
+            type="button"
+            size="icon-xs"
+            variant="secondary"
+            aria-label={`Remove photo ${position}`}
+            onClick={onRemove}
+          >
+            <X aria-hidden="true" />
+          </Button>
+        </span>
       </div>
       {position > 1 ? (
         <Button type="button" size="xs" variant="ghost" onClick={onMakeCover}>
