@@ -53,9 +53,6 @@ export function OfferForm({ listingId, askingPrice, currentAmount }: OfferFormPr
           {isBusy ? "Sending..." : currentAmount === null ? "Make offer" : "Change offer"}
         </Button>
       </div>
-      <p className="text-xs text-muted-foreground">
-        Asking {formatPrice(askingPrice)}. If the seller accepts, the item is reserved for you at your price.
-      </p>
       {error ? (
         <p role="alert" className="text-sm text-foreground">
           {error}

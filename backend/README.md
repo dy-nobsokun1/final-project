@@ -455,6 +455,9 @@ cancel it. Both get an email and a Telegram reminder 30 minutes before.
   under a lock on the listing row, with a partial unique index as a backstop. While an accepted meetup
   is still to come, a new proposal is refused (409): cancel it first. Accepting is refused once the
   time has passed. Each answer is one conditional `UPDATE`, so two answers at once cannot both win.
+- **10 proposals an hour:** each proposal emails the other person, so a student who already made 10 in
+  the last hour gets 429. Counted in the database (`created_at`), so a restart does not reset it;
+  replaced and cancelled proposals count too.
 - **Live:** each change goes to both people's open streams as `event: meetup` (the JSON below), which the
   message code ignores; the thread page refreshes on it.
 - **Notifications:** proposed, accepted, declined and cancelled go to the other person, but not while
@@ -810,7 +813,7 @@ A token issued before the account's last password change or reset is refused (40
 | PATCH 🔒 | `/api/messages/read` | `{ listingId, withUserId }` → mark a thread read |
 | GET 🔒 | `/api/messages/stream?listingId=&withUserId=` | Server-Sent Events: my new messages, live. Each is `event: message` with the same JSON as `POST /api/messages` returns (`toMessage`), sent to both the sender's and the receiver's streams. A meetup change comes as `event: meetup` with the meetup's JSON. With both params it gets only that thread and counts as watching it, so no new-message email or Telegram is sent while it is open; with neither (the inbox) it gets all of mine. `: connected` at once, then `: ping` every 25 s. `400` with only one param |
 | GET 🔒 | `/api/meetups?listingId=&withUserId=` | `{ meetup }`: the thread's newest meetup in any status, or `null`. A meetup is `{ id, listingId, proposerId, inviteeId, spot, meetAt, status, createdAt, updatedAt }`. Only ever one the signed-in student is part of |
-| POST 🔒 | `/api/meetups` | `{ listingId, withUserId, spot, meetAt }` → `201 { meetup }`. Replaces the thread's waiting proposal. `400` bad spot or time, `403` not the owner and someone who chatted with them, `404` no listing, `409` an accepted meetup is still to come (see Meetups) |
+| POST 🔒 | `/api/meetups` | `{ listingId, withUserId, spot, meetAt }` → `201 { meetup }`. Replaces the thread's waiting proposal. `400` bad spot or time, `403` not the owner and someone who chatted with them, `404` no listing, `409` an accepted meetup is still to come (see Meetups), `429` 10 proposals by this student in the last hour |
 | PATCH 🔒 | `/api/meetups/:id` | `{ status: "accepted" \| "declined" \| "cancelled" }` → `{ meetup }`. Only the invitee accepts or declines; either person cancels. `403` not the invitee, `404` not yours, `409` already answered, or its time has passed |
 | POST 🔒 | `/api/uploads` | One photo per request: raw image bytes with `Content-Type: image/jpeg`, `png`, `webp` or `gif` (max 5 MB) → `{ url }` |
 | POST 🔒 | `/api/voice/transcribe` | Raw audio bytes with `Content-Type: audio/webm`, `ogg`, `mp4`, `mpeg` or `wav` (max 2 MB, about 60 s) → `{ text }` from Groq's Whisper (`GROQ_API_KEY`). Nothing is stored or logged. `415` wrong type, `503` while off or while Groq's free limit is used up, `502` if Groq fails |

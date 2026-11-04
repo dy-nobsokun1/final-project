@@ -1,6 +1,6 @@
 "use client";
 
-import { CheckCircle2, Download, Printer, X } from "lucide-react";
+import { CheckCircle2, Printer, X } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import type { ListingWithSeller, PaymentReceipt } from "@/types";
@@ -112,16 +112,6 @@ export function InvoiceReceiptCard({ receipt, listing }: InvoiceReceiptCardProps
             >
               <Printer className="size-4" />
               <span>Print / Save as PDF</span>
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => window.print()}
-              className="gap-1.5 border-border bg-brand-50 text-brand-ink hover:bg-brand-200 hover:text-brand-ink"
-            >
-              <Download className="size-4" />
-              <span>Download</span>
             </Button>
           </div>
         </div>

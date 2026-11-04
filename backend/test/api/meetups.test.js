@@ -216,3 +216,17 @@ test("meetup changes go live to both people's open thread streams as a separate 
     controller.abort();
   }
 });
+
+test("one person can propose at most 10 meetups an hour, counting replaced ones", async () => {
+  const { owner, buyer, listing } = await thread();
+  // Each new proposal replaces the last one in this chat, but every one of them still counts.
+  for (let i = 0; i < 10; i += 1) {
+    const made = await propose(buyer, owner, listing);
+    assert.equal(made.status, 201, JSON.stringify(made.body));
+  }
+  const refused = await propose(buyer, owner, listing);
+  assert.equal(refused.status, 429);
+  assert.equal(refused.body.error, "You have planned 10 meetups this hour. Try again later.");
+  // The limit is per person, not per chat: the other person can still propose.
+  assert.equal((await propose(owner, buyer, listing)).status, 201);
+});

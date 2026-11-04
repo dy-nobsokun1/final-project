@@ -393,6 +393,8 @@ when `uniswap` has none, so an older `uniswap` database needs the upgrade SQL (b
     label needs no database change.
   - **One open per thread:** a new proposal cancels the waiting one (listing row lock + partial unique
     index); refused (409) while an accepted one is still to come. Each answer is one conditional `UPDATE`.
+  - **10 an hour:** a student may propose at most 10 meetups in the last hour (429), counted in the
+    database on `created_at`, replaced and cancelled ones included, because each one sent an email.
   - **Live:** `publishMeetup` in `liveHub.js` sends `event: meetup` to both streams; `use-live-messages`
     calls `router.refresh()` on it, and the page re-reads the meetup (`getThreadMeetup`).
   - **Alerts:** `notifyMeetupChanged` (skipped while the other person has the thread open, like

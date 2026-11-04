@@ -14,6 +14,7 @@ Log of completed tasks, architecture decisions, and bug fixes for the UniSwap te
 - **Photo picker:** removing a photo clears stale errors; focus stays on the photo list after "Make cover".
 - **Seed chat order:** the two seed messages had the same time, so the reply could show above the question. Fixed in `db:seed` and in the Supabase demo row.
 - Text: "1 chat" (was "1 chats"), and the Ask UniSwap example says "under $5".
+- Last three: at most 10 meetup proposals an hour per student (429, counted in the database, since each one sends an email; API test added); the receipt keeps only "Print / Save as PDF" ("Download" did the same thing); the offer panel says "Asking $X" once (the form's second sentence is gone).
 - Checked at 1280×800 and 1024×768 (light, no side scroll) and in dark mode. Tests: 97 unit, 161 API.
 
 ### Snap to list ("Fill in from photo")

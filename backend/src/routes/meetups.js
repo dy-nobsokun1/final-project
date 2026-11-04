@@ -33,7 +33,10 @@ meetupsRouter.get("/", async (req, res) => {
   res.json({ meetup: row ? toMeetup(row) : null });
 });
 
+const MAX_PROPOSALS_PER_HOUR = 10;
+
 // POST /api/meetups  { listingId, withUserId, spot, meetAt }  -> 201 { meetup }
+// 429 after 10 proposals by the same person in the last hour.
 meetupsRouter.post("/", async (req, res) => {
   const { listingId, withUserId, spot, meetAt } = req.body ?? {};
   if (!isUuid(listingId) || !isUuid(withUserId)) throw new HttpError(400, "listingId and withUserId are required.");
@@ -43,6 +46,15 @@ meetupsRouter.post("/", async (req, res) => {
   }
   const timeError = meetupTimeError(meetAt);
   if (timeError) throw new HttpError(400, timeError, { meetAt: timeError });
+  // Each proposal emails the other person, so at most 10 an hour. Counted in the database (so a
+  // restart does not reset it), replaced and cancelled proposals included: they were sent too.
+  const { rows: [recent] } = await query(
+    "SELECT count(*)::int AS n FROM meetups WHERE proposer_id = $1 AND created_at > now() - interval '1 hour'",
+    [req.userId],
+  );
+  if (recent.n >= MAX_PROPOSALS_PER_HOUR) {
+    throw new HttpError(429, `You have planned ${MAX_PROPOSALS_PER_HOUR} meetups this hour. Try again later.`);
+  }
 
   const meetup = await withTransaction(async (client) => {
     // Locking the listing row makes two quick taps in one thread wait for each other, so the
