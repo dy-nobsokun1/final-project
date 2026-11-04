@@ -46,7 +46,7 @@ export function ReviewForm({ listingId, reviewee }: ReviewFormProps) {
           >
             <Star
               aria-hidden="true"
-              className={cn("size-6", star <= rating ? "fill-current text-brand-600" : "text-muted-foreground/50")}
+              className={cn("size-6", star <= rating ? "fill-current text-foreground" : "text-muted-foreground/50")}
             />
           </button>
         ))}
