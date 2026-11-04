@@ -43,6 +43,8 @@ export function BidForm({ listingId, minimumBid }: BidFormProps) {
           // `key` resets the box to the new minimum after someone (you or another bidder) bids.
           key={minimumBid}
           defaultValue={minimumBid}
+          // Selects the minimum on focus, so typing replaces it: typing "11" after the "10" gave $1,011.
+          onFocus={(event) => event.currentTarget.select()}
           aria-label="Your bid in USD"
           className="bg-brand-50/40"
         />
