@@ -35,7 +35,7 @@ export function TelegramSettings() {
       return;
     }
     window.open(result.link, "_blank", "noopener");
-    setMessage('Telegram opened. Press "Start" there, then click "Check again".');
+    setMessage('Telegram opened. Press "Start" there within 30 minutes, then click "Check again".');
   }
 
   async function handleDisconnect() {
