@@ -411,7 +411,7 @@ when `uniswap` has none, so an older `uniswap` database needs the upgrade SQL (b
     passed" (or "Meetup request expired"), loses its buttons, and the planner shows again (`isMeetupPast`).
 - **Uploads:** `POST /api/uploads` with raw image bytes (max 5 MB; the form takes 4 MB, `MAX_PHOTO_MB`,
   because Vercel refuses requests over 4.5 MB), saved to `backend/uploads/`
-  (git-ignored). The first bytes must match the `Content-Type` (`hasImageSignature` in `utils/imageType.js`), else 400. Must move to Cloudinary before deploying, because Render wipes the disk on restart.
+  (git-ignored). The type (and the file extension) comes from the file's first bytes (`detectImageType` in `utils/imageType.js`), not the header; bytes of no accepted type are 400. Must move to Cloudinary before deploying, because Render wipes the disk on restart.
   A listing has up to 6 photos; `imageUrls[0]` is the cover. `validateListing` enforces `MAX_PHOTOS`,
   no duplicates and own-upload URLs only (`uploadedPhotoPrefix` in `routes/uploads.js`), but keeps
   photos the listing already has; a DB `CHECK` limits it to 6 too. The form uploads each photo when it
