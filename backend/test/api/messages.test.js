@@ -123,6 +123,21 @@ test("every message about a listing must include its owner", async () => {
   assert.equal((await send(stranger, buyer, listing, "Psst, mine is cheaper")).status, 400);
 });
 
+test("a message to nobody is 404, and ids that are not ids are 400, never 500", async () => {
+  const [owner, buyer] = await Promise.all([api.createUser(), api.createUser()]);
+  const listing = await api.createListing(owner);
+  const toNobody = await send(owner, { id: randomUUID() }, listing, "Hello?");
+  assert.equal(toNobody.status, 404);
+  assert.equal(toNobody.body.error, "User not found.");
+  // Not UUIDs, or missing: refused before the database sees them.
+  assert.equal((await send(owner, { id: "abc" }, listing, "Hi")).status, 400);
+  assert.equal((await send(owner, {}, listing, "Hi")).status, 400);
+  assert.equal((await send(buyer, owner, { id: "abc" }, "Hi")).status, 400);
+  assert.equal((await send(buyer, owner, {}, "Hi")).status, 400);
+  // A well-formed id of no listing is still 404.
+  assert.equal((await send(buyer, owner, { id: randomUUID() }, "Hi")).status, 404);
+});
+
 test("you cannot message yourself, and empty messages are refused", async () => {
   const [owner, buyer] = await Promise.all([api.createUser(), api.createUser()]);
   const listing = await api.createListing(owner);

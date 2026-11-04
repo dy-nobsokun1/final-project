@@ -6,6 +6,7 @@ import { HttpError } from "../utils/httpError.js";
 import { addStream, isWatchingThread, publishMessage } from "../utils/liveHub.js";
 import { notifyNewMessage } from "../utils/notify.js";
 import { toMessage } from "../utils/serializers.js";
+import { isUuid } from "../utils/validation.js";
 
 // Messaging follows the ER diagram: each message has a listing, a sender and a receiver.
 // A "conversation" is not stored; it is every message between two users about one listing.
@@ -118,6 +119,11 @@ messagesRouter.post("/", async (req, res) => {
   if (typeof body !== "string" || !body.trim() || body.length > 2000) {
     throw new HttpError(400, "Message must be 1-2000 characters.");
   }
+  // Ids that are not even UUIDs are the client's mistake (400). Checked here, so Postgres never
+  // sees them: a missing receiverId would otherwise break the NOT NULL rule and answer 500.
+  if (!isUuid(listingId) || !isUuid(receiverId)) {
+    throw new HttpError(400, "listingId and receiverId must be valid ids.");
+  }
   if (receiverId === req.userId) throw new HttpError(400, "You cannot message yourself.");
 
   const listing = await findListingById(listingId);
@@ -126,6 +132,9 @@ messagesRouter.post("/", async (req, res) => {
   if (listing.user_id !== req.userId && listing.user_id !== receiverId) {
     throw new HttpError(400, "Messages about a listing must include its owner.");
   }
+  // A well-formed id of nobody: say so (404) instead of letting the INSERT fail on the foreign key (500).
+  const { rowCount: receiverExists } = await query("SELECT 1 FROM users WHERE id = $1", [receiverId]);
+  if (!receiverExists) throw new HttpError(404, "User not found.");
 
   const { rows } = await query(
     `INSERT INTO messages (listing_id, sender_id, receiver_id, content)
