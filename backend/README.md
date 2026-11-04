@@ -5,12 +5,14 @@ project proposal (Section 4, Methodology).
 
 ## Setup
 
-Requires Node.js 20.6+ and PostgreSQL 13+ (local, or a free Supabase database).
+Requires Node.js 20.6+ (the frontend needs 20.9+) and PostgreSQL 13+ (local, or a free Supabase database).
+Create an empty database first: `createdb uniswap`, or in Docker
+`docker exec <container> createdb -U <user> uniswap`.
 
 ```bash
 cd backend
 npm install
-cp .env.example .env      # then edit DATABASE_URL and JWT_SECRET
+cp .env.example .env      # then edit DATABASE_URL (your database) and JWT_SECRET
 npm run db:setup          # creates the tables (drops existing data!)
 npm run db:seed           # optional demo data; every demo user's password is "password123"
 npm run db:samples        # optional: 60 more realistic items (see "Sample listings" below)
@@ -18,6 +20,7 @@ npm run db:demo-deals     # optional, after the two above: 9 finished deals for 
 npm run dev               # http://localhost:4000, restarts on file changes
 npm test                  # unit tests (Node's built-in test runner)
 npm run test:api          # API tests against a separate test database (see Testing below)
+npm run start:prod        # what Render runs: like start, but settings come from the environment, not .env
 ```
 
 Check it works: `curl http://localhost:4000/api/health` → `{"status":"ok"}`
@@ -56,6 +59,18 @@ the [profile stats](#profile-stats) have something to show: 6 of their own items
 straight to the database (no Stripe, Bakong, email or Telegram), and skips deals it added before.
 `npm run db:demo-deals -- --remove` deletes exactly those 9 listings, with their bids, offers and
 payments.
+
+Two more helpers for rehearsing the demo (both write straight to the database in `DATABASE_URL`):
+
+- `npm run db:reset-sold` puts every sold or traded listing except the 9 demo deals back to active,
+  and deletes its payments, offers and reviews (`-- --all` resets the demo deals too).
+- `npm run db:open-auctions` reopens the demo auctions for 7 more days: the RTX 3090 goes back to
+  active at $450 **with all its bids deleted**, and every other active auction (not the demo deals)
+  gets a new end time 7 days from now.
+
+`npm run db:to-supabase` copies a local database to Supabase once: it reads `LOCAL_DATABASE_URL`
+(default: the Docker database on port 5433) and writes to `SUPABASE_DATABASE_URL`. It runs `schema.sql`
+there first, which **drops every table**, so it replaces all data in that Supabase database.
 
 ### Verification emails (optional)
 
@@ -100,14 +115,15 @@ CORS stays on `FRONTEND_ORIGIN`, because only the Next.js server calls the API.
 
 ```
 backend/
-├── scripts/            db-setup.js (create tables), db-seed.js (demo data), check-email.js
+├── scripts/            db-setup.js (create tables), db-seed.js (demo data), db-samples.js, db-demo-deals.js,
+│                       db-reset-sold.js, db-open-auctions.js, migrate-to-supabase.js, check-email.js
 ├── src/
 │   ├── server.js       starts the HTTP server
 │   ├── app.js          Express app: middleware + routes
 │   ├── config.js       reads environment variables
 │   ├── db/             schema.sql, connection pool, shared listing query, wanted-post matching, offer helpers
 │   ├── middleware/     requireAuth (JWT), CORS, error handler
-│   ├── routes/         auth, listings, bids, offers, reviews, saved, users, messages, payments, telegram, uploads, voice, assistant
+│   ├── routes/         auth, listings, bids, offers, reviews, saved, users, messages, meetups, payments, khqr, telegram, uploads, voice, assistant
 │   └── utils/          validation, password hashing, tokens, JSON serializers, email
 └── test/               unit tests; test/api/ holds the API tests (see Testing)
 ```
@@ -865,7 +881,7 @@ can check who would have been emailed, waiting with `waitFor` because notificati
 
 - **SQL injection:** every query uses `$1, $2, ...` parameters, never string concatenation.
 - **Passwords:** hashed with scrypt (Node's built-in `crypto`) plus a random salt; never returned by the API.
-- **Verified members only:** an account cannot sign in until the link sent to its `.edu.kh` address is opened, so a
+- **Verified members only:** an account cannot sign in until the 6-digit code emailed to its `@aupp.edu.kh` address is typed, so a
   made-up or borrowed email gets nowhere. An unverified sign-up is replaced if the email registers again, so a
   stranger cannot block the real owner. Every protected request re-checks that the account exists and is verified.
 - **Auth:** signed JWTs expire after 7 days; changing or resetting the password signs out every session
