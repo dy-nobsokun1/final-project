@@ -4,6 +4,11 @@ Log of completed tasks, architecture decisions, and bug fixes for the UniSwap te
 
 ## 4 Nov 2026
 
+### Dark mode depth
+- Dark mode looked flat: cards `#314740` on a page `#22312d` were only 1.36:1 apart. The dark page is now `#121b18` (1.76:1); `--card` and its contrast numbers are unchanged.
+- Cards get a pale top edge and a soft shadow; the hero and profile header get a mint glow, paler grid lines and a mint border; "On Campus", prices, stats numbers and category icons are mint. The Wanted card is `#1a2521` with a rose dashed border. The Telegram strip's icon was invisible in dark mode and now shows.
+- Dark mode only: a `getComputedStyle` snapshot of every element on 8 pages at 1280×800 and 1024×768 is identical in light mode before and after.
+
 ### Enter sends a chat message
 - In `MessageComposer`, Enter sends through the form's own `handleSubmit` (`requestSubmit()`); Shift+Enter adds a line. Enter is ignored while an IME is composing, while sending, and while voice input is not idle.
 
