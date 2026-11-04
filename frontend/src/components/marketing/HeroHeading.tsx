@@ -47,8 +47,9 @@ export function HeroHeading() {
         delay={240}
         holdDelay={90}
       >
-        <span className="mr-[0.25em] inline-block">On</span>
-        <span className="inline-block">Campus</span>
+        {/* Dark mode: mint, 3.9:1 on the hero's lightest corner (large text needs 3:1). */}
+        <span className="mr-[0.25em] inline-block dark:text-brand-400">On</span>
+        <span className="inline-block dark:text-brand-400">Campus</span>
       </Effects>
     </h1>
   );

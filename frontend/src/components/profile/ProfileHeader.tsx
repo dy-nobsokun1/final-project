@@ -23,7 +23,7 @@ export function ProfileHeader({ user, listings, averageRating, reviewCount, isOw
   const details = [user.major, user.graduationYear && `Class of ${user.graduationYear}`].filter(Boolean).join(" · ");
 
   return (
-    <section className="light-surface relative overflow-hidden rounded-3xl border border-border bg-gradient-to-br from-hero-from to-hero-to">
+    <section className="light-surface relative overflow-hidden rounded-3xl border border-border bg-gradient-to-br from-hero-from to-hero-to dark:border-brand-400/35">
       <div aria-hidden="true" className="brand-grid absolute inset-0 opacity-60" />
 
       <div className="relative flex flex-col gap-5 p-5 sm:p-8">

@@ -9,7 +9,7 @@ import { HeroSubheading } from "@/components/marketing/HeroSubheading";
 /** Brand banner that sits above the browse filters on the home page. */
 export function HeroBand() {
   return (
-    <section className="light-surface relative overflow-hidden rounded-3xl border border-border bg-gradient-to-br from-hero-from to-hero-to">
+    <section className="light-surface relative overflow-hidden rounded-3xl border border-border bg-gradient-to-br from-hero-from to-hero-to dark:border-brand-400/35">
       {/* Decorative grid, faded out towards the bottom. */}
       <div aria-hidden="true" className="brand-grid absolute inset-0 opacity-60" />
 

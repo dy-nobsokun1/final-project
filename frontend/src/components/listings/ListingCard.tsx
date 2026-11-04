@@ -68,7 +68,7 @@ export function ListingCard({ listing, saved }: ListingCardProps) {
             <h3 className="line-clamp-2 font-medium text-foreground group-hover:underline">
               {listing.title}
             </h3>
-            <p className="shrink-0 font-semibold">{formatListingPrice(listing)}</p>
+            <p className="shrink-0 font-semibold dark:text-brand-400">{formatListingPrice(listing)}</p>
           </div>
 
           <div className="mt-auto flex flex-wrap items-center gap-2">
