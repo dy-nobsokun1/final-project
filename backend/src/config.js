@@ -58,4 +58,14 @@ export const config = {
     // and gemini-3.8-flash did not answer at all.
     model: process.env.GEMINI_MODEL ?? "gemini-3.5-flash-lite",
   },
+  // "Fill in from photo" on the sell form (services/vision.js). Gemini by default, on a model of its
+  // own: free limits count per Google project and per model, so it never uses up the assistant's
+  // gemini-3.5-flash-lite or Groq's qwen. Checked 4 Nov 2026: Groq's only vision model is the
+  // assistant's own qwen/qwen3.8-27b (same 1,000 requests and 8,000 tokens a minute, about 2,500 per
+  // photo), so VISION_PROVIDER=groq shares the assistant's quota. Use it only if Gemini fails.
+  vision: {
+    provider: process.env.VISION_PROVIDER?.trim().toLowerCase() || "gemini",
+    geminiModel: process.env.VISION_GEMINI_MODEL ?? "gemini-3.1-flash-lite",
+    groqModel: process.env.VISION_GROQ_MODEL ?? "qwen/qwen3.8-27b",
+  },
 };
