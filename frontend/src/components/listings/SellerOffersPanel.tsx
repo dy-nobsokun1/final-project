@@ -1,7 +1,7 @@
 import { HandCoins } from "lucide-react";
 import { OfferRow } from "@/components/listings/OfferRow";
 import { getListingOffers } from "@/lib/api";
-import { formatPrice } from "@/lib/utils";
+import { formatPrice, lowerPriceNote } from "@/lib/utils";
 import type { ListingWithSeller } from "@/types";
 
 /**
@@ -27,7 +27,7 @@ export async function SellerOffersPanel({ listing }: { listing: ListingWithSelle
         <p className="text-sm">
           You accepted {accepted.buyer.name}&apos;s offer of {formatPrice(accepted.amount)}
           {listing.status === "reserved"
-            ? ", so the item is reserved for them. Mark it sold once you have handed it over, or make it available again if the deal falls through."
+            ? `, so the item is reserved for them.${lowerPriceNote(listing, accepted.amount, "they pay")} Mark it sold once you have handed it over, or make it available again if the deal falls through.`
             : "."}
         </p>
       ) : null}

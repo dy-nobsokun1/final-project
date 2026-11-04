@@ -45,6 +45,14 @@ export function payableAmount(listing: ListingWithSeller, userId: string | null,
   return null;
 }
 
+/**
+ * " The price is now $40, so you pay that." when the seller lowered the price below an accepted
+ * offer (payableAmount charges the lower one), else "". `who` is "you pay" or "they pay".
+ */
+export function lowerPriceNote(listing: Pick<Listing, "price">, offerAmount: number, who: string): string {
+  return listing.price < offerAmount ? ` The price is now ${formatPrice(listing.price)}, so ${who} that.` : "";
+}
+
 const RELATIVE_UNITS: Array<[Intl.RelativeTimeFormatUnit, number]> = [
   ["year", 1000 * 60 * 60 * 24 * 365],
   ["month", 1000 * 60 * 60 * 24 * 30],
