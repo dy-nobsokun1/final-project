@@ -7,7 +7,7 @@ import { RatingStars } from "@/components/profile/RatingStars";
 import { ReviewForm } from "@/components/profile/ReviewForm";
 import { UserAvatar } from "@/components/profile/UserAvatar";
 import { Button, buttonVariants } from "@/components/ui/button";
-import { formatPrice } from "@/lib/utils";
+import { cn, formatPrice } from "@/lib/utils";
 import type { Purchase } from "@/types";
 
 /** The one line about what happened, e.g. "Paid $45 by card". */
@@ -55,7 +55,16 @@ export function PurchaseCard({ purchase }: { purchase: Purchase }) {
         ) : (
           <span className="flex items-center gap-2 text-sm">You rated <RatingStars rating={myRating} /></span>
         )}
-        <Link href={`/profile/${seller.id}`} className={buttonVariants({ variant: "outline", size: "sm" })}>
+        {/* The outline variant fills with the page colour (#22312d), and this card makes text black: 1.5:1.
+            A pale fill like SaveButton's: black text 18.1:1 (12.9:1 on hover), and the border is the
+            card's --input, 3.6:1 on the light card and 3.4:1 on the dark one. */}
+        <Link
+          href={`/profile/${seller.id}`}
+          className={cn(
+            buttonVariants({ variant: "outline", size: "sm" }),
+            "border-input bg-brand-50 text-brand-ink hover:bg-brand-200 hover:text-brand-ink",
+          )}
+        >
           More from {seller.name.split(" ")[0]}
         </Link>
       </div>

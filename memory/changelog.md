@@ -4,6 +4,9 @@ Log of completed tasks, architecture decisions, and bug fixes for the UniSwap te
 
 ## 4 Nov 2026
 
+### "More from <seller>" readable in light mode
+- On Recent purchases, the outline button filled with the dark page colour under black text (1.5:1). `PurchaseCard` now gives it a pale fill like `SaveButton`: black text 18.1:1, border 3.6:1 on the light card and 3.4:1 on the dark one.
+
 ### Dark mode depth
 - Dark mode looked flat: cards `#314740` on a page `#22312d` were only 1.36:1 apart. The dark page is now `#121b18` (1.76:1); `--card` and its contrast numbers are unchanged.
 - Cards get a pale top edge and a soft shadow; the hero and profile header get a mint glow, paler grid lines and a mint border; "On Campus", prices, stats numbers and category icons are mint. The Wanted card is `#1a2521` with a rose dashed border. The Telegram strip's icon was invisible in dark mode and now shows.
