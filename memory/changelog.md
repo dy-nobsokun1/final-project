@@ -4,11 +4,6 @@ Log of completed tasks, architecture decisions, and bug fixes for the UniSwap te
 
 ## 4 Nov 2026
 
-### Dark mode colour mix
-- Dark mode now keeps light mode's mix of colours, in deep tones, instead of one mint accent: six different category chips (olive, grey-teal, outline, near-black, jade, olive), wine filter selects and Free tag, jade Trade tag and own chat bubbles, near-black buttons, an olive-to-green hero, a darker tray for the filter panel and Telegram strip, olive insets and stats sections.
-- New tokens (`--tone-*`, `--deep-fill`, `--panel`, `--stats-card`, `--star`) have today's light colours in `:root`. Every text and icon ratio is computed and written in `globals.css`.
-- Light mode: the `getComputedStyle` snapshot of every element on 9 pages at 2 sizes is identical before and after.
-
 ### "More from <seller>" readable in light mode
 - On Recent purchases, the outline button filled with the dark page colour under black text (1.5:1). `PurchaseCard` now gives it a pale fill like `SaveButton`: black text 18.1:1, border 3.6:1 on the light card and 3.4:1 on the dark one.
 

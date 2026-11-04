@@ -315,26 +315,12 @@ when `uniswap` has none, so an older `uniswap` database needs the upgrade SQL (b
       `--tw-inset-shadow` (a pale top line) and `--tw-shadow`. It is layered on purpose: hover shadows
       and the shadcn Card's ring are utilities, so they still win and keep the edge.
     - **Hero and profile header:** `.dark .brand-grid` draws paler grid lines and a mint glow at the top
-      right, and the sections get a mint border (`dark:border-brand-400/35`). The gradient shifts hue
-      like light mode's mint-to-cream: deep green `#1f5040` to deep olive `#3f4b2b` (text 7.9:1 and
-      8.0:1; 5.9:1 under the glow). "On Campus" is mint, 4.3:1 (large text).
+      right (pale text there 5.4:1), and the sections get a mint border (`dark:border-brand-400/35`).
+      "On Campus" is mint, 3.9:1 (large text).
     - **Wanted card:** `--wanted-card` is `#1a2521`, just above the page, with a rose dashed border
       (`dark:border-brand-wanted/60`, 3.9:1 on the page).
-    - **Colour mix (4 Nov), not one accent:** every light colour has its own deep tone, in the same hue
-      family, with pale text or icons (`dark:` classes on tokens whose `:root` value is today's light colour).
-      - Chips (`CATEGORIES[].accent`, so the tiles, card chips and inbox rows match): cream → olive
-        `--tone-olive` (5.4:1), sage → grey-teal `--tone-teal` (4.7:1), forest → near-black `--tone-forest`
-        (14.9:1), mint → jade `--tone-jade` (5.6:1); Furniture stays outlined. Each is ≥1.5:1 against the card.
-      - Wine: the filter selects and the Free tag are `--tone-wine` `#5e1a23` (11.0:1; hover `#6f222c`).
-        The Trade tag and your own chat bubbles are jade. Wanted stays rose.
-      - `--deep-fill` (light: `brand-deep`, so light is unchanged): "Browse listings", Connect Telegram,
-        Ask's send button, the hero points' circles, the Auction tag, voice listening. Dark: near-black
-        `#0b1813`, ≥1.5:1 against every surface it sits on, text 15.7:1.
-      - Sections: the filter panel and Telegram strip are a tray, `--panel` `#293b33`, a step below the
-        cards. `--inset` is a deep olive `#47513c` (light's inset is cream). The profile's Selling and
-        Buying sections (`--stats-card`) are olive `#2d3527`; the ring's slices are ≥4.8:1 there.
-      - Small marks: stars `--star` `#8db8a9` (4.5:1), avatar ring pale at 70% (3.9:1), the unread dot
-        and the bar axis pale. Mint stays on prices and stats numbers (4.7:1 on the card).
+    - **Mint accents** (`dark:text-brand-400`, 4.7:1 on the card): card and listing prices, stats numbers,
+      category tile icons and the Telegram strip's icon (3.6:1 on their `bg-brand-400/15` circles).
 - **Recent purchases:** `GET /api/users/me/purchases` (`db/purchases.js`), shown on your own `/profile`
   as `RecentPurchases` + `PurchaseCard` (hidden until the first purchase).
   - **Who bought it:** it shares `CLOSED_DEALS_SQL` with the stats below, so the two always agree: the
@@ -359,8 +345,7 @@ when `uniswap` has none, so an older `uniswap` database needs the upgrade SQL (b
     (`listingsFirst` in `app/(main)/profile/page.tsx`).
   - `ProfileDashboard` and the `Stats*` components draw bars and a conic-gradient ring, no chart package.
     The ring's six colours are the `--slice-1..6` tokens in `globals.css` (light: three brand, three chart-only
-    `--chart-*`, each ≥3:1 on the card; dark: their own set, each ≥3.7:1 on `#314740` and ≥4.8:1 on the
-    olive stats card `#2d3527`). They are ordered
+    `--chart-*`, each ≥3:1 on the card; dark: their own set, each ≥3.7:1 on `#314740`). They are ordered
     so touching slices differ, also for red-green colour blindness.
   - `npm run db:demo-deals` (`-- --remove` undoes it) gives chanrithorn 9 deals over Aug–Oct for the demo.
 - **Messaging:** there is no conversations table. A thread is all messages between two users about
