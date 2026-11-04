@@ -4,6 +4,12 @@ Log of completed tasks, architecture decisions, and bug fixes for the UniSwap te
 
 ## 4 Nov 2026
 
+### Test round 2 and security review
+- **Clicked what the first check skipped** (1280×800, light; one student in the browser, the other through the API): live chat (inbox and thread update without a reload; Enter sends, Shift+Enter adds a line), meetups (plan, accept, decline and cancel from both sides, live card, past-meetup state), Fill in from photo (2.4–2.9 s a photo, never posted), the photo picker, the Telegram strip's three states, and a dark-mode contrast scan of 12 pages (no unreadable text). All test rows were deleted.
+- **Fixed:** the photo's remove X showed under the photo (the ripple's inline `position: relative` beat `absolute`); after Remove, focus stays in the photos; a photo Cloudinary refuses answers 502 "Could not save that photo" (was a 500); tokens are only accepted when signed with HS256; at most 20 Ask UniSwap questions and 60 voice clips an hour per student (429), so one script cannot use up the free tier.
+- **Security review:** no key, token or password in git history (only the public local Docker password); every route checks who may act; SQL always uses `$n`; no `dangerouslySetInnerHTML`; the Stripe webhook refuses unsigned calls (and every call while its secret is unset). Open for a decision: no login rate limit, and `npm audit` reports Next 16.3.7 (critical, fixed in 16.4.5) and 3 backend advisories.
+- Tests: 99 unit, 164 API.
+
 ### Demo check: small fixes found by clicking through the demo
 - **Receipt readable:** the payment receipt card had no `light-surface`, so its labels were the card's own colour (invisible); the total and the Download button were 1.3:1 and 1.6:1. Now all text is readable, and the header no longer runs under the close button.
 - **Rating stars:** filled stars (1.9:1) looked like the empty ones, so a 5-star rating read as empty. They now use the text colour.

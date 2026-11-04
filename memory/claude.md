@@ -232,7 +232,7 @@ when `uniswap` has none, so an older `uniswap` database needs the upgrade SQL (b
   back unchanged). `services/assistantModel.js` picks Groq when `GROQ_API_KEY` is set, else Gemini when
   `GEMINI_API_KEY` is set, else off (503); `ASSISTANT_PROVIDER=gemini|groq` forces one (restart the API;
   a forced provider without its key means off). Keep provider differences in the adapters; the loop uses
-  neutral turns. Stateless: the frontend sends the conversation (plain `{ role, text }`) with every
+  neutral turns. At most 20 questions an hour per student (`QUESTIONS_PER_HOUR`, in memory; 429). Stateless: the frontend sends the conversation (plain `{ role, text }`) with every
   question. The model must call a tool (Groq `tool_choice: "required"`, Gemini `mode: "ANY"`):
   `search_listings` (browse search, active, no wanted posts or ended auctions, 5 results), then
   `reply { text, listingIds, wantedDraft }`; cards only for ids found in that question; at most 3 calls,
@@ -277,7 +277,7 @@ when `uniswap` has none, so an older `uniswap` database needs the upgrade SQL (b
     forwards it to `POST /api/voice/transcribe`.
     - The API side is `routes/voice.js` and `services/whisper.js`: Groq `whisper-large-v3-turbo`, the
       same `GROQ_API_KEY`.
-    - Signed-in only, 2 MB, nothing stored or logged.
+    - Signed-in only, 2 MB, 60 clips an hour per student (in memory; 429), nothing stored or logged.
     - API tests fake Groq.
   - **The button:**
     - It shows bars while listening: they follow the voice with the recorder, or wave with live words.
