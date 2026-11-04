@@ -39,3 +39,8 @@ export function formatMeetupTime(meetAt: string): string {
     minute: "2-digit",
   });
 }
+
+/** Whether a meetup's time has come. The thread page works it out once on the server and passes it down. */
+export function isMeetupPast(meetAt: string): boolean {
+  return new Date(meetAt).getTime() <= Date.now();
+}

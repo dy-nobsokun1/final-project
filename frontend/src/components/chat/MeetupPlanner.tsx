@@ -13,7 +13,7 @@ interface MeetupPlannerProps {
 /**
  * "Plan meetup" above the chat box. The form stays closed until it is tapped, so the messages
  * keep their room on small screens. The page leaves it out until the thread has a message, and
- * while a meetup is accepted (the API refuses both).
+ * while an accepted meetup is still to come (the API refuses both).
  */
 export function MeetupPlanner({ listingId, partnerId }: MeetupPlannerProps) {
   const [isOpen, setIsOpen] = useState(false);

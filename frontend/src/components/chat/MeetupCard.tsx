@@ -10,6 +10,8 @@ import type { Meetup } from "@/types";
 
 interface MeetupCardProps {
   meetup: Meetup;
+  /** Its time has come (worked out by the page, so the server and the browser agree). */
+  isPast: boolean;
   meId: string;
   partnerName: string;
 }
@@ -21,8 +23,15 @@ const HEADINGS: Record<Meetup["status"], string> = {
   cancelled: "Meetup cancelled",
 };
 
+/** Once its time has come, a waiting or accepted meetup can no longer be answered or cancelled. */
+const PAST_HEADINGS: Partial<Record<Meetup["status"], string>> = {
+  proposed: "Meetup request expired",
+  accepted: "Meetup time has passed",
+};
+
 /** One short line under the time: who has to do what next. */
-function nextStep(meetup: Meetup, isInvitee: boolean, partnerName: string): string {
+function nextStep(meetup: Meetup, isInvitee: boolean, partnerName: string, isOver: boolean): string {
+  if (isOver) return "Plan a new one below if you still need to meet.";
   if (meetup.status === "proposed") return isInvitee ? `${partnerName} asked to meet.` : `Waiting for ${partnerName} to answer.`;
   if (meetup.status === "accepted") return "You both get a reminder 30 minutes before.";
   if (meetup.status === "declined") return isInvitee ? "You declined it." : `${partnerName} cannot make it.`;
@@ -34,12 +43,13 @@ function nextStep(meetup: Meetup, isInvitee: boolean, partnerName: string): stri
  * signed-in student may use (the invitee accepts or declines; either cancels). The page shows a
  * new copy when anything changes, live too (use-live-messages refreshes it on "event: meetup").
  */
-export function MeetupCard({ meetup, meId, partnerName }: MeetupCardProps) {
+export function MeetupCard({ meetup, isPast, meId, partnerName }: MeetupCardProps) {
   const [isBusy, setIsBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const isInvitee = meetup.inviteeId === meId;
-  const canAnswer = meetup.status === "proposed" && isInvitee;
-  const canCancel = meetup.status === "accepted" || (meetup.status === "proposed" && !isInvitee);
+  const pastHeading = isPast ? PAST_HEADINGS[meetup.status] : undefined;
+  const canAnswer = !pastHeading && meetup.status === "proposed" && isInvitee;
+  const canCancel = !pastHeading && (meetup.status === "accepted" || (meetup.status === "proposed" && !isInvitee));
 
   async function run(action: (meetupId: string) => Promise<ActionResult>) {
     setIsBusy(true);
@@ -56,12 +66,12 @@ export function MeetupCard({ meetup, meId, partnerName }: MeetupCardProps) {
     >
       <CalendarClock aria-hidden="true" className="size-5 shrink-0" />
       <div className="min-w-0 flex-1" aria-live="polite">
-        <p className="font-semibold">{HEADINGS[meetup.status]}</p>
+        <p className="font-semibold">{pastHeading ?? HEADINGS[meetup.status]}</p>
         {/* An explicit time zone, so the server and the browser write the same text. */}
         <p suppressHydrationWarning>
           {MEETUP_SPOTS[meetup.spot] ?? meetup.spot} · {formatMeetupTime(meetup.meetAt)}
         </p>
-        <p className="text-xs text-muted-foreground">{nextStep(meetup, isInvitee, partnerName)}</p>
+        <p className="text-xs text-muted-foreground">{nextStep(meetup, isInvitee, partnerName, Boolean(pastHeading))}</p>
       </div>
       {canAnswer ? (
         <div className="flex gap-2">

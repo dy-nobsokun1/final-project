@@ -19,6 +19,7 @@ import {
   parseConversationId,
   requireUser,
 } from "@/lib/api";
+import { isMeetupPast } from "@/lib/meetup-spots";
 
 /**
  * A single message thread: the signed-in user and one other person, about one listing.
@@ -51,8 +52,9 @@ export default async function MessageThreadPage({
     isFinished ? canReview(listing.id, partner.id) : false,
     getThreadMeetup(listing.id, partner.id),
   ]);
-  // The API only takes a meetup once the two have chatted, and not while one is accepted.
-  const mayPlanMeetup = messages.length > 0 && meetup?.status !== "accepted";
+  // The API only takes a meetup once the two have chatted, and not while an accepted one is still to come.
+  const meetupIsPast = meetup ? isMeetupPast(meetup.meetAt) : false;
+  const mayPlanMeetup = messages.length > 0 && (meetup?.status !== "accepted" || meetupIsPast);
 
   return (
     // Fills the screen under the navbar (65px) and main's 24px top and bottom padding, so the
@@ -81,7 +83,7 @@ export default async function MessageThreadPage({
         </div>
       </header>
 
-      {meetup ? <MeetupCard meetup={meetup} meId={me.id} partnerName={partner.name} /> : null}
+      {meetup ? <MeetupCard meetup={meetup} isPast={meetupIsPast} meId={me.id} partnerName={partner.name} /> : null}
 
       {/* flex-col-reverse makes the browser start this scroll area at the bottom, so the newest
           message is in view on load with no JavaScript. Its one child keeps the messages in

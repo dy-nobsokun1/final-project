@@ -400,7 +400,8 @@ when `uniswap` has none, so an older `uniswap` database needs the upgrade SQL (b
     once a minute: one `UPDATE … RETURNING`, so no reminder goes out twice.
   - **UI:** `MeetupCard` under the thread header (Accept / Decline for the invitee, Cancel meetup for
     either), `MeetupPlanner` + `MeetupForm` above the chat box (hidden until the thread has a message and
-    while a meetup is accepted).
+    while an accepted meetup is still to come). Once its time passes, the card says "Meetup time has
+    passed" (or "Meetup request expired"), loses its buttons, and the planner shows again (`isMeetupPast`).
 - **Uploads:** `POST /api/uploads` with raw image bytes (max 5 MB; the form takes 4 MB, `MAX_PHOTO_MB`,
   because Vercel refuses requests over 4.5 MB), saved to `backend/uploads/`
   (git-ignored). Must move to Cloudinary before deploying, because Render wipes the disk on restart.

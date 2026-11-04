@@ -128,6 +128,17 @@ test("a proposal whose time has passed cannot be accepted", async () => {
   assert.match(late.body.error, /time has passed/);
 });
 
+test("an accepted meetup whose time has passed no longer blocks a new one", async () => {
+  const { owner, buyer, listing } = await thread();
+  const meetup = (await propose(buyer, owner, listing)).body.meetup;
+  assert.equal((await answer(owner, meetup, "accepted")).status, 200);
+  await api.sql("UPDATE meetups SET meet_at = now() - interval '1 hour' WHERE id = $1", [meetup.id]);
+  // The thread page shows it as past and offers "Plan meetup" again (MeetupCard, isMeetupPast).
+  const next = await propose(owner, buyer, listing);
+  assert.equal(next.status, 201);
+  assert.equal((await threadMeetup(buyer, owner, listing)).body.meetup.id, next.body.meetup.id);
+});
+
 test("the other person is told about each change by email", async () => {
   const title = `Meetup lamp ${randomUUID().slice(0, 8)}`;
   const { owner, buyer, listing } = await thread(title);
