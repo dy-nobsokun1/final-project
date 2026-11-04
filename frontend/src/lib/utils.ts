@@ -53,6 +53,16 @@ export function lowerPriceNote(listing: Pick<Listing, "price">, offerAmount: num
   return listing.price < offerAmount ? ` The price is now ${formatPrice(listing.price)}, so ${who} that.` : "";
 }
 
+/**
+ * Where to go after signing in: `next` from /login?next=…, only if it is a path on this site.
+ * "//evil.example" or "/\evil.example" would leave the site, so they (and anything else) give "/".
+ */
+export function safeNextPath(next: unknown): string {
+  return typeof next === "string" && next.startsWith("/") && !next.startsWith("//") && !next.startsWith("/\\")
+    ? next
+    : "/";
+}
+
 const RELATIVE_UNITS: Array<[Intl.RelativeTimeFormatUnit, number]> = [
   ["year", 1000 * 60 * 60 * 24 * 365],
   ["month", 1000 * 60 * 60 * 24 * 30],

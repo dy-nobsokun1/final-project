@@ -13,8 +13,9 @@ import { useAuth } from "@/contexts/AuthContext";
  * API and stores the session in an httpOnly cookie. The password is never stored in the browser.
  * Accounts that have not verified their email are refused, with a button to resend the link.
  * "Forgot your password?" leads to /forgot-password, which emails a reset link.
+ * `next` is the page to open after signing in (already checked by safeNextPath on the login page).
  */
-export function LoginForm() {
+export function LoginForm({ next = "/" }: { next?: string }) {
   const router = useRouter();
   const { signIn, isLoading } = useAuth();
   const [email, setEmail] = useState("");
@@ -38,7 +39,7 @@ export function LoginForm() {
       else setPassword("");
       return;
     }
-    router.push("/");
+    router.push(next);
   }
 
   return (

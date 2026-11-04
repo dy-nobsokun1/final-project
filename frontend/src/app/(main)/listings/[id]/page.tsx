@@ -72,7 +72,8 @@ export default async function ListingDetailPage({ params, searchParams }: PagePr
   // A wanted post's owner is looking to buy, so the contact button names them instead of "seller".
   const contactName = listing.listingType === "buy_request" ? listing.seller.name : null;
   // Signed-out visitors are sent to sign in first; the thread page needs a session.
-  const contactHref = user ? `/messages/${conversationId(listing.id, listing.seller.id)}` : "/login";
+  const signInHref = `/login?next=${encodeURIComponent(`/listings/${listing.id}`)}`;
+  const contactHref = user ? `/messages/${conversationId(listing.id, listing.seller.id)}` : signInHref;
   const contactLabel = user ? `Message ${contactName ?? "seller"}` : `Sign in to message ${contactName ?? "the seller"}`;
   // The phone bar only offers what can still be done: bidding or a chat about an active listing.
   const showBuyBar = !isOwner && listing.status === "active" && !listing.auction?.ended;
@@ -90,7 +91,7 @@ export default async function ListingDetailPage({ params, searchParams }: PagePr
       {receipt ? <InvoiceReceiptCard receipt={receipt} listing={listing} /> : null}
       {wantsReceipt && !user ? (
         <p className="light-surface rounded-xl border border-border bg-card p-3 text-sm text-foreground">
-          <Link href="/login" className="font-medium underline">Sign in</Link> to see the receipt for this payment.
+          <Link href={`${signInHref}${encodeURIComponent("?invoice=1")}`} className="font-medium underline">Sign in</Link> to see the receipt for this payment.
         </p>
       ) : null}
 

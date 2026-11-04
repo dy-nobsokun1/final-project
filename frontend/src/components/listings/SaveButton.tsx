@@ -1,7 +1,7 @@
 "use client";
 
 import { Heart } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useOptimistic, useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
@@ -21,6 +21,7 @@ interface SaveButtonProps {
 /** The heart: saves a listing to the Saved page, or unsaves it. Signed-out visitors go to sign in. */
 export function SaveButton({ listingId, listingTitle, sellerId, saved, className }: SaveButtonProps) {
   const router = useRouter();
+  const pathname = usePathname();
   const { user } = useAuth();
   const [optimisticSaved, setOptimisticSaved] = useOptimistic(saved);
   const [, startTransition] = useTransition();
@@ -31,7 +32,8 @@ export function SaveButton({ listingId, listingTitle, sellerId, saved, className
 
   function handleClick() {
     if (!user) {
-      router.push("/login");
+      // Back to this page after signing in (the login page checks `next`).
+      router.push(`/login?next=${encodeURIComponent(pathname)}`);
       return;
     }
     const next = !optimisticSaved;
