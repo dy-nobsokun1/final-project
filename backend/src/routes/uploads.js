@@ -49,7 +49,16 @@ uploadsRouter.post(
 
     // With Cloudinary set up, photos are hosted there; otherwise they are saved on this server.
     if (isCloudinaryConfigured) {
-      return res.status(201).json({ url: await uploadImage(req.body, req.get("content-type").split(";")[0]) });
+      let url;
+      try {
+        url = await uploadImage(req.body, req.get("content-type").split(";")[0]);
+      } catch (error) {
+        // Cloudinary refuses bytes that are not really an image, and can be down. Either way the
+        // student gets a clear message instead of "Something went wrong on the server."
+        console.error("[cloudinary]", error.message);
+        throw new HttpError(502, "Could not save that photo. Try another JPEG or PNG image.");
+      }
+      return res.status(201).json({ url });
     }
 
     const fileName = `${randomUUID()}.${extension}`;
