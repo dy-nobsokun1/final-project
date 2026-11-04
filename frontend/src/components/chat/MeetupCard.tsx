@@ -59,6 +59,11 @@ export function MeetupCard({ meetup, isPast, meId, partnerName }: MeetupCardProp
     if (result.error) setError(result.error);
   }
 
+  // One click would cancel it and message the other person, so ask first (like deleting a listing).
+  function cancel() {
+    if (window.confirm(`Cancel this meetup? ${partnerName} will be told.`)) run(cancelMeetup);
+  }
+
   return (
     <section
       aria-label="Meetup"
@@ -80,7 +85,7 @@ export function MeetupCard({ meetup, isPast, meId, partnerName }: MeetupCardProp
         </div>
       ) : null}
       {canCancel ? (
-        <Button size="sm" variant="secondary" disabled={isBusy} onClick={() => run(cancelMeetup)}>
+        <Button size="sm" variant="secondary" disabled={isBusy} onClick={cancel}>
           Cancel meetup
         </Button>
       ) : null}
