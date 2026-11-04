@@ -69,12 +69,26 @@ export function toListingDraft(text) {
 }
 
 /**
- * A title -> a search that matches ANY of its words, e.g. "Apple MacBook Pro" -> "apple or macbook or pro".
- * Only letters and digits are kept, so quotes and "-" never act as search operators.
+ * A title -> its distinct words, e.g. 'Apple "MacBook" Pro -13' -> ["apple", "macbook", "pro", "13"].
+ * Only letters and digits are kept, and at most 8 words, so the list stays a small SQL parameter.
  */
-export function anyWordSearch(title) {
+export function titleWords(title) {
   const words = String(title).toLowerCase().match(/[a-z0-9]+/g) ?? [];
-  return [...new Set(words)].filter((word) => word.length > 1 && word !== "or").slice(0, 8).join(" or ");
+  return [...new Set(words)].filter((word) => word.length > 1).slice(0, 8);
+}
+
+/**
+ * Rows of similar listings, best first, each with `shared` (how many of the AI title's words its own
+ * title has) -> only the closest ones: those sharing as many words as the best row, and at least 2
+ * when the AI title has 3 or more real words (`titleWordCount`, stop words not counted).
+ * Why: "Apple MacBook Pro Laptop" must not be priced from laptop RAM or an iPad Pro, which share only
+ * one word. Weaker rows are never used instead, so with no close match there is no hint at all.
+ */
+export function closestMatches(rows, titleWordCount) {
+  const needed = titleWordCount >= 3 ? 2 : 1;
+  const best = Math.max(0, ...rows.map((row) => Number(row.shared)));
+  if (best < needed) return [];
+  return rows.filter((row) => Number(row.shared) === best);
 }
 
 /**

@@ -78,7 +78,8 @@ test("sends Gemini only the photo, and returns a checked draft", async () => {
 test("the price hint comes from similar sale listings, sold ones first", async () => {
   const word = `pangolin${randomUUID().slice(0, 6)}`;
   const [seller, buyer, student] = await Promise.all([api.createUser(), api.createUser(), api.createUser()]);
-  answerWith({ title: `Blue ${word} backpack`, category: "other" });
+  // Two words, so one word in common is enough (closestMatches).
+  answerWith({ title: `${word} backpack`, category: "other" });
 
   // Only one match: no hint.
   const first = await api.createListing(seller, { title: `${word} bag`, category: "other", price: 10 });
@@ -102,6 +103,30 @@ test("the price hint comes from similar sale listings, sold ones first", async (
     assert.equal(done.status, 200, JSON.stringify(done.body));
   }
   assert.deepEqual((await send(student.token)).body.priceHint, { low: 10, high: 30, count: 2, sold: true });
+});
+
+test("the price hint uses only the closest titles, not items sharing one word", async () => {
+  // Like a MacBook photo: two real matches, and cheap laptop RAM and an iPad Pro that share one word.
+  const id = randomUUID().slice(0, 6);
+  const [brand, model] = [`zorbex${id}`, `quillbook${id}`];
+  const [seller, student] = await Promise.all([api.createUser(), api.createUser()]);
+  answerWith({ title: `${brand} ${model} Pro laptop`, category: "electronics" });
+
+  await api.createListing(seller, { title: `${brand} ${model} 13-inch`, category: "electronics", price: 500 });
+  const second = await api.createListing(seller, { title: `Used ${brand} ${model} Pro`, category: "electronics", price: 600 });
+  await api.createListing(seller, { title: `DDR4 laptop RAM ${id}`, category: "electronics", price: 12 });
+  await api.createListing(seller, { title: `${brand} charger`, category: "electronics", price: 15 });
+  // The second one shares 3 words, the first only 2: only the closest group counts, so one item, no hint.
+  assert.equal((await send(student.token)).body.priceHint, null);
+
+  // Two items sharing the same, best number of words: their prices only.
+  await api.createListing(seller, { title: `${brand} ${model} Pro 2021`, category: "electronics", price: 550 });
+  assert.deepEqual((await send(student.token)).body.priceHint, { low: 550, high: 600, count: 2, sold: false });
+
+  // Left with one closest match, weaker ones (2 words, or 1) are not used instead.
+  const removed = await api.request("DELETE", `/api/listings/${second.id}`, { token: seller.token });
+  assert.equal(removed.status, 204, JSON.stringify(removed.body));
+  assert.equal((await send(student.token)).body.priceHint, null);
 });
 
 test("a busy Gemini falls back to Groq once, which gets only the photo too", async () => {

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import {
-  anyWordSearch, createRateLimiter, DRAFT_INSTRUCTIONS, MAX_DESCRIPTION, MAX_TITLE, toListingDraft, toPriceHint,
+  closestMatches, createRateLimiter, DRAFT_INSTRUCTIONS, MAX_DESCRIPTION, MAX_TITLE, titleWords, toListingDraft, toPriceHint,
 } from "../src/utils/listingDraft.js";
 import { CATEGORIES, CONDITIONS } from "../src/utils/validation.js";
 
@@ -43,9 +43,20 @@ test("an unreadable or empty answer gives null", () => {
   assert.equal(toListingDraft(JSON.stringify({ title: "", category: "nope" })), null);
 });
 
-test("turns a title into an any-word search without operators", () => {
-  assert.equal(anyWordSearch('Apple "MacBook" Pro -13 or'), "apple or macbook or pro or 13");
-  assert.equal(anyWordSearch("!!"), "");
+test("turns a title into its distinct words, without operators", () => {
+  assert.deepEqual(titleWords('Apple "MacBook" Pro -13 pro'), ["apple", "macbook", "pro", "13"]);
+  assert.deepEqual(titleWords("!! a"), []);
+  assert.equal(titleWords("one two three four five six seven eight nine ten").length, 8);
+});
+
+test("only the closest matches count, never weaker ones instead", () => {
+  const rows = [{ shared: "3", price: 550 }, { shared: "3", price: 500 }, { shared: "1", price: 12 }];
+  assert.deepEqual(closestMatches(rows, 4).map((row) => row.price), [550, 500]);
+  // A 3-word title needs 2 words in common: one shared word ("laptop") is not enough.
+  assert.deepEqual(closestMatches([{ shared: "1" }, { shared: "1" }], 3), []);
+  // A 1- or 2-word title ("Calculus textbook") needs only 1.
+  assert.equal(closestMatches([{ shared: "1" }, { shared: "1" }], 2).length, 2);
+  assert.deepEqual(closestMatches([], 2), []);
 });
 
 test("a price hint needs at least 2 prices", () => {
