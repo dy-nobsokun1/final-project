@@ -3,21 +3,27 @@ import { randomUUID } from "node:crypto";
 import { after, test } from "node:test";
 import { startApi } from "./helpers.js";
 
-// "Fill in from photo": Gemini's vision model is replaced. The fake answers with `gemini.answer`
-// (JSON text) or, while `gemini.status` is not 200, with that error. Every request body is kept in
-// `gemini.requests`. Groq must never be called: the photos must not use the assistant's quota.
-// All other requests (the tests calling our API) go through as normal.
+// "Fill in from photo": Gemini and Groq are replaced. Each fake answers with `answer` (JSON text) or,
+// while its `status` is not 200, with that error, and keeps every request in `requests`. Gemini is the
+// main model; Groq is only the fallback when Gemini is busy, at most VISION_FALLBACK_PER_DAY (3 here)
+// times, because it shares the assistant's quota. All other requests (the tests calling our API) go
+// through as normal.
 const realFetch = globalThis.fetch;
 const gemini = { answer: "", status: 200, requests: [] };
+const groq = { answer: "", status: 200, requests: [] };
 globalThis.fetch = async (url, options) => {
-  if (String(url).startsWith("https://api.groq.com/")) throw new Error("Groq was called for a photo");
+  if (String(url).startsWith("https://api.groq.com/")) {
+    groq.requests.push(options.body);
+    if (groq.status !== 200) return Response.json({ error: { message: "busy" } }, { status: groq.status });
+    return Response.json({ choices: [{ message: { role: "assistant", content: groq.answer } }] });
+  }
   if (!String(url).startsWith("https://generativelanguage.googleapis.com/")) return realFetch(url, options);
   gemini.requests.push({ url: String(url), body: options.body });
-  if (gemini.status !== 200) return Response.json({ error: { message: "quota" } }, { status: gemini.status });
+  if (gemini.status !== 200) return Response.json({ error: { message: "high demand" } }, { status: gemini.status });
   return Response.json({ candidates: [{ content: { role: "model", parts: [{ text: gemini.answer }] } }] });
 };
 
-const api = await startApi({ env: { GROQ_API_KEY: "test-key", GEMINI_API_KEY: "test-key" } });
+const api = await startApi({ env: { GROQ_API_KEY: "test-key", GEMINI_API_KEY: "test-key", VISION_FALLBACK_PER_DAY: "3" } });
 after(() => api.close());
 
 const photo = Buffer.from("fake jpeg bytes");
@@ -28,9 +34,11 @@ const send = (token, { type = "image/jpeg", bytes = photo } = {}) =>
     body: bytes,
   }).then(async (response) => ({ status: response.status, body: await response.json() }));
 
+const draftJson = (fields) =>
+  JSON.stringify({ title: "Desk lamp", category: "furniture", condition: "good", description: "A lamp.", ...fields });
 const answerWith = (fields) => {
-  gemini.status = 200;
-  gemini.answer = JSON.stringify({ title: "Desk lamp", category: "furniture", condition: "good", description: "A lamp.", ...fields });
+  Object.assign(gemini, { status: 200, answer: draftJson(fields) });
+  Object.assign(groq, { status: 200, answer: draftJson({ title: "Lamp from Groq" }) });
 };
 
 test("is switched on, needs a login, a photo type and a small photo", async () => {
@@ -50,8 +58,10 @@ test("sends Gemini only the photo, and returns a checked draft", async () => {
   answerWith({ condition: "poor", category: "weapons", price: 500 });
 
   gemini.requests.length = 0;
+  groq.requests.length = 0;
   const result = await send(student.token);
   assert.equal(result.status, 200, JSON.stringify(result.body));
+  assert.equal(groq.requests.length, 0, "Groq is only the fallback");
   assert.deepEqual(result.body.draft, { title: "Desk lamp", category: "", condition: "", description: "A lamp." });
   assert.equal(result.body.priceHint, null, "no category, so no price hint");
 
@@ -94,14 +104,41 @@ test("the price hint comes from similar sale listings, sold ones first", async (
   assert.deepEqual((await send(student.token)).body.priceHint, { low: 10, high: 30, count: 2, sold: true });
 });
 
-test("a busy or unreadable model gives a friendly error", async () => {
+test("a busy Gemini falls back to Groq once, which gets only the photo too", async () => {
+  const student = await api.createUser("Student Dara");
+  answerWith({});
+  gemini.status = 503;
+  groq.requests.length = 0;
+  const result = await send(student.token);
+  assert.equal(result.status, 200, JSON.stringify(result.body));
+  assert.equal(result.body.draft.title, "Lamp from Groq");
+  assert.equal(groq.requests.length, 1);
+  const body = groq.requests[0];
+  assert.equal(JSON.parse(body).model, "qwen/qwen3.8-27b");
+  assert.ok(body.includes(`data:image/jpeg;base64,${photo.toString("base64")}`));
+  for (const secret of [student.name, student.email]) assert.ok(!body.includes(secret), `${secret} was sent to Groq`);
+});
+
+test("a refused request does not fall back, and a busy fallback says busy", async () => {
   const student = await api.createUser();
-  gemini.status = 429;
+  answerWith({});
+  gemini.status = 400;
+  groq.requests.length = 0;
+  const refused = await send(student.token);
+  assert.equal(refused.status, 502);
+  assert.equal(groq.requests.length, 0);
+
+  gemini.status = 503;
+  groq.status = 429;
   const busy = await send(student.token);
   assert.equal(busy.status, 503);
   assert.match(busy.body.error, /busy/);
+  assert.equal(groq.requests.length, 1);
+});
 
-  gemini.status = 200;
+test("an unreadable answer gives a friendly error", async () => {
+  const student = await api.createUser();
+  answerWith({});
   gemini.answer = "It looks like a lamp to me!";
   const unreadable = await send(student.token);
   assert.equal(unreadable.status, 502);
@@ -116,4 +153,17 @@ test("each student may ask 10 times an hour", async () => {
   assert.equal(limited.status, 429);
   assert.match(limited.body.error, /10 times this hour/);
   assert.equal((await send(other.token)).status, 200);
+});
+
+test("Groq takes at most VISION_FALLBACK_PER_DAY photos a day", async () => {
+  // The two tests above used 2 of the 3 fallbacks.
+  const student = await api.createUser();
+  answerWith({});
+  gemini.status = 503;
+  groq.requests.length = 0;
+  assert.equal((await send(student.token)).status, 200);
+  const capped = await send(student.token);
+  assert.equal(capped.status, 503);
+  assert.match(capped.body.error, /busy/);
+  assert.equal(groq.requests.length, 1, "the fourth fallback never reached Groq");
 });

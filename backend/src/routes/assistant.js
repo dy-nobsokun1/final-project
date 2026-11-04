@@ -82,8 +82,11 @@ assistantRouter.post(
       // Only the photo and the instructions go to the model: never a name, an email or a listing.
       text = await describePhoto({ instructions: DRAFT_INSTRUCTIONS, schema: DRAFT_SCHEMA, image: req.body, mimeType: type });
     } catch (error) {
-      if (error.status === 429) throw new HttpError(503, "Fill in from photo is busy right now. Try again in a minute, or fill in the form yourself.");
-      console.error("[listing-draft]", error.name === "TimeoutError" ? "timed out" : error.message);
+      // Busy, down or slow (after the fallback too, see services/vision.js).
+      if (error.status === 429 || error.status >= 500 || error.name === "TimeoutError") {
+        throw new HttpError(503, "Fill in from photo is busy right now. Try again in a minute, or fill in the form yourself.");
+      }
+      console.error("[listing-draft]", error.message);
       throw new HttpError(502, "Could not read the photo right now. Please fill in the form yourself.");
     }
     const draft = toListingDraft(text);
