@@ -54,3 +54,14 @@ test("answers 503 while off or busy, and 502 when Groq fails", async () => {
   assert.deepEqual(await send(student.token, "audio/ogg"), { status: 503, body: { error: "Voice input is off." } });
   config.groq.apiKey = key;
 });
+
+test("one student may send 60 clips an hour; others can still send", async () => {
+  const [student, other] = await Promise.all([api.createUser(), api.createUser()]);
+  for (let i = 0; i < 60; i += 1) assert.equal((await send(student.token, "audio/webm")).status, 200);
+  const clips = groq.forms.length;
+  const refused = await send(student.token, "audio/webm");
+  assert.equal(refused.status, 429);
+  assert.match(refused.body.error, /^You have used voice input 60 times this hour/);
+  assert.equal(groq.forms.length, clips, "a refused clip never reaches Groq");
+  assert.equal((await send(other.token, "audio/webm")).status, 200);
+});
