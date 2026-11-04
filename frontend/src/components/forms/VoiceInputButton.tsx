@@ -70,7 +70,7 @@ export function VoiceInputButton({ status, level, onStart, onStop, className }: 
       }}
       className={cn(
         "inline-flex shrink-0 touch-none select-none items-center justify-center rounded-full text-foreground transition-colors hover:bg-brand-200/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground",
-        (isListening || isBusy) && "bg-brand-deep text-brand-50 hover:bg-brand-900",
+        (isListening || isBusy) && "bg-deep-fill text-brand-50 hover:bg-deep-fill-hover",
         className,
       )}
     >

@@ -15,8 +15,9 @@ export function MessageBubble({ message, isOwn }: MessageBubbleProps) {
           "max-w-[75%] rounded-2xl px-3.5 py-2 text-sm",
           // Not bg-muted for replies: inside the light-surface card --muted is the
           // card's own colour, so the bubble vanished and replies read as loose text.
+          // Dark mode: your own bubbles are deep jade with pale text (5.6:1), replies deep olive.
           isOwn
-            ? "bg-primary text-primary-foreground"
+            ? "bg-primary text-primary-foreground dark:bg-tone-jade dark:text-brand-50"
             : "border border-brand-600/40 bg-inset text-foreground",
         )}
       >
@@ -29,7 +30,7 @@ export function MessageBubble({ message, isOwn }: MessageBubbleProps) {
             "mt-1 text-[10px]",
             // Bubbles sit inside the thread's light-surface card, so both
             // resolve to black text via that scope.
-            isOwn ? "text-primary-foreground" : "text-muted-foreground",
+            isOwn ? "text-primary-foreground dark:text-brand-50" : "text-muted-foreground",
           )}
         >
           {formatRelativeTime(message.createdAt)}

@@ -29,9 +29,10 @@ export function FilterSelect({ label, value, onValueChange, options }: FilterSel
             `[&>svg]` is required: the chevron is hardcoded to text-muted-foreground,
             which the enclosing `light-surface` scope resolves to #2E2E2E -- 1.54:1
             on this red, i.e. effectively invisible. A descendant selector outranks
-            it. */}
+            it. Dark mode: a deep wine (pale text 11.0:1, 9.3:1 on hover). These `dark:`
+            classes replace select.tsx's `dark:bg-field` and `dark:hover:bg-input/50`. */}
         <SelectTrigger
-          className="w-full border-destructive bg-brand-danger text-brand-50 hover:bg-brand-danger/90 sm:w-44 [&>svg]:text-brand-50"
+          className="w-full border-destructive bg-brand-danger text-brand-50 hover:bg-brand-danger/90 dark:bg-tone-wine dark:hover:bg-tone-wine-hover sm:w-44 [&>svg]:text-brand-50"
           aria-label={label}
         >
           <SelectValue />
@@ -42,7 +43,8 @@ export function FilterSelect({ label, value, onValueChange, options }: FilterSel
             --background, so it needs the sage ring to keep an edge against the
             page field. #E6F2DD on #22312D is 11.72:1. The `focus:**:` descendant
             term is what actually paints the label and outranks a plain
-            `focus:text-*` on the item itself. */}
+            `focus:text-*` on the item itself. Dark mode keeps the list deep green and puts the
+            focused option on the same wine as the trigger. */}
         <SelectContent
           scrollButtonClassName="bg-brand-deep text-brand-50"
           className="bg-brand-deep text-brand-50 ring-brand-400/40"
@@ -51,7 +53,7 @@ export function FilterSelect({ label, value, onValueChange, options }: FilterSel
             <SelectItem
               key={option.value}
               value={option.value}
-              className="focus:bg-brand-danger focus:text-brand-50 not-data-[variant=destructive]:focus:**:text-brand-50"
+              className="focus:bg-brand-danger dark:focus:bg-tone-wine-hover focus:text-brand-50 not-data-[variant=destructive]:focus:**:text-brand-50"
             >
               {option.label}
             </SelectItem>

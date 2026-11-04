@@ -16,7 +16,7 @@ export function RatingStars({ rating, className }: RatingStarsProps) {
         <Star
           key={star}
           aria-hidden="true"
-          className={cn("size-4", star <= filled ? "fill-current text-brand-600" : "text-muted-foreground/40")}
+          className={cn("size-4", star <= filled ? "fill-current text-star" : "text-muted-foreground/40")}
         />
       ))}
     </span>

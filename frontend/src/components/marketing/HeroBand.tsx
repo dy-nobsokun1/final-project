@@ -43,7 +43,7 @@ export function HeroBand() {
                 than brand-50, which would flash bright against the hero. */}
             <a
               href="#listings"
-              className="inline-flex items-center rounded-lg border border-brand-50/30 bg-brand-deep px-5 py-2.5 text-sm font-semibold text-brand-50 transition-colors hover:bg-brand-900"
+              className="inline-flex items-center rounded-lg border border-brand-50/30 bg-deep-fill px-5 py-2.5 text-sm font-semibold text-brand-50 transition-colors hover:bg-deep-fill-hover"
             >
               Browse listings
             </a>

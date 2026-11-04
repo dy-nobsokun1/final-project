@@ -25,7 +25,7 @@ export function HeroPoints() {
           {/* #E6F2DD on #22312D is 11.72:1, like the hero's "Browse listings". */}
           <span
             aria-hidden="true"
-            className="row-span-2 flex size-8 items-center justify-center rounded-full bg-brand-deep text-brand-50 sm:row-span-1 sm:size-7"
+            className="row-span-2 flex size-8 items-center justify-center rounded-full bg-deep-fill text-brand-50 sm:row-span-1 sm:size-7"
           >
             <Icon className="size-4" />
           </span>

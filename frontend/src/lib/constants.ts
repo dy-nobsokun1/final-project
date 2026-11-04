@@ -17,17 +17,18 @@ export const CATEGORIES: Array<{
   value: ListingCategory;
   label: string;
   /** Tailwind-safe class list for the category chip. Each one has to stay
-   *  legible and distinct against the #B1D3B9 card it sits on. */
+   *  legible and distinct against the #B1D3B9 card it sits on. The `dark:` classes
+   *  give each its own deep tone (the `--tone-*` tokens in globals.css) with pale text. */
   accent: string;
   /** Drawn large where a wanted post's card would have its photo (WantedCard). */
   icon: LucideIcon;
 }> = [
-  { value: "textbooks", label: "Textbooks", accent: "bg-brand-50 text-brand-ink", icon: BookOpen },
-  { value: "electronics", label: "Electronics", accent: "bg-brand-600 text-brand-ink", icon: MonitorSmartphone },
+  { value: "textbooks", label: "Textbooks", accent: "bg-brand-50 text-brand-ink dark:bg-tone-olive dark:text-brand-50", icon: BookOpen },
+  { value: "electronics", label: "Electronics", accent: "bg-brand-600 text-brand-ink dark:bg-tone-teal dark:text-brand-50", icon: MonitorSmartphone },
   { value: "furniture", label: "Furniture", accent: "border border-foreground/40 text-foreground", icon: Armchair },
-  { value: "clothing", label: "Clothing", accent: "bg-brand-900 text-brand-50", icon: Shirt },
-  { value: "bikes", label: "Bikes", accent: "bg-brand-400 text-brand-ink", icon: Bike },
-  { value: "other", label: "Other", accent: "bg-brand-50 text-brand-ink", icon: Package },
+  { value: "clothing", label: "Clothing", accent: "bg-brand-900 text-brand-50 dark:bg-tone-forest", icon: Shirt },
+  { value: "bikes", label: "Bikes", accent: "bg-brand-400 text-brand-ink dark:bg-tone-jade dark:text-brand-50", icon: Bike },
+  { value: "other", label: "Other", accent: "bg-brand-50 text-brand-ink dark:bg-tone-olive dark:text-brand-50", icon: Package },
 ];
 
 export const CONDITIONS: Array<{ value: ListingCondition; label: string }> = [

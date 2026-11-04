@@ -50,7 +50,7 @@ export function ConversationRow({ conversation, partner, isActive }: Conversatio
             {conversation.lastMessageBody}
           </span>
           {isUnread ? (
-            <span className="ml-auto size-2.5 shrink-0 rounded-full bg-brand-ink">
+            <span className="ml-auto size-2.5 shrink-0 rounded-full bg-brand-ink dark:bg-foreground">
               <span className="sr-only">{conversation.unreadCount} unread</span>
             </span>
           ) : null}

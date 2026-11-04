@@ -25,13 +25,14 @@ interface UserAvatarProps {
  *
  * 2.1:1 is a soft edge, under the 3:1 WCAG asks for a shape's outline, so
  * inside a `light-surface` card the circle also gets a ring: brand-deep at 65%
- * is 3.6:1 on the #B1D3B9 cards and 4.2:1 on #E6F2DD. The dark page needs none.
+ * is 3.6:1 on the #B1D3B9 cards and 4.2:1 on #E6F2DD. The dark page needs none. In dark mode
+ * the cards are deep, so the ring is pale: #B1D3B9 at 70% is 3.9:1 on the #314740 card.
  */
 export function UserAvatar({ name, src, size = "default", className }: UserAvatarProps) {
   return (
     <Avatar
       size={size}
-      className={cn("in-[.light-surface]:ring-2 in-[.light-surface]:ring-brand-deep/65", className)}
+      className={cn("in-[.light-surface]:ring-2 in-[.light-surface]:ring-brand-deep/65 dark:in-[.light-surface]:ring-brand-200/70", className)}
     >
       {src ? <AvatarImage src={src} alt={name} /> : null}
       <AvatarFallback className="bg-brand-600 font-heading tracking-wide text-brand-ink">

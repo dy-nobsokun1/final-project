@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 import type { ListingType } from "@/types";
 
 /** Sale has no tag on the cards (it is the default), so its tile gets its own icon and colour. */
-const SALE_TILE = { icon: Tag, colours: "bg-brand-600 text-brand-ink" };
+const SALE_TILE = { icon: Tag, colours: "bg-brand-600 text-brand-ink dark:bg-tone-teal dark:text-brand-50" };
 
 /** The order the form offers them in, the most common first. */
 const TYPES: ListingType[] = ["sale", "auction", "trade", "giveaway", "buy_request"];

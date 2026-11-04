@@ -50,7 +50,7 @@ export default async function ProfilePage() {
                 Same dark and light pills as the home page hero. */}
             <Link
               href="/settings"
-              className="inline-flex items-center justify-center rounded-lg border border-brand-50/30 bg-brand-deep px-5 py-2.5 text-sm font-semibold text-brand-50 transition-colors hover:bg-brand-900"
+              className="inline-flex items-center justify-center rounded-lg border border-brand-50/30 bg-deep-fill px-5 py-2.5 text-sm font-semibold text-brand-50 transition-colors hover:bg-deep-fill-hover"
             >
               Settings
             </Link>
