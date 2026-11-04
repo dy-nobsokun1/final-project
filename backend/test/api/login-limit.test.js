@@ -44,6 +44,15 @@ test("an unknown email is blocked with exactly the same answer, so the 429 revea
   assert.deepEqual(await login(unknown, "password123"), await login(user.email, "password123"));
 });
 
+test("an email over 254 characters gets the usual 401 and is never counted", async () => {
+  const long = `${"a".repeat(250)}@aupp.edu.kh`;
+  for (let i = 0; i < 11; i += 1) {
+    const answer = await login(long, "not-the-password");
+    assert.equal(answer.status, 401);
+    assert.equal(answer.body.error, "Email or password is incorrect.");
+  }
+});
+
 test("parallel wrong guesses cannot get past the limit", async () => {
   const user = await api.createUser();
   const answers = await Promise.all(Array.from({ length: 15 }, () => login(user.email, "not-the-password")));

@@ -70,6 +70,9 @@ const loginLimiter = createLoginLimiter({ limit: 10, windowMs: 15 * 60 * 1000 })
 // so attackers cannot probe for which emails have accounts.
 async function findUserByCredentials(body) {
   const email = String(body.email ?? "").trim().toLowerCase();
+  // No email is longer than 254 characters. Refusing longer ones here, without counting them, keeps
+  // huge made-up emails out of the limiter's memory.
+  if (email.length > 254) throw new HttpError(401, "Email or password is incorrect.");
   // Checked before the password, so after 10 wrong tries even the right one must wait.
   const waitMs = loginLimiter.begin(email);
   if (waitMs > 0) {
