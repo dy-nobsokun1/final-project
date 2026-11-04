@@ -5,6 +5,7 @@ import express, { Router } from "express";
 import { requireAuth } from "../middleware/auth.js";
 import { CLOUDINARY_PHOTO_PREFIX, isCloudinaryConfigured, uploadImage } from "../services/cloudinary.js";
 import { HttpError } from "../utils/httpError.js";
+import { hasImageSignature } from "../utils/imageType.js";
 
 // Listing photos are saved to backend/uploads/ and served from /uploads/<file>.
 // Good enough for local demos; swap for Cloudinary before deploying (Render's disk is wiped on restart).
@@ -42,16 +43,19 @@ uploadsRouter.post(
   requireAuth,
   express.raw({ type: Object.keys(EXTENSIONS), limit: MAX_SIZE }),
   async (req, res) => {
-    const extension = EXTENSIONS[req.get("content-type")?.split(";")[0]];
+    const mimeType = req.get("content-type")?.split(";")[0];
+    const extension = EXTENSIONS[mimeType];
     if (!extension || !Buffer.isBuffer(req.body) || req.body.length === 0) {
       throw new HttpError(400, "Send a JPEG, PNG, WebP or GIF image.");
     }
+    // The header is only the client's claim: the file's first bytes must match it too.
+    if (!hasImageSignature(req.body, mimeType)) throw new HttpError(400, "That file is not a real image.");
 
     // With Cloudinary set up, photos are hosted there; otherwise they are saved on this server.
     if (isCloudinaryConfigured) {
       let url;
       try {
-        url = await uploadImage(req.body, req.get("content-type").split(";")[0]);
+        url = await uploadImage(req.body, mimeType);
       } catch (error) {
         // Cloudinary refuses bytes that are not really an image, and can be down. Either way the
         // student gets a clear message instead of "Something went wrong on the server."

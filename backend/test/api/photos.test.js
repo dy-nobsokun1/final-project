@@ -101,6 +101,10 @@ test("a photo from POST /api/uploads can go straight into a listing", async () =
 
   assert.equal((await upload(null, "image/png")).status, 401);
   assert.equal((await upload(seller.token, "application/pdf")).status, 400);
+  // The PNG's bytes sent as a JPEG: the first bytes do not match the claimed type.
+  const mismatch = await upload(seller.token, "image/jpeg");
+  assert.equal(mismatch.status, 400);
+  assert.equal((await mismatch.json()).error, "That file is not a real image.");
 
   const response = await upload(seller.token, "image/png");
   assert.equal(response.status, 201);
