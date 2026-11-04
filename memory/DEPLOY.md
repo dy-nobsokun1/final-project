@@ -13,7 +13,7 @@ local `backend/.env`, which git ignores).
 | Card payments (test mode) | Stripe | `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` |
 | KHQR payments (real money) | Bakong (National Bank of Cambodia) | `BAKONG_TOKEN` |
 | Telegram alerts | @BotFather | `TELEGRAM_BOT_TOKEN`, `TELEGRAM_BOT_USERNAME` |
-| Shopping assistant | Groq (free, no card), or Google AI Studio (Gemini) as a backup | `GROQ_API_KEY`, `GEMINI_API_KEY` |
+| Ask UniSwap and Fill in from photo | Groq (free, no card) and Google AI Studio (Gemini, free) | `GROQ_API_KEY`, `GEMINI_API_KEY` |
 | Email | Gmail App Password | `SMTP_USER`, `SMTP_PASS` |
 
 Each optional service (Cloudinary, Stripe, Bakong, Telegram, Groq or Gemini, email) stays switched off until its keys
@@ -41,7 +41,7 @@ are set. When the API starts, its log shows which ones are on, e.g.
 
 **Already have a database from an earlier version?** Do not run `npm run db:setup` again, because it
 wipes everything. First run the SQL listed in [`backend/README.md`, "Upgrading an existing database to
-this version"](backend/README.md#upgrading-an-existing-database-to-this-version) in Supabase's
+this version"](../backend/README.md#upgrading-an-existing-database-to-this-version) in Supabase's
 **SQL Editor**, then deploy the new API.
 
 ## 2. Photos: Cloudinary
@@ -53,8 +53,9 @@ disk on every restart.
 ## 3. API: Render
 
 1. Push your branch to GitHub first (Render deploys from GitHub).
-2. render.com → **New** → **Blueprint** → connect GitHub → pick the repository and branch. Render
-   reads `render.yaml` and creates the `uniswap-api` service.
+2. render.com → **New** → **Blueprint** → connect GitHub → pick the repository and branch. Set the
+   **Blueprint Path** to `memory/render.yaml` (it is not at the repository's root, where Render looks
+   by default). Render reads it and creates the `uniswap-api` service.
 3. Fill in the values it asks for. Leave `FRONTEND_ORIGIN` as `http://localhost:3000` for now (you
    get the real value in step 4). Leave Stripe and Telegram empty if you have not set them up yet.
 4. When the deploy finishes, open `https://<your-service>.onrender.com/api/health`. It should show
@@ -134,7 +135,7 @@ email first.
 - [ ] `https://<render-url>/api/health` → `{"status":"ok"}`
 - [ ] The Render log shows the services you expect switched on
 - [ ] The Vercel site lists the demo listings (so the database and `API_URL` are right)
-- [ ] Register with a `.edu.kh` email, receive the verification email, and log in
+- [ ] Register with an `@aupp.edu.kh` email, receive the 6-digit code by email, type it, and log in
 - [ ] Post a listing with two photos: both image URLs start with `https://res.cloudinary.com/`
 - [ ] Pay for an item with the test card: it becomes sold, and the seller and buyer get emails
 - [ ] (API running in Cambodia) Pay a $0.01 item by KHQR: it becomes sold within a few seconds
