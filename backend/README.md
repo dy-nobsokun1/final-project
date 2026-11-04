@@ -137,6 +137,10 @@ works, and each one is safe to re-run:
 6. [Row level security](#row-level-security): keeps Supabase's public roles out of every table. The API
    starts without it, but on Supabase run it anyway.
 
+7. [Meetups](#meetups): the reminder check in `server.js` reads `meetups` every minute from start-up, and
+   every chat thread page reads it, so without it threads fail to open. The block also turns on row
+   level security for the table.
+
 Also recommended: [Photos](#photos), which adds the database's own limit of 6 photos per listing. The
 API already enforces that limit, so the new API starts without it.
 
@@ -150,8 +154,9 @@ that kept an older `uniswap` database needs these blocks as well (its address is
 ### Tables
 
 Tables follow the ER diagram in the proposal (Figure 2): `users`, `listings`, `messages`,
-`reviews`. `saved_listings` was added for saved listings, and `offers` (with `listings.reserved_for`)
-for price offers; neither is in the ER diagram (see Saved listings and Offers below). See
+`reviews`. `saved_listings` was added for saved listings, `offers` (with `listings.reserved_for`)
+for price offers, and `meetups` for meetups planned in a chat; none of them is in the ER diagram (see
+Saved listings, Offers and Meetups below). See
 [`src/db/schema.sql`](src/db/schema.sql). Allowed values are enforced twice, in
 the API (`utils/validation.js`) and in the database (`CHECK` constraints):
 
@@ -164,7 +169,7 @@ the API (`utils/validation.js`) and in the database (`CHECK` constraints):
 
 Supabase gives its public roles (`anon`, `authenticated`) access to every table in `public` through its
 REST API, so without this anyone holding the public key could read and change all of them. `schema.sql`
-ends by turning on row level security for all 8 tables, with no policies: those roles then see and
+ends by turning on row level security for all 9 tables, with no policies: those roles then see and
 change nothing. The API connects as the tables' owner, which RLS does not apply to (there is no
 `FORCE`), so it works as before. A database made before this version needs it once; it is safe to re-run:
 
@@ -178,6 +183,8 @@ ALTER TABLE messages       ENABLE ROW LEVEL SECURITY;
 ALTER TABLE reviews        ENABLE ROW LEVEL SECURITY;
 ALTER TABLE saved_listings ENABLE ROW LEVEL SECURITY;
 ```
+
+`meetups` (added 4 Nov) gets the same line in its own upgrade block (see Meetups).
 
 ### Passwords
 
@@ -427,6 +434,61 @@ CREATE TABLE IF NOT EXISTS offers (
 CREATE INDEX IF NOT EXISTS offers_listing_idx ON offers (listing_id, status);
 CREATE UNIQUE INDEX IF NOT EXISTS offers_one_pending_idx ON offers (listing_id, buyer_id) WHERE status = 'pending';
 CREATE UNIQUE INDEX IF NOT EXISTS offers_one_accepted_idx ON offers (listing_id) WHERE status = 'accepted';
+```
+
+### Meetups
+
+In a chat thread, either person can plan a meetup: a campus spot and a time (`src/routes/meetups.js`,
+`src/db/meetups.js`, `src/utils/meetups.js`). The other person accepts or declines it; either can
+cancel it. Both get an email and a Telegram reminder 30 minutes before.
+
+- **Who:** only the listing's owner and someone who already has at least one message with the owner
+  about that listing (checked in the database, in either direction). Only the invitee accepts or
+  declines. Either person cancels a proposal or an accepted meetup.
+- **Spots** are keys from `MEETUP_SPOTS` (`library_entrance`, `cafeteria`, `main_gate`,
+  `student_lounge`); the frontend has the same list in `src/lib/meetup-spots.ts`. The labels are
+  placeholders until the team names AUPP's real spots. Only the API checks the key (the database only
+  checks its length), so renaming a label needs no database change.
+- **Time:** an ISO time with its zone (the form sends `+07:00`), in the future and within 14 days.
+  Emails, Telegram and the page show it in Phnom Penh time.
+- **One open meetup per thread:** a new proposal replaces (cancels) the one still waiting for an answer,
+  under a lock on the listing row, with a partial unique index as a backstop. While an accepted meetup
+  is still to come, a new proposal is refused (409): cancel it first. Accepting is refused once the
+  time has passed. Each answer is one conditional `UPDATE`, so two answers at once cannot both win.
+- **Live:** each change goes to both people's open streams as `event: meetup` (the JSON below), which the
+  message code ignores; the thread page refreshes on it.
+- **Notifications:** proposed, accepted, declined and cancelled go to the other person, but not while
+  they have that thread open (they see the card change, as with messages). The reminder always goes to
+  both: `server.js` checks once a minute, and `claimDueReminders()` picks and marks the due meetups in
+  one `UPDATE … RETURNING`, so a restart never sends one twice. A meetup accepted less than 30 minutes
+  before its time gets its reminder at the next check.
+- Statuses: `proposed` → `accepted` | `declined` | `cancelled`; `accepted` → `cancelled`.
+
+Upgrade block (added 4 Nov; the new API needs it, see the list at the top of Database). Safe to re-run:
+
+```sql
+CREATE TABLE IF NOT EXISTS meetups (
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  listing_id  UUID NOT NULL REFERENCES listings(id) ON DELETE CASCADE,
+  proposer_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  invitee_id  UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  spot        TEXT NOT NULL CHECK (length(spot) BETWEEN 1 AND 40),
+  meet_at     TIMESTAMPTZ NOT NULL,
+  status      TEXT NOT NULL DEFAULT 'proposed'
+                CHECK (status IN ('proposed', 'accepted', 'declined', 'cancelled')),
+  reminded_at TIMESTAMPTZ,
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
+  CHECK (proposer_id <> invitee_id)
+);
+CREATE INDEX IF NOT EXISTS meetups_thread_idx
+  ON meetups (listing_id, LEAST(proposer_id, invitee_id), GREATEST(proposer_id, invitee_id), created_at);
+CREATE UNIQUE INDEX IF NOT EXISTS meetups_one_proposal_idx
+  ON meetups (listing_id, LEAST(proposer_id, invitee_id), GREATEST(proposer_id, invitee_id))
+  WHERE status = 'proposed';
+CREATE INDEX IF NOT EXISTS meetups_reminder_idx ON meetups (meet_at)
+  WHERE status = 'accepted' AND reminded_at IS NULL;
+ALTER TABLE meetups ENABLE ROW LEVEL SECURITY;
 ```
 
 ### Reviews
@@ -726,7 +788,10 @@ A token issued before the account's last password change or reset is refused (40
 | GET 🔒 | `/api/messages?listingId=&withUserId=` | One thread, oldest first |
 | POST 🔒 | `/api/messages` | `{ listingId, receiverId, body }` |
 | PATCH 🔒 | `/api/messages/read` | `{ listingId, withUserId }` → mark a thread read |
-| GET 🔒 | `/api/messages/stream?listingId=&withUserId=` | Server-Sent Events: my new messages, live. Each is `event: message` with the same JSON as `POST /api/messages` returns (`toMessage`), sent to both the sender's and the receiver's streams. With both params it gets only that thread and counts as watching it, so no new-message email or Telegram is sent while it is open; with neither (the inbox) it gets all of mine. `: connected` at once, then `: ping` every 25 s. `400` with only one param |
+| GET 🔒 | `/api/messages/stream?listingId=&withUserId=` | Server-Sent Events: my new messages, live. Each is `event: message` with the same JSON as `POST /api/messages` returns (`toMessage`), sent to both the sender's and the receiver's streams. A meetup change comes as `event: meetup` with the meetup's JSON. With both params it gets only that thread and counts as watching it, so no new-message email or Telegram is sent while it is open; with neither (the inbox) it gets all of mine. `: connected` at once, then `: ping` every 25 s. `400` with only one param |
+| GET 🔒 | `/api/meetups?listingId=&withUserId=` | `{ meetup }`: the thread's newest meetup in any status, or `null`. A meetup is `{ id, listingId, proposerId, inviteeId, spot, meetAt, status, createdAt, updatedAt }`. Only ever one the signed-in student is part of |
+| POST 🔒 | `/api/meetups` | `{ listingId, withUserId, spot, meetAt }` → `201 { meetup }`. Replaces the thread's waiting proposal. `400` bad spot or time, `403` not the owner and someone who chatted with them, `404` no listing, `409` an accepted meetup is still to come (see Meetups) |
+| PATCH 🔒 | `/api/meetups/:id` | `{ status: "accepted" \| "declined" \| "cancelled" }` → `{ meetup }`. Only the invitee accepts or declines; either person cancels. `403` not the invitee, `404` not yours, `409` already answered, or its time has passed |
 | POST 🔒 | `/api/uploads` | One photo per request: raw image bytes with `Content-Type: image/jpeg`, `png`, `webp` or `gif` (max 5 MB) → `{ url }` |
 | POST 🔒 | `/api/voice/transcribe` | Raw audio bytes with `Content-Type: audio/webm`, `ogg`, `mp4`, `mpeg` or `wav` (max 2 MB, about 60 s) → `{ text }` from Groq's Whisper (`GROQ_API_KEY`). Nothing is stored or logged. `415` wrong type, `503` while off or while Groq's free limit is used up, `502` if Groq fails |
 | GET | `/api/assistant/config` | `{ enabled }`: whether the shopping assistant is switched on (`GROQ_API_KEY` or `GEMINI_API_KEY` set) |
