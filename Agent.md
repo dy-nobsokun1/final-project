@@ -20,7 +20,7 @@ This repository centralizes all project standards, architectural rules, and assi
 2. **Never Commit Secrets**: Do not write API keys, passwords, or tokens into any file. Secrets live in `.env` / `.env.local`.
 3. **Component Sizing**: Keep React components in `frontend/src/components/` under ~80-100 lines. One component per file.
 4. **Preserve Demo Deals**: Never delete or modify the 9 simulated demo deals for Chanrithorn Lim's profile stats.
-5. **Strict Campus Boundary**: Cambodian university emails ending in `.edu.kh` are strictly enforced across DB check constraints and forms.
+5. **Strict Campus Boundary**: New sign-ups are AUPP only (`@aupp.edu.kh`, in the API and the register form). The DB check constraint and password reset still take any `.edu.kh`, for the `@demo.edu.kh` sample sellers.
 6. **Verification Required**:
-   - `npm test --prefix backend` must pass 78+ unit tests.
+   - `npm test --prefix backend` must pass every unit test (99 on 4 Nov 2026).
    - `npm run build --prefix frontend` must compile with 0 errors.
