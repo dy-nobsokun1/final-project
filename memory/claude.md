@@ -158,7 +158,7 @@ when `uniswap` has none, so an older `uniswap` database needs the upgrade SQL (b
   code). `notify.js` sends to Telegram as well as email. The public `GET /api/telegram` answers
   `{ enabled, botUrl }` for the home page's strip (`TelegramPromo`): "Sign in to connect" when signed
   out, "Connect Telegram" when not linked, "Open Telegram" (the bot chat) when linked. It is in the first
-  HTML, and its X hides it only until the next page load. Deploy guide: `DEPLOY.md`; Render blueprint: `render.yaml`.
+  HTML, and its X hides it only until the next page load. Deploy guide: `memory/DEPLOY.md`; Render blueprint: `memory/render.yaml`.
 - **Telegram bot menu:** `utils/telegramBot.js` (handlers; Telegram calls are injected, so tests pass a
   fake to `handleBotUpdate`), `utils/telegramScreens.js` (pure: each screen's text and buttons, plain
   text, no `parse_mode`), `db/telegram.js` (its queries) and `db/saved.js` (save rules shared with
@@ -426,7 +426,7 @@ between the owner and the buyer: whoever paid online, else the auction winner, e
 offer was accepted, else (in-person deals) someone who chatted with the owner both ways (`reviewBlocker` in `routes/reviews.js`). API tests in `backend/test/api/`.
 
 Done (week 6, 26–27 Oct):
-- **Ask UniSwap**, the shopping assistant (Groq, with Gemini as the backup), with its `/assistant` chat page, a pill in the navbar and a link in the hero.
+- **Ask UniSwap**, the shopping assistant (Groq; Gemini only when `GROQ_API_KEY` is unset or `ASSISTANT_PROVIDER=gemini`, chosen once at start-up, never switched while running), with its `/assistant` chat page, a pill in the navbar and a link in the hero.
   - It waits and retries when Groq is busy, and retries once on a broken answer.
   - It drafts a wanted post only after the student says yes, using only what they said.
   - It keeps the chat until the tab closes, and has a "New chat" button.
@@ -471,14 +471,16 @@ Done (week 6, 26–27 Oct):
 @memory/rules.md
 @memory/changelog.md
 
-Built but needs the team's own accounts/keys (see `DEPLOY.md`): Supabase database, Render + Vercel
-deployment, Cloudinary photos, Stripe test payments, Telegram bot.
+Set up on the team laptop (keys only in its `backend/.env`): the Supabase database, Cloudinary photos, Stripe
+test payments, KHQR, the Telegram bot, email and Groq. Still not done: the Render + Vercel deployment
+(see `memory/DEPLOY.md`).
 
 ### Picking up on another machine
 
-Everything above is pushed to `implement_backend`. Last full check (2 Nov):
-- `npm test` (86) and `npm run test:api` (137) pass (2 Nov, with the new notification messages).
-- The frontend's lint, `tsc --noEmit` and `next build` are clean (2 Nov).
+Everything above is pushed to `implement_backend`. Last full check (4 Nov):
+- `npm test` (99) and `npm run test:api` (164) pass (4 Nov, after the second test round).
+- A fresh clone set up by following only the root README ran (4 Nov): setup scripts, both test sets,
+  API and website; its lint and `tsc --noEmit` were clean. `next build` was last checked on 2 Nov.
 After `git pull origin implement_backend`:
 
 - No packages were added, but run `npm install` in `backend/` and `frontend/` if they are stale.
@@ -503,7 +505,7 @@ After `git pull origin implement_backend`:
      the local database only (never in the repo), so their items show "Pay with KHQR". Paying one sends
      real money to Long and marks it sold: demo it with a cheap item.
 2. **Open the PR** from `implement_backend` into `dy-nobsokun1/final-project` `main` (only when asked).
-3. **Deploy** by following `DEPLOY.md`. Set up Cloudinary before Render, because Render wipes uploaded
+3. **Deploy** by following `memory/DEPLOY.md`. Set up Cloudinary before Render, because Render wipes uploaded
    photos. A new Supabase database is built from `schema.sql`, so it needs no upgrade blocks.
    An Ask UniSwap question can take about 25 s when Groq makes it wait, so check that Vercel's function
    time limit allows that (Fluid compute allows far more; Hobby without it stops at 10 s).
