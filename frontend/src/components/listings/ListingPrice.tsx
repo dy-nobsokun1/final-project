@@ -16,7 +16,7 @@ interface ListingPriceProps {
 export function ListingPrice({ listing, myOffer }: ListingPriceProps) {
   if (myOffer?.status === "accepted" && listing.status === "reserved" && myOffer.amount < listing.price) {
     return (
-      <p className="flex flex-wrap items-baseline gap-2 text-3xl font-semibold">
+      <p className="flex flex-wrap items-baseline gap-2 text-4xl font-bold tracking-tight">
         {formatPrice(myOffer.amount)}{" "}
         <span className="text-base font-normal text-muted-foreground">
           agreed, asking <s>{formatListingPrice(listing)}</s>
@@ -27,7 +27,7 @@ export function ListingPrice({ listing, myOffer }: ListingPriceProps) {
   const topup = listing.listingType === "trade" ? listing.cashTopup ?? 0 : 0;
   return (
     <div>
-      <p className="text-3xl font-semibold">{formatListingPrice(listing)}</p>
+      <p className="text-4xl font-bold tracking-tight">{formatListingPrice(listing)}</p>
       {topup > 0 ? <p className="text-sm text-muted-foreground">Plus {formatPrice(topup)} cash top-up</p> : null}
     </div>
   );

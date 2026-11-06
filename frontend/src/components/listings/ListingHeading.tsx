@@ -11,12 +11,11 @@ interface ListingHeadingProps {
 
 /**
  * The listing page's title and price (the agreed price for the buyer whose offer was accepted), with
- * the save heart and how many students saved it.
+ * the save heart. How many students saved it is in ListingFacts.
  * It looks up which listings you saved itself, so the listing page stays the same size.
  */
 export async function ListingHeading({ listing, myOffer }: ListingHeadingProps) {
   const savedIds = await getSavedListingIds();
-  const count = listing.saveCount;
 
   return (
     <>
@@ -30,11 +29,6 @@ export async function ListingHeading({ listing, myOffer }: ListingHeadingProps) 
         />
       </div>
       <ListingPrice listing={listing} myOffer={myOffer} />
-      {count > 0 ? (
-        <p className="text-sm text-muted-foreground">
-          Saved by {count} {count === 1 ? "student" : "students"}
-        </p>
-      ) : null}
     </>
   );
 }

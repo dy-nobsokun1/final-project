@@ -3,17 +3,18 @@ const BAR = "block h-5 rounded bg-foreground/10";
 
 /**
  * Placeholder cards shaped like `ListingCard`, shown while browse results load. Same grid classes
- * as `ListingGrid`, so nothing moves when the real cards arrive. Screen readers hear one
- * "Loading listings" instead of eight empty cards.
+ * as `ListingGrid`, so nothing moves when the real cards arrive (`count`: 4 for the listing page's
+ * one-row "Similar items"). Screen readers hear one
+ * "Loading listings" instead of empty cards.
  */
-export function ListingGridSkeleton() {
+export function ListingGridSkeleton({ count = 8 }: { count?: number }) {
   return (
     <div>
       <p role="status" className="sr-only">
         Loading listings
       </p>
       <ul aria-hidden="true" className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-        {Array.from({ length: 8 }, (_, index) => (
+        {Array.from({ length: count }, (_, index) => (
           <li
             key={index}
             className="light-surface flex animate-pulse flex-col overflow-hidden rounded-xl border border-border bg-card motion-reduce:animate-none"
