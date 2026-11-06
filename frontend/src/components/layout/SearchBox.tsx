@@ -35,7 +35,8 @@ export function SearchBox() {
   });
 
   const suggestions = answer?.results ?? [];
-  const searchHref = query ? `/?q=${encodeURIComponent(query)}` : "/";
+  // "#listings" scrolls down to the results, past the hero (like the hero's "Browse listings").
+  const searchHref = query ? `/?q=${encodeURIComponent(query)}#listings` : "/";
   // The rows, in order: each suggestion, then "See all results".
   const hrefs = [...suggestions.map((suggestion) => `/listings/${suggestion.id}`), searchHref];
   const isShown = isOpen && answer !== null;
