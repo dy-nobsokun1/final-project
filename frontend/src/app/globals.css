@@ -302,53 +302,67 @@
   }
 }
 
-/* Small animations (6 Nov). One block, so one rule switches them all off: they run only on a
-   screen (a printed receipt never moves) and only when the student has not asked for reduced
-   motion in their system settings. Each one is short (200-300 ms, ease-out), plays once, and moves
-   only `transform` and `opacity`, which a weak laptop can draw smoothly. */
+/* Animations (6 Nov). One block, so one rule switches them all off: they run only on a screen (a
+   printed receipt never moves) and only when the student has not asked for reduced motion in their
+   system settings. Each plays once and moves only `transform` and `opacity` (plus one short glow on
+   the bid), which a weak laptop can draw smoothly. Sized to be seen on a projector. */
 @media screen and (prefers-reduced-motion: no-preference) {
-  /* Listing cards rise 10 px and fade in when a grid first shows (ListingGrid). The first six
-     cards start 40 ms apart (--i is set on each <li>). `backwards` holds the start frame only
-     during the delay, so nothing is kept on the card once it has finished. */
+  /* Listing cards rise 24 px and fade in (ListingGrid). The first eight cards start 70 ms apart
+     (--i is set on each <li>). `backwards` holds the start frame only during the delay, so nothing
+     is kept on the card once it has finished. A grid below the first screen waits, hidden, until it
+     scrolls into view (RevealList sets data-reveal="wait", then removes it), so the cards rise
+     where the student can see them. Without JavaScript the attribute is never set. */
   @keyframes card-in {
-    from { opacity: 0; transform: translateY(10px); }
+    from { opacity: 0; transform: translateY(24px); }
   }
   .card-in {
-    animation: card-in 250ms ease-out backwards;
-    animation-delay: calc(var(--i, 0) * 40ms);
+    animation: card-in 450ms cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
+    animation-delay: calc(var(--i, 0) * 70ms);
+  }
+  [data-reveal="wait"] > .card-in {
+    opacity: 0;
+    animation: none;
   }
 
-  /* Cards lift 2 px on hover or keyboard focus (ListingCard, WantedCard). */
+  /* Cards lift 6 px with a bigger shadow on hover or keyboard focus (ListingCard, WantedCard).
+     `:has(:focus-visible)`, not `:focus-within`, so a mouse click on the heart does not leave the
+     card lifted. */
   .card-lift {
     transition: translate 200ms ease-out;
   }
   .card-lift:hover,
-  .card-lift:focus-within {
-    translate: 0 -2px;
+  .card-lift:has(:focus-visible) {
+    translate: 0 -6px;
+  }
+  .card-lift:hover > a,
+  .card-lift:has(:focus-visible) > a {
+    box-shadow:
+      0 22px 40px -14px rgb(0 0 0 / 0.55),
+      0 10px 28px -10px color-mix(in srgb, var(--brand-400) 55%, transparent);
   }
 
   /* The heart pops once when a click saves it (SaveButton). */
   @keyframes heart-pop {
-    50% { transform: scale(1.2); }
+    45% { transform: scale(1.4); }
   }
   .heart-pop {
-    animation: heart-pop 300ms ease-out;
+    animation: heart-pop 350ms ease-out;
   }
 
-  /* The highest bid pulses once when it changes (BidAmount). */
+  /* The highest bid pulses once, with a short brand glow, when it changes (BidAmount). */
   @keyframes bid-flash {
-    40% { transform: scale(1.15); opacity: 0.6; }
+    40% { transform: scale(1.25); text-shadow: 0 0 14px var(--brand-400); }
   }
   .bid-flash {
-    animation: bid-flash 300ms ease-out;
+    animation: bid-flash 400ms ease-out;
   }
 
   /* A chat message that arrives after the thread opened slides up into place (LiveMessageList). */
   @keyframes message-in {
-    from { opacity: 0; transform: translateY(8px); }
+    from { opacity: 0; transform: translateY(16px); }
   }
   .message-in {
-    animation: message-in 200ms ease-out;
+    animation: message-in 300ms ease-out;
   }
 
   /* Page changes crossfade (PageTransition, experimental). The old page fades out where it was and
