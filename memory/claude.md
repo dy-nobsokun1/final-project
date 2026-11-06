@@ -339,6 +339,19 @@ when `uniswap` has none, so an older `uniswap` database needs the upgrade SQL (b
     The shadcn `dark:` fills on the outline and destructive buttons were removed so passed colours win.
     Two `dark:` fixes (4 Nov): the inbox unread dot is pale (`dark:bg-foreground`, 8.6:1), and the
     Telegram strip's icon is black on its pale circle (`dark:text-brand-ink`, 18.1:1).
+- **Animations (6 Nov), no package:** every keyframe and rule is in one block at the end of
+  `globals.css`, `@media screen and (prefers-reduced-motion: no-preference)`, so nothing moves on paper or
+  for students who asked for reduced motion. All 200–300 ms ease-out, play once, `transform`/`opacity` only.
+  - Cards fade up when a grid first shows (`card-in` on `ListingGrid`'s `<li>`, first six 40 ms apart;
+    this replaced the motion `Effect` there), lift 2 px on hover or focus (`card-lift`), the heart pops
+    when a click saves it (`SaveButton`), the top bid pulses when it changes on the page (`BidAmount`),
+    and chat messages that arrive after the thread opened slide in (`LiveMessageList`).
+  - **Page crossfade (experimental, `e38ef19`, revert it alone to turn it off):** `layout/PageTransition.tsx`
+    wraps the `(main)` pages in React's `<ViewTransition>`, keyed on the path, so only a new page fades
+    (200 ms); searches, filters, `router.refresh()` and live updates stay still. It comes from the React
+    19.3 canary that Next 16 bundles for the App Router (the `react` 19.2.8 package has no
+    `ViewTransition`). Browser back/forward does not fade. One rule after the block turns view
+    transitions off for reduced motion and print.
 - **Recent purchases:** `GET /api/users/me/purchases` (`db/purchases.js`), shown on your own `/profile`
   as `RecentPurchases` + `PurchaseCard` (hidden until the first purchase).
   - **Who bought it:** it shares `CLOSED_DEALS_SQL` with the stats below, so the two always agree: the
