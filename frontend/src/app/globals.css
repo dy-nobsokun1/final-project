@@ -350,4 +350,40 @@
   .message-in {
     animation: message-in 200ms ease-out;
   }
+
+  /* Page changes crossfade (PageTransition, experimental). The old page fades out where it was and
+     the new one fades in; nothing slides. The rest of the screen (navbar, background) is the "root"
+     snapshot, which is the same before and after, so it does not animate. Clicks go through to the
+     new page while it fades in. */
+  @keyframes page-fade {
+    from { opacity: 0; }
+  }
+  ::view-transition {
+    pointer-events: none;
+  }
+  ::view-transition-group(root),
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none;
+  }
+  ::view-transition-group(.page-in),
+  ::view-transition-group(.page-out) {
+    animation: none;
+  }
+  ::view-transition-new(.page-in) {
+    animation: page-fade 200ms ease-out;
+  }
+  ::view-transition-old(.page-out) {
+    animation: page-fade 200ms ease-out reverse;
+  }
+}
+
+/* With reduced motion (or on paper) the block above does not apply, so the browser would still
+   play its own default crossfade. This switches every view transition off there. */
+@media not screen, (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
 }
