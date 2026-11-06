@@ -1,5 +1,6 @@
 import { Gavel } from "lucide-react";
 import Link from "next/link";
+import { BidAmount } from "@/components/listings/BidAmount";
 import { BidForm } from "@/components/listings/BidForm";
 import { BidHistory } from "@/components/listings/BidHistory";
 import { formatPrice, formatRelativeTime } from "@/lib/utils";
@@ -36,7 +37,7 @@ export function AuctionPanel({ listing, bids, userId }: AuctionPanelProps) {
 
       <p className="text-sm">
         {auction.highestBid === null ? "Starting bid" : "Highest bid"}{" "}
-        <span className="font-semibold">{formatPrice(auction.highestBid ?? listing.price)}</span>
+        <BidAmount amount={auction.highestBid ?? listing.price} />
         {" · "}
         {auction.bidCount} {auction.bidCount === 1 ? "bid" : "bids"} · raise by at least{" "}
         {formatPrice(auction.minIncrement)}

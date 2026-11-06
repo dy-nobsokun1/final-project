@@ -301,3 +301,53 @@
     transition: none;
   }
 }
+
+/* Small animations (6 Nov). One block, so one rule switches them all off: they run only on a
+   screen (a printed receipt never moves) and only when the student has not asked for reduced
+   motion in their system settings. Each one is short (200-300 ms, ease-out), plays once, and moves
+   only `transform` and `opacity`, which a weak laptop can draw smoothly. */
+@media screen and (prefers-reduced-motion: no-preference) {
+  /* Listing cards rise 10 px and fade in when a grid first shows (ListingGrid). The first six
+     cards start 40 ms apart (--i is set on each <li>). `backwards` holds the start frame only
+     during the delay, so nothing is kept on the card once it has finished. */
+  @keyframes card-in {
+    from { opacity: 0; transform: translateY(10px); }
+  }
+  .card-in {
+    animation: card-in 250ms ease-out backwards;
+    animation-delay: calc(var(--i, 0) * 40ms);
+  }
+
+  /* Cards lift 2 px on hover or keyboard focus (ListingCard, WantedCard). */
+  .card-lift {
+    transition: translate 200ms ease-out;
+  }
+  .card-lift:hover,
+  .card-lift:focus-within {
+    translate: 0 -2px;
+  }
+
+  /* The heart pops once when a click saves it (SaveButton). */
+  @keyframes heart-pop {
+    50% { transform: scale(1.2); }
+  }
+  .heart-pop {
+    animation: heart-pop 300ms ease-out;
+  }
+
+  /* The highest bid pulses once when it changes (BidAmount). */
+  @keyframes bid-flash {
+    40% { transform: scale(1.15); opacity: 0.6; }
+  }
+  .bid-flash {
+    animation: bid-flash 300ms ease-out;
+  }
+
+  /* A chat message that arrives after the thread opened slides up into place (LiveMessageList). */
+  @keyframes message-in {
+    from { opacity: 0; transform: translateY(8px); }
+  }
+  .message-in {
+    animation: message-in 200ms ease-out;
+  }
+}

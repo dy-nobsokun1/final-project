@@ -27,10 +27,10 @@ export function WantedCard({ listing, saved }: WantedCardProps) {
 
   return (
     // Laid out like ListingCard: the heart sits next to the link, and the lift moves both.
-    <div className="relative h-full transition-transform hover:-translate-y-0.5">
+    <div className="card-lift relative h-full">
       <Link
         href={`/listings/${listing.id}`}
-        className="group flex h-full flex-col overflow-hidden rounded-xl border-2 border-dashed border-brand-200/70 bg-wanted-card text-brand-50 transition-all hover:border-brand-50 hover:shadow-lg hover:shadow-brand-600/20"
+        className="group flex h-full flex-col overflow-hidden rounded-xl border-2 border-dashed border-brand-200/70 bg-wanted-card text-brand-50 transition-all hover:border-brand-50 hover:shadow-lg hover:shadow-brand-600/20 focus-visible:shadow-lg focus-visible:shadow-brand-600/20"
       >
         {/* Where an item card has its photo, with the status and type tags in the same corners. */}
         <div className="relative flex aspect-[4/3] items-center justify-center bg-brand-600/25">

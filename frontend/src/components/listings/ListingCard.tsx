@@ -33,12 +33,13 @@ export function ListingCard({ listing, saved }: ListingCardProps) {
 
   return (
     // The heart sits next to the link, not inside it: a button inside a link is invalid HTML, and
-    // clicking it would open the listing too. The lift on hover moves both together. `h-full`
+    // clicking it would open the listing too. The lift on hover or keyboard focus (`card-lift` in
+    // globals.css) moves both together. `h-full`
     // makes every card in a grid row as tall as the tallest one.
-    <div className="relative h-full transition-transform hover:-translate-y-0.5">
+    <div className="card-lift relative h-full">
       <Link
         href={`/listings/${listing.id}`}
-        className="light-surface group flex h-full flex-col overflow-hidden rounded-xl border border-border bg-card transition-all hover:border-brand-600 hover:shadow-lg hover:shadow-brand-600/20"
+        className="light-surface group flex h-full flex-col overflow-hidden rounded-xl border border-border bg-card transition-all hover:border-brand-600 hover:shadow-lg hover:shadow-brand-600/20 focus-visible:shadow-lg focus-visible:shadow-brand-600/20"
       >
         <div className="relative">
           <ListingImage
