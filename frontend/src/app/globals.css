@@ -365,12 +365,15 @@
     animation: message-in 300ms ease-out;
   }
 
-  /* Page changes crossfade (PageTransition, experimental). The old page fades out where it was and
-     the new one fades in; nothing slides. The rest of the screen (navbar, background) is the "root"
-     snapshot, which is the same before and after, so it does not animate. Clicks go through to the
-     new page while it fades in. */
-  @keyframes page-fade {
-    from { opacity: 0; }
+  /* Page changes (PageTransition, experimental): the old page fades out where it was (150 ms) and
+     the new one fades in while rising 12 px (300 ms). The rest of the screen (navbar, background)
+     is the "root" snapshot, the same before and after, so it does not animate. Clicks go through
+     to the new page while it fades in. */
+  @keyframes page-in {
+    from { opacity: 0; transform: translateY(12px); }
+  }
+  @keyframes page-out {
+    to { opacity: 0; }
   }
   ::view-transition {
     pointer-events: none;
@@ -385,10 +388,10 @@
     animation: none;
   }
   ::view-transition-new(.page-in) {
-    animation: page-fade 200ms ease-out;
+    animation: page-in 300ms cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
   }
   ::view-transition-old(.page-out) {
-    animation: page-fade 200ms ease-out reverse;
+    animation: page-out 150ms ease-out forwards;
   }
 }
 
