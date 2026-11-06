@@ -483,6 +483,8 @@ test payments, KHQR, the Telegram bot, email and Groq. Still not done: the Rende
 ### Picking up on another machine
 
 Everything above is pushed to `implement_backend`. Last full check (4 Nov):
+- 6 Nov: whole demo script walked at 1280×800 and 1024×768 on Next 16.4.5; one fix (navbar search
+  scrolls to the results, `#listings`); lint, `tsc --noEmit` and `next build` clean.
 - 5 Nov: `npm test` (107) and `npm run test:api` (171) pass; Next.js is 16.4.5 (security update), and
   lint, `tsc --noEmit` and `next build` are clean on it.
 - `npm test` (99) and `npm run test:api` (164) pass (4 Nov, after the second test round).
