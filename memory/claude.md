@@ -341,17 +341,23 @@ when `uniswap` has none, so an older `uniswap` database needs the upgrade SQL (b
     Telegram strip's icon is black on its pale circle (`dark:text-brand-ink`, 18.1:1).
 - **Animations (6 Nov), no package:** every keyframe and rule is in one block at the end of
   `globals.css`, `@media screen and (prefers-reduced-motion: no-preference)`, so nothing moves on paper or
-  for students who asked for reduced motion. All 200–300 ms ease-out, play once, `transform`/`opacity` only.
-  - Cards fade up when a grid first shows (`card-in` on `ListingGrid`'s `<li>`, first six 40 ms apart;
-    this replaced the motion `Effect` there), lift 2 px on hover or focus (`card-lift`), the heart pops
-    when a click saves it (`SaveButton`), the top bid pulses when it changes on the page (`BidAmount`),
-    and chat messages that arrive after the thread opened slide in (`LiveMessageList`).
-  - **Page crossfade (experimental, `e38ef19`, revert it alone to turn it off):** `layout/PageTransition.tsx`
-    wraps the `(main)` pages in React's `<ViewTransition>`, keyed on the path, so only a new page fades
-    (200 ms); searches, filters, `router.refresh()` and live updates stay still. It comes from the React
+  for students who asked for reduced motion. Each plays once and moves only `transform`/`opacity` (plus one
+  glow on the bid). Sized for a projector (made bigger the same day: the first values were too subtle).
+  - Cards rise 24 px and fade in over 450 ms (`card-in` on `ListingGrid`'s `<li>`, first eight 70 ms
+    apart; this replaced the motion `Effect` there). `RevealList` (the grid's `<ul>`) holds a grid that
+    starts below the screen (`data-reveal="wait"`) until it scrolls into view, so on the home page the
+    cards rise when the student reaches them, not behind the hero.
+  - Cards lift 6 px with a bigger shadow on hover or keyboard focus (`card-lift`, `:has(:focus-visible)`
+    so a mouse click on the heart does not leave it lifted). The heart pops to 1.4 when a click saves it
+    (`SaveButton`, 350 ms). The top bid pulses to 1.25 with a green glow when it changes on the page
+    (`BidAmount`, 400 ms). Chat messages that arrive after the thread opened slide 16 px (300 ms).
+  - **Page change (experimental, `e38ef19` + `f5453ef`, revert both to turn it off):**
+    `layout/PageTransition.tsx` wraps the `(main)` pages in React's `<ViewTransition>`, keyed on the path,
+    so only a new page animates: the old page fades out (150 ms), the new one fades in rising 12 px
+    (300 ms). Searches, filters, `router.refresh()` and live updates stay still. It comes from the React
     19.3 canary that Next 16 bundles for the App Router (the `react` 19.2.8 package has no
-    `ViewTransition`). Browser back/forward does not fade. One rule after the block turns view
-    transitions off for reduced motion and print.
+    `ViewTransition`; the lockfile pins `@types/react` 19.3.0). Browser back/forward does not animate.
+    One rule after the block turns view transitions off for reduced motion and print.
 - **Recent purchases:** `GET /api/users/me/purchases` (`db/purchases.js`), shown on your own `/profile`
   as `RecentPurchases` + `PurchaseCard` (hidden until the first purchase).
   - **Who bought it:** it shares `CLOSED_DEALS_SQL` with the stats below, so the two always agree: the
