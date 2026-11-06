@@ -358,6 +358,13 @@ when `uniswap` has none, so an older `uniswap` database needs the upgrade SQL (b
     19.3 canary that Next 16 bundles for the App Router (the `react` 19.2.8 package has no
     `ViewTransition`; the lockfile pins `@types/react` 19.3.0). Browser back/forward does not animate.
     One rule after the block turns view transitions off for reduced motion and print.
+- **Item page (6 Nov), frontend only:** same layout, more life. `ListingStatusPill` (always shown, `statusLabel`),
+  a bigger price (`ListingPrice`), `ListingFacts` (condition, category icon, posted, saves, pickup; on `bg-inset`;
+  the "Saved by" line moved here from `ListingHeading`), `ListingSellerCard` (stars from `getUserReviews`, fetched
+  inside the card so it runs alongside the rest; an API error just hides the stars; "More from <first name>"),
+  `SimilarItems` (same category via `getListings`, not this one or wanted posts, 4 max, in Suspense with
+  `ListingGridSkeleton count={4}`, hidden when empty) and `PaymentBanner` (moved out of the page as is). The
+  photo zooms 3% on hover (`photo-zoom`) and the right column rises in with `card-in` (`rise(i)` in the page).
 - **Recent purchases:** `GET /api/users/me/purchases` (`db/purchases.js`), shown on your own `/profile`
   as `RecentPurchases` + `PurchaseCard` (hidden until the first purchase).
   - **Who bought it:** it shares `CLOSED_DEALS_SQL` with the stats below, so the two always agree: the
