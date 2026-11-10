@@ -21,8 +21,8 @@ Instructions for AI coding agents (Codex, Claude, Gemini, Cline) working on UniS
 
 ## Frontend Stack & Architecture
 
-- **Framework**: Next.js 15 (App Router) + TypeScript + Turbopack
-- **Styling**: Tailwind CSS
+- **Framework**: Next.js 16 (App Router) + React 19 + TypeScript + Turbopack (needs Node.js 20.9+)
+- **Styling**: Tailwind CSS 4
 - **Primitives**: shadcn/ui
 - **Structure**:
   ```
@@ -43,13 +43,13 @@ Instructions for AI coding agents (Codex, Claude, Gemini, Cline) working on UniS
 
 ## Backend Stack & Architecture
 
-- **Runtime**: Node.js 24 + Express + Native ES Modules (`type: "module"`)
-- **Database**: PostgreSQL with `pg` pool (Supabase Cloud + local Postgres on port 5433 fallback)
+- **Runtime**: Node.js 20.6+ (developed on 24) + Express 5 + Native ES Modules (`type: "module"`)
+- **Database**: PostgreSQL with one `pg` pool on `DATABASE_URL` (Supabase for the demo; a local Postgres, e.g. Docker on port 5433, for development and the API tests). There is no automatic fallback between them.
 - **Integrations**: Stripe Checkout (card), Bakong KHQR (mobile banking), Telegram Bot API (`notify.js`, `telegram.js`)
 - **Safety**: Always use parameterized queries (`$1`, `$2`), never string interpolation. Protect transactions with `withTransaction()`.
 
 ---
 
 ## Verification Gates Before Every Commit
-- **Backend**: `npm test` in `backend/` must pass 78+ unit tests.
+- **Backend**: `npm test` in `backend/` must pass every unit test (99 on 4 Nov 2026). For reference, `npm run test:api` had 164 API tests on 4 Nov 2026.
 - **Frontend**: `npm run build` in `frontend/` must complete with zero errors.

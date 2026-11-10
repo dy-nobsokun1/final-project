@@ -59,11 +59,12 @@ for (const [owner, title, category, condition, type, price, description, images]
   listingIds.push(rows[0].id);
 }
 
-// A short chat: Chanrithorn asks Sokunth about the MacBook.
+// A short chat: Chanrithorn asks Sokunth about the MacBook. The question is a minute older, so the
+// thread shows it first (one INSERT gives both rows the same now(), and then their order is random).
 await pool.query(
-  `INSERT INTO messages (listing_id, sender_id, receiver_id, content) VALUES
-     ($1, $2, $3, 'Hi! Is the MacBook still available?'),
-     ($1, $3, $2, 'Yes it is. Want to meet at the library tomorrow?')`,
+  `INSERT INTO messages (listing_id, sender_id, receiver_id, content, created_at) VALUES
+     ($1, $2, $3, 'Hi! Is the MacBook still available?', now() - interval '1 minute'),
+     ($1, $3, $2, 'Yes it is. Want to meet at the library tomorrow?', now())`,
   [listingIds[1], ids[1], ids[0]],
 );
 

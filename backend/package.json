@@ -13,6 +13,7 @@
     "db:samples": "node --env-file=.env scripts/db-samples.js",
     "db:demo-deals": "node --env-file=.env scripts/db-demo-deals.js",
     "db:reset-sold": "node --env-file=.env scripts/db-reset-sold.js",
+    "db:open-auctions": "node --env-file=.env scripts/db-open-auctions.js",
     "db:to-supabase": "node --env-file=.env scripts/migrate-to-supabase.js",
     "email:test": "node --env-file=.env scripts/check-email.js",
     "test": "node --test test/*.test.js",

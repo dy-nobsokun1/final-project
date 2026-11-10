@@ -25,6 +25,20 @@ test("posting a listing needs a login and valid fields", async () => {
   assert.equal(created.body.listing.status, "active");
 });
 
+test("a trade keeps its cash top-up, and an edit can clear it", async () => {
+  const owner = await api.createUser();
+  const trade = await api.createListing(owner, { listingType: "trade", price: 0, cashTopup: 5 });
+  const path = `/api/listings/${trade.id}`;
+  assert.equal((await api.request("GET", path)).body.listing.cashTopup, 5);
+
+  const negative = await api.request("PATCH", path, { token: owner.token, body: { cashTopup: -1 } });
+  assert.equal(negative.status, 400);
+
+  const cleared = await api.request("PATCH", path, { token: owner.token, body: { listingType: "sale", cashTopup: null } });
+  assert.equal(cleared.status, 200);
+  assert.equal((await api.request("GET", path)).body.listing.cashTopup, null);
+});
+
 test("only the owner can change or delete a listing", async () => {
   const [owner, stranger] = await Promise.all([api.createUser(), api.createUser()]);
   const path = `/api/listings/${(await api.createListing(owner)).id}`;

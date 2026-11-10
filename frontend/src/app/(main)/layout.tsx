@@ -1,5 +1,6 @@
 import { MobileNav } from "@/components/layout/MobileNav";
 import { Navbar } from "@/components/layout/Navbar";
+import { PageTransition } from "@/components/layout/PageTransition";
 
 /** Shell for the signed-in part of the app: persistent nav plus a mobile tab bar. */
 export default function MainLayout({ children }: LayoutProps<"/">) {
@@ -7,7 +8,7 @@ export default function MainLayout({ children }: LayoutProps<"/">) {
     <div className="flex min-h-full flex-1 flex-col">
       <Navbar />
       <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-6 pb-20 md:pb-6">
-        {children}
+        <PageTransition>{children}</PageTransition>
       </main>
       <MobileNav />
     </div>

@@ -5,6 +5,7 @@ import express, { Router } from "express";
 import { requireAuth } from "../middleware/auth.js";
 import { CLOUDINARY_PHOTO_PREFIX, isCloudinaryConfigured, uploadImage } from "../services/cloudinary.js";
 import { HttpError } from "../utils/httpError.js";
+import { detectImageType } from "../utils/imageType.js";
 
 // Listing photos are saved to backend/uploads/ and served from /uploads/<file>.
 // Good enough for local demos; swap for Cloudinary before deploying (Render's disk is wiped on restart).
@@ -42,14 +43,29 @@ uploadsRouter.post(
   requireAuth,
   express.raw({ type: Object.keys(EXTENSIONS), limit: MAX_SIZE }),
   async (req, res) => {
-    const extension = EXTENSIONS[req.get("content-type")?.split(";")[0]];
-    if (!extension || !Buffer.isBuffer(req.body) || req.body.length === 0) {
+    // The header must name an accepted type, or express.raw above does not read the body at all.
+    const claimedType = req.get("content-type")?.split(";")[0];
+    if (!EXTENSIONS[claimedType] || !Buffer.isBuffer(req.body) || req.body.length === 0) {
       throw new HttpError(400, "Send a JPEG, PNG, WebP or GIF image.");
     }
+    // The header is only the client's claim (a PNG saved as "photo.jpg" is sent as image/jpeg), so the
+    // real type comes from the file's first bytes. Bytes of no accepted image type are refused.
+    const mimeType = detectImageType(req.body);
+    if (!mimeType) throw new HttpError(400, "That file is not a real image.");
+    const extension = EXTENSIONS[mimeType];
 
     // With Cloudinary set up, photos are hosted there; otherwise they are saved on this server.
     if (isCloudinaryConfigured) {
-      return res.status(201).json({ url: await uploadImage(req.body, req.get("content-type").split(";")[0]) });
+      let url;
+      try {
+        url = await uploadImage(req.body, mimeType);
+      } catch (error) {
+        // Cloudinary refuses bytes that are not really an image, and can be down. Either way the
+        // student gets a clear message instead of "Something went wrong on the server."
+        console.error("[cloudinary]", error.message);
+        throw new HttpError(502, "Could not save that photo. Try another JPEG or PNG image.");
+      }
+      return res.status(201).json({ url });
     }
 
     const fileName = `${randomUUID()}.${extension}`;

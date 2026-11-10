@@ -1,9 +1,9 @@
-import { randomBytes } from "node:crypto";
 import { Router } from "express";
 import { query } from "../db/pool.js";
 import { requireAuth } from "../middleware/auth.js";
 import { botChatLink, botStartLink, isTelegramConfigured } from "../services/telegram.js";
 import { HttpError } from "../utils/httpError.js";
+import { newLinkCode } from "../utils/telegramLinkCode.js";
 
 // Mounted at /api/telegram, with no sign-in. GET -> { enabled, botUrl }: whether the bot is set up
 // and the link to its chat (null when it is not), so the home page can tell everyone about Telegram
@@ -26,10 +26,10 @@ telegramRouter.get("/", async (req, res) => {
   res.json({ enabled: isTelegramConfigured, connected: Boolean(rows[0]?.telegram_chat_id) });
 });
 
-// POST -> { link }: a fresh one-time link; any older link stops working
+// POST -> { link }: a fresh one-time link that works for 30 minutes; any older link stops working
 telegramRouter.post("/", async (req, res) => {
   if (!isTelegramConfigured) throw new HttpError(503, "Telegram notifications are not set up yet.");
-  const code = randomBytes(16).toString("hex");
+  const code = newLinkCode();
   await query("UPDATE users SET telegram_link_code = $2 WHERE id = $1", [req.userId, code]);
   res.json({ link: botStartLink(code) });
 });

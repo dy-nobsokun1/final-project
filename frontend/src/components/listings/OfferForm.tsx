@@ -45,15 +45,14 @@ export function OfferForm({ listingId, askingPrice, currentAmount }: OfferFormPr
           // `key` resets the box when the pending offer changes (after sending a new amount).
           key={currentAmount ?? "new"}
           defaultValue={currentAmount ?? ""}
+          // Selects a pending offer's amount on focus, so typing a new one replaces it (as in BidForm).
+          onFocus={(event) => event.currentTarget.select()}
           className="bg-brand-50/40"
         />
         <Button type="submit" disabled={isBusy}>
           {isBusy ? "Sending..." : currentAmount === null ? "Make offer" : "Change offer"}
         </Button>
       </div>
-      <p className="text-xs text-muted-foreground">
-        Asking {formatPrice(askingPrice)}. If the seller accepts, the item is reserved for you at your price.
-      </p>
       {error ? (
         <p role="alert" className="text-sm text-foreground">
           {error}

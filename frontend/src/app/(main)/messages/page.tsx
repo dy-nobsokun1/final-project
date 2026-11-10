@@ -1,4 +1,5 @@
 import { ConversationList } from "@/components/chat/ConversationList";
+import { LiveInboxRefresh } from "@/components/chat/LiveInboxRefresh";
 import { Card } from "@/components/ui/card";
 import { getConversations, getUserById, requireUser } from "@/lib/api";
 import type { User } from "@/types";
@@ -31,6 +32,7 @@ export default async function MessagesPage() {
       <Card className="overflow-hidden">
         <ConversationList conversations={conversations} partners={partners} />
       </Card>
+      <LiveInboxRefresh />
     </div>
   );
 }

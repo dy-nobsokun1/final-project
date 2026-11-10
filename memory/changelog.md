@@ -2,7 +2,61 @@
 
 Log of completed tasks, architecture decisions, and bug fixes for the UniSwap team.
 
+## 4 Nov 2026
+
+### Test round 2 and security review
+- **Clicked what the first check skipped** (1280×800, light; one student in the browser, the other through the API): live chat (inbox and thread update without a reload; Enter sends, Shift+Enter adds a line), meetups (plan, accept, decline and cancel from both sides, live card, past-meetup state), Fill in from photo (2.4–2.9 s a photo, never posted), the photo picker, the Telegram strip's three states, and a dark-mode contrast scan of 12 pages (no unreadable text). All test rows were deleted.
+- **Fixed:** the photo's remove X showed under the photo (the ripple's inline `position: relative` beat `absolute`); after Remove, focus stays in the photos; a photo Cloudinary refuses answers 502 "Could not save that photo" (was a 500); tokens are only accepted when signed with HS256; at most 20 Ask UniSwap questions and 60 voice clips an hour per student (429), so one script cannot use up the free tier.
+- **Security review:** no key, token or password in git history (only the public local Docker password); every route checks who may act; SQL always uses `$n`; no `dangerouslySetInnerHTML`; the Stripe webhook refuses unsigned calls (and every call while its secret is unset). Open for a decision: no login rate limit, and `npm audit` reports Next 16.3.7 (critical, fixed in 16.4.5) and 3 backend advisories.
+- Tests: 99 unit, 164 API.
+
+### Demo check: small fixes found by clicking through the demo
+- **Receipt readable:** the payment receipt card had no `light-surface`, so its labels were the card's own colour (invisible); the total and the Download button were 1.3:1 and 1.6:1. Now all text is readable, and the header no longer runs under the close button.
+- **Rating stars:** filled stars (1.9:1) looked like the empty ones, so a 5-star rating read as empty. They now use the text colour.
+- **Bid and offer boxes** select their number on focus, so typing replaces it (typing 11 after the prefilled 10 placed a $1,011 bid).
+- **Offers:** when the seller cuts the price below an accepted offer, both panels now say "The price is now $X, so you/they pay that."
+- **Meetups:** an accepted meetup whose time has passed says "Meetup time has passed" (an unanswered one "Meetup request expired"), without buttons, and "Plan meetup" shows again. API test added.
+- **Sign in returns to the listing** (heart, "Sign in to message the seller", receipt link) through `/login?next=`, checked by `safeNextPath` (no other sites).
+- **Photo picker:** removing a photo clears stale errors; focus stays on the photo list after "Make cover".
+- **Seed chat order:** the two seed messages had the same time, so the reply could show above the question. Fixed in `db:seed` and in the Supabase demo row.
+- Text: "1 chat" (was "1 chats"), and the Ask UniSwap example says "under $5".
+- Last three: at most 10 meetup proposals an hour per student (429, counted in the database, since each one sends an email; API test added); the receipt keeps only "Print / Save as PDF" ("Download" did the same thing); the offer panel says "Asking $X" once (the form's second sentence is gone).
+- Checked at 1280×800 and 1024×768 (light, no side scroll) and in dark mode. Tests: 97 unit, 161 API.
+
+### Snap to list ("Fill in from photo")
+- On a new listing, after a photo is picked, "Fill in from photo" sends the shrunk photo (only the photo) to Gemini `gemini-3.1-flash-lite`, with Groq `qwen/qwen3.8-27b` once when Gemini is busy (at most 20 photos a day, since it shares Ask UniSwap's quota). It fills only empty fields (title, category, condition, description) and never posts. 10 photos an hour per student; nothing stored or logged.
+- The price hint comes only from similar UniSwap listings. Tightened the same day: a MacBook photo gave "$12–$550" because laptop RAM and an iPad Pro shared one word. Now only titles sharing the most words count, at least 2 words, and weaker matches are never used instead: no hint is better than a wrong one. On the demo data the MacBook, ThinkPad, GPU, mouse, textbooks and bike get no hint (one or no close match; every bike is an auction or a trade); "Samsung SSD" gets $30–$45.
+- Checked in the browser at 1280×800 and 1024×768 (light, no side scroll) and in dark mode (pale button with black text; the note 6.1:1). Tests: 97 unit, 160 API.
+- Open: one lint warning in `NewListingForm.tsx` (`description` unused since it became optional on 2 Nov), not from this feature.
+
+### Meetup planner in chat
+- In a chat thread, either person taps "Plan meetup" and picks a campus spot, a date and a time (Phnom Penh time). A card under the thread's header shows it at once for both people (live, `event: meetup`). The other person accepts or declines; either can cancel. Both get an email + Telegram reminder 30 minutes before (`server.js`, once a minute, one `UPDATE … RETURNING` so it is sent once).
+- Only the owner and someone who already chatted with them may plan one (checked in the database). One open meetup per thread: a new proposal replaces the waiting one; refused while an accepted one is still to come.
+- New table `meetups` with row level security; applied to the Supabase demo database on 4 Nov. Other databases need the README's Meetups upgrade block before the API starts.
+- The four spots ("Library entrance", "Cafeteria", "Main gate", "Student lounge") are placeholders: rename them in `backend/src/utils/meetups.js` and `frontend/src/lib/meetup-spots.ts`.
+- Checked in the browser at 1280×800 and 1024×768 (light) and in dark mode, with two demo users (browser + API). Tests: 88 unit, 151 API.
+
+### Two items visible in dark mode
+- The inbox unread dot (`ConversationRow`) is pale in dark mode, 8.6:1 on the card (was 2.1:1), and the Telegram strip's icon (`TelegramPromo`) is black on its pale circle, 18.1:1 (was 1:1). Only `dark:` classes, so light mode is unchanged.
+
+### Dark mode back to its 2 Nov design
+- Dark mode is back to how it looked on 2 Nov (`8a0c841`). The two redesigns stay in history (`49b90a6` depth, `e79a4c3` colour mix); revert the revert commits to bring one back.
+
+### "More from <seller>" readable in light mode
+- On Recent purchases, the outline button filled with the dark page colour under black text (1.5:1). `PurchaseCard` now gives it a pale fill like `SaveButton`: black text 18.1:1, border 3.6:1 on the light card and 3.4:1 on the dark one.
+
+### Enter sends a chat message
+- In `MessageComposer`, Enter sends through the form's own `handleSubmit` (`requestSubmit()`); Shift+Enter adds a line. Enter is ignored while an IME is composing, while sending, and while voice input is not idle.
+
+### Live chat (Server-Sent Events)
+- New messages show at once on the other person's open thread and in their inbox, no reload, no package. `GET /api/messages/stream` (Express, in-memory hub `utils/liveHub.js`) behind the Next Route Handler `app/api/messages/stream`; the thread page merges live messages by id; the inbox refreshes on each one.
+- No new-message email or Telegram while the receiver has that thread open. If the stream fails, chat works as before.
+- Checked with two demo users through `next start`, also through the Tailscale address (the event arrived in about 0.2 s), and after an API restart. Tests: 86 unit, 142 API.
+
 ## 2 Nov 2026
+
+### Cash top-up on trades
+- The sell form now has a cash top-up box for trades, and the listing page shows it. The API and database already stored it, but students could not enter it before. Checked with a temporary trade on the live site, created through the form, edited and deleted.
 
 ### Sign-up is AUPP only
 - `validateRegistration` and `RegisterForm` accept only `@aupp.edu.kh`. The database CHECK and `forgot-password` still take any `.edu.kh`, so the `@demo.edu.kh` sample sellers keep working. This narrows the proposal's `.edu.kh` rule, on purpose.
@@ -103,3 +157,24 @@ Log of completed tasks, architecture decisions, and bug fixes for the UniSwap te
 - **Solution**:
   - Centralized project memory into `memory/` directory (`rules.md`, `manager.md`, `changelog.md`, `index.md`).
   - Updated root `Agent.md` to act as universal beacon for Codex, Claude, Gemini, and Cline.
+
+## 2 Nov 2026
+
+### 1. Re-open Demo Auctions (RTX 3090, City Bike, Calculus)
+- **Problem**: In UniSwap, auctions automatically close when `auction_ends_at <= now()`. Because the original test dates were in late October (e.g., Oct 30 for the RTX 3090), the countdown naturally expired, causing the UI to show "bidding closed" and the API to block new bids.
+- **Solution**:
+  - Re-opened `Gigabyte RTX 3090 Eagle OC 24GB graphics card` (`9ff9e789-bb59-4b9e-bd91-936bd2e824b7`) with starting price `$450`, `$10` minimum raise, `status = 'active'`, and `auction_ends_at` extended by 7 days to `2026-11-09`.
+  - Cleared lingering test bids so the RTX 3090 is completely clean for demo bidding.
+  - Also extended active demo auctions (`Teal city bike` at $40, `Calculus: Early Transcendentals` at $10) by 7 days.
+  - Preserved the 9 simulated demo deals for Chanrithorn Lim.
+  - Applied updates to both live Supabase pooler and local PostgreSQL fallback.
+
+### 2. Make Listing Description Optional in NewListingForm
+- **Problem**: When creating or editing a listing in `NewListingForm.tsx`, the form required `description.length >= 20` characters, blocking users from creating quick listings with short or empty descriptions.
+- **Solution**:
+  - Removed the 20-character minimum constraint in `frontend/src/components/forms/NewListingForm.tsx`.
+  - Updated field label to `Description (optional)`.
+  - Confirmed backend and database schema already support optional descriptions (`description TEXT NOT NULL DEFAULT ''`).
+  - Verified frontend Turbopack build and backend test suite.
+
+

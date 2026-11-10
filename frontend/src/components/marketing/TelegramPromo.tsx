@@ -34,7 +34,8 @@ export async function TelegramPromo() {
       hideLabel="Hide Telegram tip"
       className="light-surface flex items-center gap-3 rounded-xl border border-border bg-card px-3 py-2.5 sm:px-4"
     >
-      <span aria-hidden="true" className="flex size-9 shrink-0 items-center justify-center rounded-full bg-brand-50">
+      {/* Dark mode: the icon took the card's pale text, 1:1 on this pale circle. Black is 18.1:1. */}
+      <span aria-hidden="true" className="flex size-9 shrink-0 items-center justify-center rounded-full bg-brand-50 dark:text-brand-ink">
         <Send className="size-4" />
       </span>
       <div className="min-w-0 flex-1">

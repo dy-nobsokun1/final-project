@@ -109,7 +109,8 @@ export async function transcribeClip(clip: Blob): Promise<string> {
   }
   if (response.status === 401) throw new VoiceError("Sign in to use voice input in this browser.");
   const body = (await response.json().catch(() => null)) as { text?: string; error?: string } | null;
-  if (response.status === 503 && body?.error) throw new VoiceError(body.error);
+  // Busy or off (503) and the hourly limit (429) say what to do, so their text is shown.
+  if ((response.status === 503 || response.status === 429) && body?.error) throw new VoiceError(body.error);
   if (!response.ok) throw new VoiceError("Couldn't turn that into text. Try again.");
   return body?.text ?? "";
 }

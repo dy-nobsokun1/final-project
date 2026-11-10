@@ -3,8 +3,10 @@ import { findListingById } from "../db/listings.js";
 import { query } from "../db/pool.js";
 import { requireAuth } from "../middleware/auth.js";
 import { HttpError } from "../utils/httpError.js";
+import { addStream, isWatchingThread, publishMessage } from "../utils/liveHub.js";
 import { notifyNewMessage } from "../utils/notify.js";
 import { toMessage } from "../utils/serializers.js";
+import { isUuid } from "../utils/validation.js";
 
 // Messaging follows the ER diagram: each message has a listing, a sender and a receiver.
 // A "conversation" is not stored; it is every message between two users about one listing.
@@ -58,6 +60,45 @@ messagesRouter.get("/conversations", async (req, res) => {
   });
 });
 
+/** A comment line this often keeps proxies from closing a quiet stream. */
+const PING_MS = 25 * 1000;
+
+// GET /api/messages/stream?listingId=&withUserId=  -> Server-Sent Events: my new messages, live.
+// One long response that stays open; each message is an "event: message" with toMessage's JSON.
+// With listingId + withUserId it only gets that thread (and counts as watching it, so the
+// new-message email is skipped); without them it gets all of my messages (the inbox).
+// It is always the signed-in user's stream: the params can only narrow it.
+// requireAuth runs once, when the stream opens, not again for each message.
+messagesRouter.get("/stream", (req, res) => {
+  const { listingId, withUserId } = req.query;
+  if (Boolean(listingId) !== Boolean(withUserId)) {
+    throw new HttpError(400, "Send both listingId and withUserId, or neither.");
+  }
+  // Added before the headers go out, so a client whose stream has opened is already in the hub.
+  const removeStream = addStream(req.userId, {
+    res,
+    listingId: listingId ? String(listingId) : null,
+    withUserId: withUserId ? String(withUserId) : null,
+  });
+  res.writeHead(200, {
+    "Content-Type": "text/event-stream",
+    // no-transform: compression would hold events back until it had enough to compress.
+    "Cache-Control": "no-cache, no-transform",
+    Connection: "keep-alive",
+    "X-Accel-Buffering": "no",
+  });
+  res.flushHeaders();
+  // A first comment line at once: Next's proxy only passes the headers on with the first bytes,
+  // and the browser's EventSource only reports "open" once it has them.
+  res.write(": connected\n\n");
+  const ping = setInterval(() => res.write(": ping\n\n"), PING_MS);
+  // The response's "close" fires when the client goes away (tab closed, Next's proxy aborted).
+  res.on("close", () => {
+    clearInterval(ping);
+    removeStream();
+  });
+});
+
 // GET /api/messages?listingId=&withUserId=  -> one thread, oldest first
 messagesRouter.get("/", async (req, res) => {
   const { listingId, withUserId } = req.query;
@@ -78,6 +119,11 @@ messagesRouter.post("/", async (req, res) => {
   if (typeof body !== "string" || !body.trim() || body.length > 2000) {
     throw new HttpError(400, "Message must be 1-2000 characters.");
   }
+  // Ids that are not even UUIDs are the client's mistake (400). Checked here, so Postgres never
+  // sees them: a missing receiverId would otherwise break the NOT NULL rule and answer 500.
+  if (!isUuid(listingId) || !isUuid(receiverId)) {
+    throw new HttpError(400, "listingId and receiverId must be valid ids.");
+  }
   if (receiverId === req.userId) throw new HttpError(400, "You cannot message yourself.");
 
   const listing = await findListingById(listingId);
@@ -86,14 +132,23 @@ messagesRouter.post("/", async (req, res) => {
   if (listing.user_id !== req.userId && listing.user_id !== receiverId) {
     throw new HttpError(400, "Messages about a listing must include its owner.");
   }
+  // A well-formed id of nobody: say so (404) instead of letting the INSERT fail on the foreign key (500).
+  const { rowCount: receiverExists } = await query("SELECT 1 FROM users WHERE id = $1", [receiverId]);
+  if (!receiverExists) throw new HttpError(404, "User not found.");
 
   const { rows } = await query(
     `INSERT INTO messages (listing_id, sender_id, receiver_id, content)
      VALUES ($1, $2, $3, $4) RETURNING *`,
     [listingId, req.userId, receiverId, body.trim()],
   );
-  notifyNewMessage({ listingId, senderId: req.userId, receiverId, body: body.trim() });
-  res.status(201).json({ message: toMessage(rows[0]) });
+  const message = toMessage(rows[0]);
+  // Both sides: the sender may have the thread open in another tab too.
+  publishMessage(message);
+  // Someone reading the thread live does not need an email or Telegram message about it.
+  if (!isWatchingThread(message.receiverId, message.listingId, message.senderId)) {
+    notifyNewMessage({ listingId, senderId: req.userId, receiverId, body: body.trim() });
+  }
+  res.status(201).json({ message });
 });
 
 // PATCH /api/messages/read  { listingId, withUserId }  -> mark a thread as read

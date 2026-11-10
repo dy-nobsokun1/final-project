@@ -31,12 +31,12 @@ is public); state a plan before multi-file changes; explain every change so the 
   - Shared types: `src/types/index.ts`. Labels and options: `src/lib/constants.ts`.
 - `backend/`: Node.js 20.6+, Express 5, PostgreSQL, ES modules, plain JavaScript.
   - `src/app.js` mounts routes in `src/routes/`: auth, listings, bids, reviews, saved, offers, users,
-    telegram, messages, uploads, payments (Stripe) and khqr.
+    telegram, messages, meetups, uploads, payments (Stripe) and khqr.
   - `src/db/schema.sql`: tables `users`, `listings`, `messages`, `reviews` (from the proposal's ER
-    diagram), plus `bids`, `offers`, `payments` and `saved_listings`. Query helpers sit beside it:
+    diagram), plus `bids`, `offers`, `payments`, `saved_listings` and `meetups`. Query helpers sit beside it:
     `listings.js` (`LISTING_SELECT`, `buildBrowseQuery()` for browse/search), `auctions.js`,
     `matches.js`, `offers.js`, `payments.js`. `schema.sql` ends by turning on row level security for
-    all 8 tables (no policies), so Supabase's public roles see nothing; the API's own login still does.
+    all 9 tables (no policies), so Supabase's public roles see nothing; the API's own login still does.
   - `src/utils/`: validation, scrypt password hashing, JWT, email (nodemailer), serializers
     (database snake_case → API camelCase, matching the frontend types).
   - The full API table is in `backend/README.md`. Keep it updated when routes change.
@@ -80,6 +80,10 @@ when `uniswap` has none, so an older `uniswap` database needs the upgrade SQL (b
   unverified email replaces that account; a verified one gets 409. Login is blocked (403) until
   verified. `resend-verification` takes `{ email, password }`. `requireAuth` re-checks in the
   database that the account exists and is verified.
+  - **Login limit (5 Nov):** 10 wrong passwords per lowercased email in 15 minutes, then 429 "Too many
+    wrong passwords. Try again in N minutes." even for the right one (`utils/loginLimit.js`, in
+    `findUserByCredentials`, so login and resend share it). A right password clears it; unknown emails
+    count too. Per account, in memory (restart clears it), because the API only sees the Next.js IP.
   - **Sign-up code, not a link:** the email holds a 6-digit code and no link or URL at all
     (`utils/verificationCode.js`).
     - **Why:** a link to a `trycloudflare.com` address sent it to school Outlook's Junk.
@@ -136,9 +140,10 @@ when `uniswap` has none, so an older `uniswap` database needs the upgrade SQL (b
   `reserved` (highest bid wins; on a tie, the earlier bid). After the first bid, type, price,
   end time and raise are locked (409). Every listing in the API has `auction: null | {...}`.
 - **Notifications:** `utils/notify.js` (fire-and-forget, never throws). New message (first unread
-  per thread only), outbid, auction won/ended, password changed, price drop on a saved listing
-  (`notifyPriceDrop`, called from PATCH in `routes/listings.js`), new listing matching a wanted post
-  (create only, not edits), offer made/accepted/declined/cancelled. Add new events there.
+  per thread only, and none while the receiver has that thread open, see Messaging), outbid,
+  auction won/ended, password changed, price drop on a saved listing (`notifyPriceDrop`, called
+  from PATCH in `routes/listings.js`), new listing matching a wanted post (create only, not edits),
+  offer made/accepted/declined/cancelled. Add new events there.
   - **One description per event:** `{ subject, preheader, emoji, heading, intro, details, quote, action,
     secondAction, note }`. Subjects cut titles to 40 characters.
   - **Email:** `utils/notificationEmail.js` draws it as a table-based email with a text part. It has no
@@ -157,7 +162,7 @@ when `uniswap` has none, so an older `uniswap` database needs the upgrade SQL (b
   code). `notify.js` sends to Telegram as well as email. The public `GET /api/telegram` answers
   `{ enabled, botUrl }` for the home page's strip (`TelegramPromo`): "Sign in to connect" when signed
   out, "Connect Telegram" when not linked, "Open Telegram" (the bot chat) when linked. It is in the first
-  HTML, and its X hides it only until the next page load. Deploy guide: `DEPLOY.md`; Render blueprint: `render.yaml`.
+  HTML, and its X hides it only until the next page load. Deploy guide: `memory/DEPLOY.md`; Render blueprint: `memory/render.yaml`.
 - **Telegram bot menu:** `utils/telegramBot.js` (handlers; Telegram calls are injected, so tests pass a
   fake to `handleBotUpdate`), `utils/telegramScreens.js` (pure: each screen's text and buttons, plain
   text, no `parse_mode`), `db/telegram.js` (its queries) and `db/saved.js` (save rules shared with
@@ -168,8 +173,9 @@ when `uniswap` has none, so an older `uniswap` database needs the upgrade SQL (b
     /inbox /help` (`setMyCommands` at start-up). An item card has its photo when the cover is https, and
     Save / Unsave.
   - **Linking and silence:** `/start <code>` sends one plain `Connected as <name>. UniSwap notifications
-    will now arrive here too.` with no buttons; a bad or used code gets `That link has expired. ` plus
-    the connect instructions. An unlinked chat gets `notLinkedScreen()` for text and for buttons. A plain
+    will now arrive here too.` with no buttons; a bad, used or old code gets `That link has expired. ` plus
+    the connect instructions. Codes work 30 minutes with no extra column: `<32 hex>_<Date.now() base 36>`
+    (`utils/telegramLinkCode.js`; the lookup still matches the whole code; codes without a time count as expired). An unlinked chat gets `notLinkedScreen()` for text and for buttons. A plain
     `/start` from a linked chat stays quiet. An unknown command shows the menu (never a search), and so
     does a photo or sticker.
   - The student always comes from `telegram_chat_id` (`findChatUser`, verified accounts only), never
@@ -211,6 +217,7 @@ when `uniswap` has none, so an older `uniswap` database needs the upgrade SQL (b
   the wanted post's price as budget (0 = any), both active, different owners, verified posters);
   `GET /api/listings/:id/matches` (the owner's listing page shows it in `ListingMatches`); alerts from
   POST only (`notifyWantedMatches`: one message per student, at most 10 students).
+- **Trade top-up:** the sell form shows `CashTopupField` only for a trade (empty means none), and `ListingPrice` shows "Plus $X cash top-up". Changing the type on an edit clears it (`cashTopup` in `lib/api/actions.ts`).
 - **Offers:** `routes/offers.js` + `db/offers.js`, table `offers` (pending/accepted/declined/withdrawn/
   cancelled); sale listings only, below the asking price; one pending offer per buyer (a new one
   withdraws the old); every offer change locks the listing row. Accept sets `listings.reserved_for` +
@@ -230,7 +237,7 @@ when `uniswap` has none, so an older `uniswap` database needs the upgrade SQL (b
   back unchanged). `services/assistantModel.js` picks Groq when `GROQ_API_KEY` is set, else Gemini when
   `GEMINI_API_KEY` is set, else off (503); `ASSISTANT_PROVIDER=gemini|groq` forces one (restart the API;
   a forced provider without its key means off). Keep provider differences in the adapters; the loop uses
-  neutral turns. Stateless: the frontend sends the conversation (plain `{ role, text }`) with every
+  neutral turns. At most 20 questions an hour per student (`QUESTIONS_PER_HOUR`, in memory; 429). Stateless: the frontend sends the conversation (plain `{ role, text }`) with every
   question. The model must call a tool (Groq `tool_choice: "required"`, Gemini `mode: "ANY"`):
   `search_listings` (browse search, active, no wanted posts or ended auctions, 5 results), then
   `reply { text, listingIds, wantedDraft }`; cards only for ids found in that question; at most 3 calls,
@@ -275,7 +282,7 @@ when `uniswap` has none, so an older `uniswap` database needs the upgrade SQL (b
     forwards it to `POST /api/voice/transcribe`.
     - The API side is `routes/voice.js` and `services/whisper.js`: Groq `whisper-large-v3-turbo`, the
       same `GROQ_API_KEY`.
-    - Signed-in only, 2 MB, nothing stored or logged.
+    - Signed-in only, 2 MB, 60 clips an hour per student (in memory; 429), nothing stored or logged.
     - API tests fake Groq.
   - **The button:**
     - It shows bars while listening: they follow the voice with the recorder, or wave with live words.
@@ -283,6 +290,29 @@ when `uniswap` has none, so an older `uniswap` database needs the upgrade SQL (b
     - Tap to start and tap to stop, or hold for 300 ms or more and release to stop.
   - **Speech is added to the end of the box** (`start(baseText)`, `trimEnd`) and never sends or
     searches by itself. The search box drops Whisper's trailing `.`, `!` or `?`.
+- **Snap to list ("Fill in from photo", 4 Nov):** on a NEW listing only, once a photo is picked
+  (`forms/PhotoDraftButton.tsx`, `hooks/use-photo-draft.ts`, `lib/fill-listing-form.ts`,
+  `lib/shrink-photo.ts`, mounted by one line in `NewListingForm`).
+  - **Flow:** the browser shrinks the photo to a 1,024 px JPEG (canvas, no package) and posts it to the
+    Next Route Handler `app/api/listing-draft`, which forwards it with the cookie's token to
+    `POST /api/assistant/listing-draft` (`routes/assistant.js`): signed-in, 2 MB, 10 an hour per student
+    (`createRateLimiter`, in memory), nothing stored or logged. `GET` answers `{ enabled }`; the button
+    hides when the provider has no key.
+  - **The model** (`services/vision.js`): Gemini `gemini-3.1-flash-lite` (own per-model free quota, apart
+    from the assistant's). Busy (429, 5xx, 8 s) → Groq `qwen/qwen3.8-27b` once (10 s), which shares the
+    assistant's quota, so at most `VISION_FALLBACK_PER_DAY` (20) a day for the whole app. It gets only the
+    photo, never a name or an email.
+  - **Only a suggestion** (`utils/listingDraft.js`, `toListingDraft`): four fields, category and condition
+    from our own lists, text cut to the form's lengths. Text in a photo can try to steer the model; these
+    checks and the student's review are the defence. The form fills only EMPTY fields (a select only if
+    never picked) and never posts; a note says to check it. Demo presets still work.
+  - **Price hint, from UniSwap only** (`db/priceHints.js`): same category, "sale" with a price, active or
+    sold, matched on the TITLE only (full-text stemming; no descriptions, related words or typo test).
+    `closestMatches` keeps only the rows sharing the most title words, at least 2 (so a one-word title
+    never gets a hint); weaker rows are never used instead (4 Nov fix: a MacBook got "$12–$550", and
+    "Silver laptop" "$12–$85", from laptop RAM). Sold ones first when 2+, at the amount paid. Fewer
+    than 2 = no hint. An empty price box gets the middle of the range. On today's demo data most items
+    get no hint (one MacBook, one ThinkPad, one GPU for sale); "Samsung SSD" gets $30–$45.
 - **Receipts:** `GET /api/payments/receipt/:listingId` (`routes/payments.js`) answers only the buyer and
   seller of a listing with a `paid` payment (404 for anyone else, unpaid, or `refund_due`): the invoice
   number (`invoiceNumber()` in `utils/payments.js`, also used by `notifyPaid`), the amount really paid,
@@ -307,6 +337,34 @@ when `uniswap` has none, so an older `uniswap` database needs the upgrade SQL (b
   - **Contrast on the dark card `#314740`:** text 8.6:1, muted 6.1:1, field outline 3.2:1, focus ring
     3.5:1 (pale, drawn at 50%), stats slices at least 3.7:1 (cream first, red last; rose stays the Wanted tag's).
     The shadcn `dark:` fills on the outline and destructive buttons were removed so passed colours win.
+    Two `dark:` fixes (4 Nov): the inbox unread dot is pale (`dark:bg-foreground`, 8.6:1), and the
+    Telegram strip's icon is black on its pale circle (`dark:text-brand-ink`, 18.1:1).
+- **Animations (6 Nov), no package:** every keyframe and rule is in one block at the end of
+  `globals.css`, `@media screen and (prefers-reduced-motion: no-preference)`, so nothing moves on paper or
+  for students who asked for reduced motion. Each plays once and moves only `transform`/`opacity` (plus one
+  glow on the bid). Sized for a projector (made bigger the same day: the first values were too subtle).
+  - Cards rise 24 px and fade in over 450 ms (`card-in` on `ListingGrid`'s `<li>`, first eight 70 ms
+    apart; this replaced the motion `Effect` there). `RevealList` (the grid's `<ul>`) holds a grid that
+    starts below the screen (`data-reveal="wait"`) until it scrolls into view, so on the home page the
+    cards rise when the student reaches them, not behind the hero.
+  - Cards lift 6 px with a bigger shadow on hover or keyboard focus (`card-lift`, `:has(:focus-visible)`
+    so a mouse click on the heart does not leave it lifted). The heart pops to 1.4 when a click saves it
+    (`SaveButton`, 350 ms). The top bid pulses to 1.25 with a green glow when it changes on the page
+    (`BidAmount`, 400 ms). Chat messages that arrive after the thread opened slide 16 px (300 ms).
+  - **Page change (experimental, `e38ef19` + `f5453ef`, revert both to turn it off):**
+    `layout/PageTransition.tsx` wraps the `(main)` pages in React's `<ViewTransition>`, keyed on the path,
+    so only a new page animates: the old page fades out (150 ms), the new one fades in rising 12 px
+    (300 ms). Searches, filters, `router.refresh()` and live updates stay still. It comes from the React
+    19.3 canary that Next 16 bundles for the App Router (the `react` 19.2.8 package has no
+    `ViewTransition`; the lockfile pins `@types/react` 19.3.0). Browser back/forward does not animate.
+    One rule after the block turns view transitions off for reduced motion and print.
+- **Item page (6 Nov), frontend only:** same layout, more life. `ListingStatusPill` (always shown, `statusLabel`),
+  a bigger price (`ListingPrice`), `ListingFacts` (condition, category icon, posted, saves, pickup; on `bg-inset`;
+  the "Saved by" line moved here from `ListingHeading`), `ListingSellerCard` (stars from `getUserReviews`, fetched
+  inside the card so it runs alongside the rest; an API error just hides the stars; "More from <first name>"),
+  `SimilarItems` (same category via `getListings`, not this one or wanted posts, 4 max, in Suspense with
+  `ListingGridSkeleton count={4}`, hidden when empty) and `PaymentBanner` (moved out of the page as is). The
+  photo zooms 3% on hover (`photo-zoom`) and the right column rises in with `card-in` (`rise(i)` in the page).
 - **Recent purchases:** `GET /api/users/me/purchases` (`db/purchases.js`), shown on your own `/profile`
   as `RecentPurchases` + `PurchaseCard` (hidden until the first purchase).
   - **Who bought it:** it shares `CLOSED_DEALS_SQL` with the stats below, so the two always agree: the
@@ -336,9 +394,50 @@ when `uniswap` has none, so an older `uniswap` database needs the upgrade SQL (b
   - `npm run db:demo-deals` (`-- --remove` undoes it) gives chanrithorn 9 deals over Aug–Oct for the demo.
 - **Messaging:** there is no conversations table. A thread is all messages between two users about
   one listing (this follows the ER diagram).
+  - **Live chat (4 Nov), Server-Sent Events, no package:** `GET /api/messages/stream` keeps one response
+    open per page. `utils/liveHub.js` holds the open streams in memory (`Map<userId, Set>`), keyed on the
+    token's user only; `listingId` + `withUserId` can only narrow a stream to one thread. `POST
+    /api/messages` publishes the new message to the sender's and the receiver's streams. A first
+    `: connected` line goes out at once (Next only passes the headers on with the first bytes), then
+    `: ping` every 25 s.
+  - **Next side:** the Route Handler `app/api/messages/stream` reads the `uniswap_token` cookie and passes
+    the stream through (`request.signal` ends the API's stream when the tab closes; `no-transform` keeps
+    `next start`'s gzip off). The thread page's `LiveMessageList` (`hooks/use-live-messages.ts`) merges
+    live messages with the server-rendered ones by id (the sender gets theirs from `refresh()` and the
+    stream), marks the partner's read (`markLiveThreadRead`, no refresh) and refreshes once after a
+    reconnect to fill any gap. The inbox's `LiveInboxRefresh` refreshes the page for each message.
+  - **Notification rule:** no new-message email or Telegram while the receiver has a stream on that
+    exact thread. The inbox stream does not count.
+  - **Limits:** one API process only (a second one would not see the first one's streams). The auth
+    check runs once, when the stream opens. A thread left open in a background tab counts as
+    watching. A refused stream (any error status, such as a 502 while the API restarts) is not retried,
+    so that page is not live until it reloads; chat still works. On HTTP/1.1 `localhost` each open
+    chat tab uses one of the browser's ~6 connections to the site. Vercel's function time limit just
+    cuts the stream; the reconnect and its refresh cover it.
+- **Meetups (4 Nov):** in a chat thread either person plans a meetup (campus spot + time); the invitee
+  accepts or declines, either cancels. `routes/meetups.js`, `db/meetups.js`, `utils/meetups.js`, table
+  `meetups` (RLS on; README "Meetups" has the upgrade block, which the API needs to start).
+  - **Who:** the listing owner and someone with at least one message with them about it (checked in the
+    database). Time: an ISO time with its zone, future, within 14 days; shown in Phnom Penh time.
+  - **Spots:** `MEETUP_SPOTS` keys in `utils/meetups.js` and `frontend/src/lib/meetup-spots.ts` (keep
+    both the same). The four labels are **placeholders**; only the API checks the key, so renaming a
+    label needs no database change.
+  - **One open per thread:** a new proposal cancels the waiting one (listing row lock + partial unique
+    index); refused (409) while an accepted one is still to come. Each answer is one conditional `UPDATE`.
+  - **10 an hour:** a student may propose at most 10 meetups in the last hour (429), counted in the
+    database on `created_at`, replaced and cancelled ones included, because each one sent an email.
+  - **Live:** `publishMeetup` in `liveHub.js` sends `event: meetup` to both streams; `use-live-messages`
+    calls `router.refresh()` on it, and the page re-reads the meetup (`getThreadMeetup`).
+  - **Alerts:** `notifyMeetupChanged` (skipped while the other person has the thread open, like
+    messages) and `notifyMeetupReminder` (always, both people). `server.js` runs `claimDueReminders()`
+    once a minute: one `UPDATE … RETURNING`, so no reminder goes out twice.
+  - **UI:** `MeetupCard` under the thread header (Accept / Decline for the invitee, Cancel meetup for
+    either, after a `window.confirm`), `MeetupPlanner` + `MeetupForm` above the chat box (hidden until the thread has a message and
+    while an accepted meetup is still to come). Once its time passes, the card says "Meetup time has
+    passed" (or "Meetup request expired"), loses its buttons, and the planner shows again (`isMeetupPast`).
 - **Uploads:** `POST /api/uploads` with raw image bytes (max 5 MB; the form takes 4 MB, `MAX_PHOTO_MB`,
   because Vercel refuses requests over 4.5 MB), saved to `backend/uploads/`
-  (git-ignored). Must move to Cloudinary before deploying, because Render wipes the disk on restart.
+  (git-ignored). The type (and the file extension) comes from the file's first bytes (`detectImageType` in `utils/imageType.js`), not the header; bytes of no accepted type are 400. Must move to Cloudinary before deploying, because Render wipes the disk on restart.
   A listing has up to 6 photos; `imageUrls[0]` is the cover. `validateListing` enforces `MAX_PHOTOS`,
   no duplicates and own-upload URLs only (`uploadedPhotoPrefix` in `routes/uploads.js`), but keeps
   photos the listing already has; a DB `CHECK` limits it to 6 too. The form uploads each photo when it
@@ -358,7 +457,7 @@ between the owner and the buyer: whoever paid online, else the auction winner, e
 offer was accepted, else (in-person deals) someone who chatted with the owner both ways (`reviewBlocker` in `routes/reviews.js`). API tests in `backend/test/api/`.
 
 Done (week 6, 26–27 Oct):
-- **Ask UniSwap**, the shopping assistant (Groq, with Gemini as the backup), with its `/assistant` chat page, a pill in the navbar and a link in the hero.
+- **Ask UniSwap**, the shopping assistant (Groq; Gemini only when `GROQ_API_KEY` is unset or `ASSISTANT_PROVIDER=gemini`, chosen once at start-up, never switched while running), with its `/assistant` chat page, a pill in the navbar and a link in the hero.
   - It waits and retries when Groq is busy, and retries once on a broken answer.
   - It drafts a wanted post only after the student says yes, using only what they said.
   - It keeps the chat until the tab closes, and has a "New chat" button.
@@ -389,6 +488,12 @@ Done (week 6, 26–27 Oct):
   Whisper. Tap or hold to talk.
 - **Recent purchases (28 Oct):** your profile lists what you bought, with Review seller and More from
   that seller.
+- **Live chat (4 Nov):** a new message shows on the other person's open thread, and in their inbox,
+  without a reload. No email or Telegram while they have that thread open.
+- **Meetup planner (4 Nov):** plan a campus meetup from a chat; the card updates live for both people,
+  and both get an email + Telegram reminder 30 minutes before. Spot names are placeholders to rename.
+- **Snap to list (4 Nov):** "Fill in from photo" on the sell form fills the title, category, condition
+  and description from a photo, with a price hint from similar UniSwap listings.
 - **Sign-up by code (28 Oct):** the sign-up email carries a 6-digit code instead of a link, so school
   Outlook stops filing it as Junk. Links in other emails use one fixed site address.
 
@@ -397,14 +502,20 @@ Done (week 6, 26–27 Oct):
 @memory/rules.md
 @memory/changelog.md
 
-Built but needs the team's own accounts/keys (see `DEPLOY.md`): Supabase database, Render + Vercel
-deployment, Cloudinary photos, Stripe test payments, Telegram bot.
+Set up on the team laptop (keys only in its `backend/.env`): the Supabase database, Cloudinary photos, Stripe
+test payments, KHQR, the Telegram bot, email and Groq. Still not done: the Render + Vercel deployment
+(see `memory/DEPLOY.md`).
 
 ### Picking up on another machine
 
-Everything above is pushed to `implement_backend`. Last full check (2 Nov):
-- `npm test` (86) and `npm run test:api` (136) pass (2 Nov, with the new notification messages).
-- The frontend's lint, `tsc --noEmit` and `next build` are clean (2 Nov).
+Everything above is pushed to `implement_backend`. Last full check (4 Nov):
+- 6 Nov: whole demo script walked at 1280×800 and 1024×768 on Next 16.4.5; one fix (navbar search
+  scrolls to the results, `#listings`); lint, `tsc --noEmit` and `next build` clean.
+- 5 Nov: `npm test` (107) and `npm run test:api` (171) pass; Next.js is 16.4.5 (security update), and
+  lint, `tsc --noEmit` and `next build` are clean on it.
+- `npm test` (99) and `npm run test:api` (164) pass (4 Nov, after the second test round).
+- A fresh clone set up by following only the root README ran (4 Nov): setup scripts, both test sets,
+  API and website; its lint and `tsc --noEmit` were clean. `next build` was last checked on 2 Nov.
 After `git pull origin implement_backend`:
 
 - No packages were added, but run `npm install` in `backend/` and `frontend/` if they are stale.
@@ -412,7 +523,8 @@ After `git pull origin implement_backend`:
   version" in `backend/README.md`, or `npm run db:setup && npm run db:seed` if it only holds demo
   data. The test database needs nothing: `npm run test:api` rebuilds it from `schema.sql`.
   The 27 Oct block adds `listings.sold_at`; the API needs it before it starts. So does the 28 Oct
-  sign-up code block (the `verification_code_*` columns).
+  sign-up code block (the `verification_code_*` columns). And the 4 Nov meetups block (table `meetups`;
+  already applied to the Supabase demo database).
 - For the profile stats demo, run `npm run db:demo-deals` (after `db:seed` and `db:samples`).
 - To add new sample items, run plain `npm run db:samples`: it skips items already there and keeps the
   sellers. `-- --remove` deletes the `@demo.edu.kh` sellers and everything hanging off them, including
@@ -428,7 +540,7 @@ After `git pull origin implement_backend`:
      the local database only (never in the repo), so their items show "Pay with KHQR". Paying one sends
      real money to Long and marks it sold: demo it with a cheap item.
 2. **Open the PR** from `implement_backend` into `dy-nobsokun1/final-project` `main` (only when asked).
-3. **Deploy** by following `DEPLOY.md`. Set up Cloudinary before Render, because Render wipes uploaded
+3. **Deploy** by following `memory/DEPLOY.md`. Set up Cloudinary before Render, because Render wipes uploaded
    photos. A new Supabase database is built from `schema.sql`, so it needs no upgrade blocks.
    An Ask UniSwap question can take about 25 s when Groq makes it wait, so check that Vercel's function
    time limit allows that (Fluid compute allows far more; Hobby without it stops at 10 s).
@@ -439,17 +551,12 @@ After `git pull origin implement_backend`:
      shows words live; Firefox needs you signed in and uses the Groq quota.
    - Before the demo, try the room: the screen size macOS picks, the HDMI adapter, and how the pale greens look on the projector.
 5. **Frontend follow-ups for Dy** (found in browser testing, not fixed yet):
-   - a heart tapped while signed out should return to the listing after login;
-   - `PhotoPicker` does not clear its error, and focus is lost after "Make cover";
-   - `forms/NewListingForm.tsx` is 155 lines, over the ~100-line rule;
-   - the offer panels still show the agreed amount after the seller cuts the price below it. The
-     buyer pays the lower price, so only the text is wrong.
+   - `forms/NewListingForm.tsx` is 176 lines, over the ~100-line rule (leave it until after the demo);
    - Phone sizes, paused until after the demo:
      - the navbar is too wide at about 768 px;
      - the hero fills the first screen, so no items show without scrolling;
      - the redesigned Wanted card (27 Oct) has not been checked at 375 px.
 6. Later ideas (after the demo):
-   - real-time chat;
    - safe meetup spots;
    - per-user notification preferences;
    - **dark mode** is built (2 Nov, opt-in, see "How things work"). Still open: following the system

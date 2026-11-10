@@ -4,12 +4,14 @@ import type { Message } from "@/types";
 interface MessageBubbleProps {
   message: Message;
   isOwn: boolean;
+  /** Arrived after the thread opened: it slides in (`message-in` in globals.css). */
+  isNew?: boolean;
 }
 
 /** One chat bubble, aligned right for the signed-in user. */
-export function MessageBubble({ message, isOwn }: MessageBubbleProps) {
+export function MessageBubble({ message, isOwn, isNew = false }: MessageBubbleProps) {
   return (
-    <li className={cn("flex", isOwn ? "justify-end" : "justify-start")}>
+    <li className={cn("flex", isOwn ? "justify-end" : "justify-start", isNew && "message-in")}>
       <div
         className={cn(
           "max-w-[75%] rounded-2xl px-3.5 py-2 text-sm",
@@ -21,7 +23,10 @@ export function MessageBubble({ message, isOwn }: MessageBubbleProps) {
         )}
       >
         <p className="whitespace-pre-wrap break-words">{message.body}</p>
+        {/* The time is worked out again in the browser (LiveMessageList), where a few seconds
+            later it may read "1 minute ago" instead of "just now". That is fine. */}
         <p
+          suppressHydrationWarning
           className={cn(
             "mt-1 text-[10px]",
             // Bubbles sit inside the thread's light-surface card, so both

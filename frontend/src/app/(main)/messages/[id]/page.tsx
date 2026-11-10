@@ -1,7 +1,11 @@
 import { ArrowLeft } from "lucide-react";
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { MessageBubble } from "@/components/chat/MessageBubble";
+import { cache } from "react";
+import { LiveMessageList } from "@/components/chat/LiveMessageList";
+import { MeetupCard } from "@/components/chat/MeetupCard";
+import { MeetupPlanner } from "@/components/chat/MeetupPlanner";
 import { MessageComposer } from "@/components/chat/MessageComposer";
 import { ThreadReview } from "@/components/chat/ThreadReview";
 import { UserAvatar } from "@/components/profile/UserAvatar";
@@ -11,11 +15,23 @@ import {
   getListingById,
   getListingReviews,
   getMessages,
+  getThreadMeetup,
   getUserById,
   markThreadRead,
   parseConversationId,
   requireUser,
 } from "@/lib/api";
+import { isMeetupPast } from "@/lib/meetup-spots";
+
+/** One API call per page view: the tab title and the page share it (React `cache`). */
+const getListing = cache(getListingById);
+
+/** The browser tab says which listing the chat is about (listing titles are public anyway). */
+export async function generateMetadata({ params }: PageProps<"/messages/[id]">): Promise<Metadata> {
+  const ids = parseConversationId((await params).id);
+  const listing = ids ? await getListing(ids.listingId) : null;
+  return { title: listing ? `Chat about ${listing.title} | UniSwap` : "Messages | UniSwap" };
+}
 
 /**
  * A single message thread: the signed-in user and one other person, about one listing.
@@ -30,7 +46,7 @@ export default async function MessageThreadPage({
   if (!ids) notFound();
 
   const [listing, partner] = await Promise.all([
-    getListingById(ids.listingId),
+    getListing(ids.listingId),
     getUserById(ids.partnerId),
   ]);
   // Every thread is between the listing's owner and one other person.
@@ -42,11 +58,15 @@ export default async function MessageThreadPage({
   // Opening the thread counts as reading it, which clears its unread badge in the inbox.
   await markThreadRead(listing.id, partner.id);
   const isFinished = listing.status === "sold" || listing.status === "traded";
-  const [messages, reviews, mayReview] = await Promise.all([
+  const [messages, reviews, mayReview, meetup] = await Promise.all([
     getMessages(listing.id, partner.id),
     getListingReviews(listing.id),
     isFinished ? canReview(listing.id, partner.id) : false,
+    getThreadMeetup(listing.id, partner.id),
   ]);
+  // The API only takes a meetup once the two have chatted, and not while an accepted one is still to come.
+  const meetupIsPast = meetup ? isMeetupPast(meetup.meetAt) : false;
+  const mayPlanMeetup = messages.length > 0 && (meetup?.status !== "accepted" || meetupIsPast);
 
   return (
     // Fills the screen under the navbar (65px) and main's 24px top and bottom padding, so the
@@ -75,26 +95,26 @@ export default async function MessageThreadPage({
         </div>
       </header>
 
+      {meetup ? <MeetupCard meetup={meetup} isPast={meetupIsPast} meId={me.id} partnerName={partner.name} /> : null}
+
       {/* flex-col-reverse makes the browser start this scroll area at the bottom, so the newest
           message is in view on load with no JavaScript. Its one child keeps the messages in
           time order, which is also the order screen readers read them in. */}
       <div className="flex min-h-0 flex-1 flex-col-reverse overflow-y-auto">
         <div className="flex flex-col gap-4">
-          {messages.length === 0 ? (
-            <p className="text-sm text-muted-foreground">
-              No messages yet. Say hi and suggest a time to meet on campus.
-            </p>
-          ) : (
-            <ul className="flex flex-col gap-2">
-              {messages.map((message) => (
-                <MessageBubble key={message.id} message={message} isOwn={message.senderId === me.id} />
-              ))}
-            </ul>
-          )}
+          {/* Keyed by thread, so moving to another thread starts its live list afresh. */}
+          <LiveMessageList
+            key={`${listing.id}_${partner.id}`}
+            messages={messages}
+            meId={me.id}
+            listingId={listing.id}
+            partnerId={partner.id}
+          />
           <ThreadReview partner={partner} meId={me.id} listingId={listing.id} mayReview={mayReview} reviews={reviews} />
         </div>
       </div>
 
+      {mayPlanMeetup ? <MeetupPlanner listingId={listing.id} partnerId={partner.id} /> : null}
       <MessageComposer listingId={listing.id} receiverId={partner.id} />
     </div>
   );

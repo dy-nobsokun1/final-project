@@ -13,11 +13,14 @@ export function ListingGallery({ imageUrls, title }: { imageUrls: string[]; titl
 
   return (
     <div className="flex flex-col gap-2">
-      <ListingImage
-        src={imageUrls[shown]}
-        alt={count > 1 ? `${title}, photo ${shown + 1} of ${count}` : title}
-        className="aspect-[4/3] w-full rounded-xl border border-border"
-      />
+      {/* The photo zooms in a little on hover (`photo-zoom` in globals.css); the frame clips it. */}
+      <div className="photo-zoom overflow-hidden rounded-xl border border-border">
+        <ListingImage
+          src={imageUrls[shown]}
+          alt={count > 1 ? `${title}, photo ${shown + 1} of ${count}` : title}
+          className="aspect-[4/3] w-full"
+        />
+      </div>
       {count > 1 ? (
         <ul className="grid grid-cols-6 gap-2">
           {imageUrls.map((url, index) => (
@@ -29,8 +32,10 @@ export function ListingGallery({ imageUrls, title }: { imageUrls: string[]; titl
                 aria-label={`Show photo ${index + 1} of ${count}`}
                 aria-current={index === shown ? "true" : undefined}
                 className={cn(
-                  "block w-full overflow-hidden rounded-lg border-2 outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
-                  index === shown ? "border-primary" : "border-transparent opacity-75 hover:opacity-100",
+                  "block w-full overflow-hidden rounded-lg border-2 outline-none transition-opacity focus-visible:ring-3 focus-visible:ring-ring/50",
+                  index === shown
+                    ? "border-primary ring-2 ring-primary ring-offset-2 ring-offset-background"
+                    : "border-transparent opacity-60 hover:opacity-100",
                 )}
               >
                 <ListingImage src={url} alt="" className="aspect-square w-full" />

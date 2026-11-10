@@ -3,9 +3,11 @@
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import { AuctionFields } from "@/components/forms/AuctionFields";
+import { CashTopupField } from "@/components/forms/CashTopupField";
 import { Field, FieldInput, FieldTextarea } from "@/components/forms/Field";
 import { FieldSelect } from "@/components/forms/FieldSelect";
 import { ListingTypeTiles } from "@/components/forms/ListingTypeTiles";
+import { PhotoDraftButton } from "@/components/forms/PhotoDraftButton";
 import { PhotoPicker } from "@/components/forms/PhotoPicker";
 import { Button } from "@/components/ui/button";
 import { useDemoPresets } from "@/hooks/use-demo-presets";
@@ -50,7 +52,7 @@ export function NewListingForm({ listing, draft }: { listing?: Listing; draft?: 
     const next: Record<string, string> = {};
     if (title.length < 5) next.title = "Use at least 5 characters.";
     if (!Number.isFinite(price) || price < 0) next.price = "Enter a valid price.";
-    if (description.length < 20) next.description = "Describe the item in at least 20 characters.";
+    if (listingType === "trade" && !(Number(data.get("cashTopup") ?? 0) >= 0)) next.cashTopup = "Enter a valid amount.";
     if (photos.isUploading) next.imageUrls = "Wait for the photos to finish uploading.";
     if (listingType === "auction" && !lockedByBids) {
       // datetime-local gives the user's local time with no zone ("2026-10-04T18:00"). Converting it
@@ -97,7 +99,7 @@ export function NewListingForm({ listing, draft }: { listing?: Listing; draft?: 
           className="bg-brand-50/40 placeholder:text-foreground/50 dark:placeholder:text-muted-foreground"
         />
       </Field>
-      <Field label="Description" error={errors.description}>
+      <Field label="Description (optional)" error={errors.description}>
         <FieldTextarea
           name="description"
           defaultValue={start?.description}
@@ -125,6 +127,7 @@ export function NewListingForm({ listing, draft }: { listing?: Listing; draft?: 
             />
           </Field>
         ) : null}
+        {listingType === "trade" ? <CashTopupField error={errors.cashTopup} defaultValue={listing?.cashTopup} /> : null}
         <Field label="Category" error={errors.category}>
           <FieldSelect
             key={`category-${demo.selects.id}`}
@@ -153,6 +156,7 @@ export function NewListingForm({ listing, draft }: { listing?: Listing; draft?: 
       ) : null}
 
       <PhotoPicker photos={photos} error={errors.imageUrls} />
+      {!listing ? <PhotoDraftButton formRef={formRef} photos={photos} /> : null}
 
       <div className="flex items-center gap-2">
         <Button type="submit" size="lg" disabled={isSubmitting || photos.isUploading}>

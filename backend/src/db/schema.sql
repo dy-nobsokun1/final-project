@@ -3,7 +3,7 @@
 -- Extra user fields (major, bio, ...) match the frontend's User type in frontend/src/types.
 -- WARNING: re-running this drops all data. Development only.
 
-DROP TABLE IF EXISTS offers, saved_listings, payments, bids, reviews, messages, listings, users CASCADE;
+DROP TABLE IF EXISTS meetups, offers, saved_listings, payments, bids, reviews, messages, listings, users CASCADE;
 
 -- pg_trgm ships with PostgreSQL (and is available on Supabase). Search uses it to tolerate typos.
 CREATE EXTENSION IF NOT EXISTS pg_trgm;
@@ -183,6 +183,37 @@ CREATE TABLE saved_listings (
 -- saved a listing: the save count, price-drop alerts, and the cascade when a listing is deleted.
 CREATE INDEX saved_listings_listing_idx ON saved_listings (listing_id);
 
+-- Meetups (plan a meetup in a chat thread): one person proposes a campus spot and a time, the other
+-- accepts or declines, and either can cancel. Not in the proposal's ER diagram. A thread is a listing
+-- and two people (as for messages), so the indexes put the two ids in a fixed order with LEAST and
+-- GREATEST: the same thread whoever proposed. The spot is a key from MEETUP_SPOTS in
+-- utils/meetups.js, checked by the API only, so renaming or adding a spot needs no database change.
+CREATE TABLE meetups (
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  listing_id  UUID NOT NULL REFERENCES listings(id) ON DELETE CASCADE,
+  proposer_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  invitee_id  UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  spot        TEXT NOT NULL CHECK (length(spot) BETWEEN 1 AND 40),
+  meet_at     TIMESTAMPTZ NOT NULL,
+  status      TEXT NOT NULL DEFAULT 'proposed'
+                CHECK (status IN ('proposed', 'accepted', 'declined', 'cancelled')),
+  -- When the 30-minute reminder went out (server.js), so it is sent once only.
+  reminded_at TIMESTAMPTZ,
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
+  CHECK (proposer_id <> invitee_id)
+);
+
+-- A thread's meetups, newest first (the thread page shows the newest).
+CREATE INDEX meetups_thread_idx
+  ON meetups (listing_id, LEAST(proposer_id, invitee_id), GREATEST(proposer_id, invitee_id), created_at);
+-- At most one proposal waiting for an answer per thread, even if two requests race.
+CREATE UNIQUE INDEX meetups_one_proposal_idx
+  ON meetups (listing_id, LEAST(proposer_id, invitee_id), GREATEST(proposer_id, invitee_id))
+  WHERE status = 'proposed';
+-- The reminder check only looks at accepted meetups that have not been reminded yet.
+CREATE INDEX meetups_reminder_idx ON meetups (meet_at) WHERE status = 'accepted' AND reminded_at IS NULL;
+
 -- Row level security: Supabase exposes every table to its public roles (anon, authenticated)
 -- through its REST API. Enabling RLS with no policies makes those roles see and change nothing.
 -- The API connects as the tables' owner, which is not subject to RLS (no FORCE), so it is
@@ -195,3 +226,4 @@ ALTER TABLE payments       ENABLE ROW LEVEL SECURITY;
 ALTER TABLE messages       ENABLE ROW LEVEL SECURITY;
 ALTER TABLE reviews        ENABLE ROW LEVEL SECURITY;
 ALTER TABLE saved_listings ENABLE ROW LEVEL SECURITY;
+ALTER TABLE meetups        ENABLE ROW LEVEL SECURITY;

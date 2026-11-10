@@ -50,7 +50,8 @@ export function ConversationRow({ conversation, partner, isActive }: Conversatio
             {conversation.lastMessageBody}
           </span>
           {isUnread ? (
-            <span className="ml-auto size-2.5 shrink-0 rounded-full bg-brand-ink">
+            // Dark mode: a black dot was 2.1:1 on the #314740 card. Pale #E6F2DD is 8.6:1 (7.5:1 on hover).
+            <span className="ml-auto size-2.5 shrink-0 rounded-full bg-brand-ink dark:bg-foreground">
               <span className="sr-only">{conversation.unreadCount} unread</span>
             </span>
           ) : null}

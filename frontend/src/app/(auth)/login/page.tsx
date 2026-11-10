@@ -1,10 +1,14 @@
 import { LoginForm } from "@/components/forms/LoginForm";
+import { safeNextPath } from "@/lib/utils";
 
 export const metadata = { title: "Sign in | UniSwap" };
 
-/** `?reset=1` is added by the reset-password form after a new password is saved. */
+/**
+ * `?reset=1` is added by the reset-password form after a new password is saved. `?next=/listings/…`
+ * is where to go after signing in (a heart or "Sign in" link on a listing), checked by safeNextPath.
+ */
 export default async function LoginPage({ searchParams }: PageProps<"/login">) {
-  const { reset } = await searchParams;
+  const { reset, next } = await searchParams;
 
   return (
     <div>
@@ -14,7 +18,7 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
           Your password was changed. Sign in with the new one.
         </p>
       ) : null}
-      <LoginForm />
+      <LoginForm next={safeNextPath(next)} />
     </div>
   );
 }

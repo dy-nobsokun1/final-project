@@ -45,6 +45,26 @@ export function payableAmount(listing: ListingWithSeller, userId: string | null,
   return null;
 }
 
+/**
+ * " The price is now $40, so you pay that." when the seller lowered the price below an accepted
+ * offer (payableAmount charges the lower one), else "". `who` is "you pay" or "they pay".
+ */
+export function lowerPriceNote(listing: Pick<Listing, "price">, offerAmount: number, who: string): string {
+  return listing.price < offerAmount ? ` The price is now ${formatPrice(listing.price)}, so ${who} that.` : "";
+}
+
+/**
+ * Where to go after signing in: `next` from /login?next=…, only if it is a path on this site.
+ * One leading "/" not followed by another "/" or a backslash, and no backslash, space, tab or
+ * newline anywhere: browsers drop tabs and newlines and read a backslash as "/", so
+ * "/<tab>/evil.example" or "/<backslash>evil.example" would leave the site. Anything else gives "/".
+ */
+const SAFE_NEXT_PATH = /^\/(?![/\\])[^\s\\]*$/;
+
+export function safeNextPath(next: unknown): string {
+  return typeof next === "string" && SAFE_NEXT_PATH.test(next) ? next : "/";
+}
+
 const RELATIVE_UNITS: Array<[Intl.RelativeTimeFormatUnit, number]> = [
   ["year", 1000 * 60 * 60 * 24 * 365],
   ["month", 1000 * 60 * 60 * 24 * 30],

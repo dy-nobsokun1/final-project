@@ -1,4 +1,5 @@
-# Render Blueprint for the UniSwap API. On render.com: New -> Blueprint -> pick this repository.
+# Render Blueprint for the UniSwap API. On render.com: New -> Blueprint -> pick this repository, and set
+# the Blueprint Path to memory/render.yaml (Render looks at the repository's root by default).
 # Render asks for every value marked `sync: false` (they are secrets, so they are not in git).
 # Full walkthrough: DEPLOY.md
 services:
@@ -44,7 +45,7 @@ services:
         sync: false
       - key: TELEGRAM_BOT_USERNAME
         sync: false
-      - key: GROQ_API_KEY # free key from console.groq.com; the assistant uses Groq first
+      - key: GROQ_API_KEY # free key from console.groq.com; Ask UniSwap uses Groq whenever this is set
         sync: false
-      - key: GEMINI_API_KEY # free key from aistudio.google.com/apikey; the backup
+      - key: GEMINI_API_KEY # free key from aistudio.google.com/apikey; Fill in from photo uses it first; Ask UniSwap only without GROQ_API_KEY
         sync: false

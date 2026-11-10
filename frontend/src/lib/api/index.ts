@@ -9,6 +9,7 @@ import type {
   KhqrStatus,
   ListingFilters,
   ListingWithSeller,
+  Meetup,
   Message,
   Offer,
   PaymentReceipt,
@@ -296,6 +297,13 @@ export async function getMessages(listingId: string, partnerId: string): Promise
   const params = new URLSearchParams({ listingId, withUserId: partnerId });
   const { messages } = await apiFetch<{ messages: Message[] }>(`/api/messages?${params}`);
   return messages;
+}
+
+/** The newest meetup in the thread with `partnerId` about a listing, or null. */
+export async function getThreadMeetup(listingId: string, partnerId: string): Promise<Meetup | null> {
+  const params = new URLSearchParams({ listingId, withUserId: partnerId });
+  const { meetup } = await apiFetch<{ meetup: Meetup | null }>(`/api/meetups?${params}`);
+  return meetup;
 }
 
 /** Marks what `partnerId` sent me in this thread as read. Called when the thread is opened. */

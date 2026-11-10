@@ -5,12 +5,14 @@ project proposal (Section 4, Methodology).
 
 ## Setup
 
-Requires Node.js 20.6+ and PostgreSQL 13+ (local, or a free Supabase database).
+Requires Node.js 20.6+ (the frontend needs 20.9+) and PostgreSQL 13+ (local, or a free Supabase database).
+Create an empty database first: `createdb uniswap`, or in Docker
+`docker exec <container> createdb -U <user> uniswap`.
 
 ```bash
 cd backend
 npm install
-cp .env.example .env      # then edit DATABASE_URL and JWT_SECRET
+cp .env.example .env      # then edit DATABASE_URL (your database) and JWT_SECRET
 npm run db:setup          # creates the tables (drops existing data!)
 npm run db:seed           # optional demo data; every demo user's password is "password123"
 npm run db:samples        # optional: 60 more realistic items (see "Sample listings" below)
@@ -18,6 +20,7 @@ npm run db:demo-deals     # optional, after the two above: 9 finished deals for 
 npm run dev               # http://localhost:4000, restarts on file changes
 npm test                  # unit tests (Node's built-in test runner)
 npm run test:api          # API tests against a separate test database (see Testing below)
+npm run start:prod        # what Render runs: like start, but settings come from the environment, not .env
 ```
 
 Check it works: `curl http://localhost:4000/api/health` → `{"status":"ok"}`
@@ -56,6 +59,18 @@ the [profile stats](#profile-stats) have something to show: 6 of their own items
 straight to the database (no Stripe, Bakong, email or Telegram), and skips deals it added before.
 `npm run db:demo-deals -- --remove` deletes exactly those 9 listings, with their bids, offers and
 payments.
+
+Two more helpers for rehearsing the demo (both write straight to the database in `DATABASE_URL`):
+
+- `npm run db:reset-sold` puts every sold or traded listing except the 9 demo deals back to active,
+  and deletes its payments, offers and reviews (`-- --all` resets the demo deals too).
+- `npm run db:open-auctions` reopens the demo auctions for 7 more days: the RTX 3090 goes back to
+  active at $450 **with all its bids deleted**, and every other active auction (not the demo deals)
+  gets a new end time 7 days from now.
+
+`npm run db:to-supabase` copies a local database to Supabase once: it reads `LOCAL_DATABASE_URL`
+(default: the Docker database on port 5433) and writes to `SUPABASE_DATABASE_URL`. It runs `schema.sql`
+there first, which **drops every table**, so it replaces all data in that Supabase database.
 
 ### Verification emails (optional)
 
@@ -100,14 +115,15 @@ CORS stays on `FRONTEND_ORIGIN`, because only the Next.js server calls the API.
 
 ```
 backend/
-├── scripts/            db-setup.js (create tables), db-seed.js (demo data), check-email.js
+├── scripts/            db-setup.js (create tables), db-seed.js (demo data), db-samples.js, db-demo-deals.js,
+│                       db-reset-sold.js, db-open-auctions.js, migrate-to-supabase.js, check-email.js
 ├── src/
 │   ├── server.js       starts the HTTP server
 │   ├── app.js          Express app: middleware + routes
 │   ├── config.js       reads environment variables
 │   ├── db/             schema.sql, connection pool, shared listing query, wanted-post matching, offer helpers
 │   ├── middleware/     requireAuth (JWT), CORS, error handler
-│   ├── routes/         auth, listings, bids, offers, reviews, saved, users, messages, payments, telegram, uploads, voice, assistant
+│   ├── routes/         auth, listings, bids, offers, reviews, saved, users, messages, meetups, payments, khqr, telegram, uploads, voice, assistant
 │   └── utils/          validation, password hashing, tokens, JSON serializers, email
 └── test/               unit tests; test/api/ holds the API tests (see Testing)
 ```
@@ -137,6 +153,10 @@ works, and each one is safe to re-run:
 6. [Row level security](#row-level-security): keeps Supabase's public roles out of every table. The API
    starts without it, but on Supabase run it anyway.
 
+7. [Meetups](#meetups): the reminder check in `server.js` reads `meetups` every minute from start-up, and
+   every chat thread page reads it, so without it threads fail to open. The block also turns on row
+   level security for the table.
+
 Also recommended: [Photos](#photos), which adds the database's own limit of 6 photos per listing. The
 API already enforces that limit, so the new API starts without it.
 
@@ -150,8 +170,9 @@ that kept an older `uniswap` database needs these blocks as well (its address is
 ### Tables
 
 Tables follow the ER diagram in the proposal (Figure 2): `users`, `listings`, `messages`,
-`reviews`. `saved_listings` was added for saved listings, and `offers` (with `listings.reserved_for`)
-for price offers; neither is in the ER diagram (see Saved listings and Offers below). See
+`reviews`. `saved_listings` was added for saved listings, `offers` (with `listings.reserved_for`)
+for price offers, and `meetups` for meetups planned in a chat; none of them is in the ER diagram (see
+Saved listings, Offers and Meetups below). See
 [`src/db/schema.sql`](src/db/schema.sql). Allowed values are enforced twice, in
 the API (`utils/validation.js`) and in the database (`CHECK` constraints):
 
@@ -164,7 +185,7 @@ the API (`utils/validation.js`) and in the database (`CHECK` constraints):
 
 Supabase gives its public roles (`anon`, `authenticated`) access to every table in `public` through its
 REST API, so without this anyone holding the public key could read and change all of them. `schema.sql`
-ends by turning on row level security for all 8 tables, with no policies: those roles then see and
+ends by turning on row level security for all 9 tables, with no policies: those roles then see and
 change nothing. The API connects as the tables' owner, which RLS does not apply to (there is no
 `FORCE`), so it works as before. A database made before this version needs it once; it is safe to re-run:
 
@@ -178,6 +199,8 @@ ALTER TABLE messages       ENABLE ROW LEVEL SECURITY;
 ALTER TABLE reviews        ENABLE ROW LEVEL SECURITY;
 ALTER TABLE saved_listings ENABLE ROW LEVEL SECURITY;
 ```
+
+`meetups` (added 4 Nov) gets the same line in its own upgrade block (see Meetups).
 
 ### Passwords
 
@@ -429,6 +452,64 @@ CREATE UNIQUE INDEX IF NOT EXISTS offers_one_pending_idx ON offers (listing_id, 
 CREATE UNIQUE INDEX IF NOT EXISTS offers_one_accepted_idx ON offers (listing_id) WHERE status = 'accepted';
 ```
 
+### Meetups
+
+In a chat thread, either person can plan a meetup: a campus spot and a time (`src/routes/meetups.js`,
+`src/db/meetups.js`, `src/utils/meetups.js`). The other person accepts or declines it; either can
+cancel it. Both get an email and a Telegram reminder 30 minutes before.
+
+- **Who:** only the listing's owner and someone who already has at least one message with the owner
+  about that listing (checked in the database, in either direction). Only the invitee accepts or
+  declines. Either person cancels a proposal or an accepted meetup.
+- **Spots** are keys from `MEETUP_SPOTS` (`library_entrance`, `cafeteria`, `main_gate`,
+  `student_lounge`); the frontend has the same list in `src/lib/meetup-spots.ts`. The labels are
+  placeholders until the team names AUPP's real spots. Only the API checks the key (the database only
+  checks its length), so renaming a label needs no database change.
+- **Time:** an ISO time with its zone (the form sends `+07:00`), in the future and within 14 days.
+  Emails, Telegram and the page show it in Phnom Penh time.
+- **One open meetup per thread:** a new proposal replaces (cancels) the one still waiting for an answer,
+  under a lock on the listing row, with a partial unique index as a backstop. While an accepted meetup
+  is still to come, a new proposal is refused (409): cancel it first. Accepting is refused once the
+  time has passed. Each answer is one conditional `UPDATE`, so two answers at once cannot both win.
+- **10 proposals an hour:** each proposal emails the other person, so a student who already made 10 in
+  the last hour gets 429. Counted in the database (`created_at`), so a restart does not reset it;
+  replaced and cancelled proposals count too.
+- **Live:** each change goes to both people's open streams as `event: meetup` (the JSON below), which the
+  message code ignores; the thread page refreshes on it.
+- **Notifications:** proposed, accepted, declined and cancelled go to the other person, but not while
+  they have that thread open (they see the card change, as with messages). The reminder always goes to
+  both: `server.js` checks once a minute, and `claimDueReminders()` picks and marks the due meetups in
+  one `UPDATE … RETURNING`, so a restart never sends one twice. A meetup accepted less than 30 minutes
+  before its time gets its reminder at the next check.
+- Statuses: `proposed` → `accepted` | `declined` | `cancelled`; `accepted` → `cancelled`.
+
+Upgrade block (added 4 Nov; the new API needs it, see the list at the top of Database). Safe to re-run:
+
+```sql
+CREATE TABLE IF NOT EXISTS meetups (
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  listing_id  UUID NOT NULL REFERENCES listings(id) ON DELETE CASCADE,
+  proposer_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  invitee_id  UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  spot        TEXT NOT NULL CHECK (length(spot) BETWEEN 1 AND 40),
+  meet_at     TIMESTAMPTZ NOT NULL,
+  status      TEXT NOT NULL DEFAULT 'proposed'
+                CHECK (status IN ('proposed', 'accepted', 'declined', 'cancelled')),
+  reminded_at TIMESTAMPTZ,
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
+  CHECK (proposer_id <> invitee_id)
+);
+CREATE INDEX IF NOT EXISTS meetups_thread_idx
+  ON meetups (listing_id, LEAST(proposer_id, invitee_id), GREATEST(proposer_id, invitee_id), created_at);
+CREATE UNIQUE INDEX IF NOT EXISTS meetups_one_proposal_idx
+  ON meetups (listing_id, LEAST(proposer_id, invitee_id), GREATEST(proposer_id, invitee_id))
+  WHERE status = 'proposed';
+CREATE INDEX IF NOT EXISTS meetups_reminder_idx ON meetups (meet_at)
+  WHERE status = 'accepted' AND reminded_at IS NULL;
+ALTER TABLE meetups ENABLE ROW LEVEL SECURITY;
+```
+
 ### Reviews
 
 Once a listing is marked `sold` or `traded`, its owner and a person they dealt with can rate each
@@ -508,7 +589,7 @@ verification email):
 
 | Event | Who gets it | Link in the email |
 |---|---|---|
-| New chat message | The receiver. Only the first unread message in a thread emails; reading the thread re-arms it | The chat thread |
+| New chat message | The receiver. Only the first unread message in a thread emails; reading the thread re-arms it. Nothing is sent while the receiver has that thread open (its live stream) | The chat thread |
 | Outbid | The person who just lost the highest bid | The auction |
 | Auction ended with bids | The winner ("You won…") and the seller ("ended at $…") | Their chat with each other |
 | Password changed or reset | The account owner | `/forgot-password`, in case it was not them |
@@ -628,6 +709,26 @@ service's web API with `fetch`.
   not answer at all. Google may read free-tier requests.
   A 429 from either (after any retry) becomes our 429 with "try again in a minute", or "try again
   tomorrow" when its message says a daily limit is used up.
+- **Fill in from photo ("Snap to list")** (`routes/assistant.js`, `services/vision.js`,
+  `utils/listingDraft.js`, `db/priceHints.js`). On a new listing, after a photo is picked, the sell form
+  shows "Fill in from photo". The browser shrinks the photo to a 1,024 px JPEG and sends it (only the
+  photo) to a vision model, which suggests a title, category, condition and description as JSON. Our
+  code keeps only those four fields, only our own category and condition values, and cuts the text to
+  the form's lengths: text in a photo can try to steer the model, so this check and the student's own
+  review are the defence. The form fills only EMPTY fields and never posts. Nothing is stored or
+  logged. Each student may use it 10 times an hour (in memory).
+  **Price hint, from UniSwap only, never from the model:** "sale" listings of the same category whose
+  TITLE shares words with the model's title (full-text stemming, no descriptions, related words or
+  typo test). Only the listings sharing the most words count, and at least 2 words, so a MacBook or
+  "Silver laptop" is never priced from laptop RAM; weaker matches are never used instead. Sold ones at the amount really
+  paid when there are 2 or more, else sold and active together; fewer than 2 = no hint. When the price
+  box is empty, the form fills the middle of the range and says so.
+  **Which model:** Gemini `gemini-3.1-flash-lite` (`VISION_GEMINI_MODEL`, the same `GEMINI_API_KEY`),
+  a different model from the assistant's, because Gemini's free limits count per model. When Gemini
+  is busy (429, 5xx, or no answer in 8 s), the photo goes once to Groq `qwen/qwen3.8-27b`
+  (`VISION_GROQ_MODEL`, 10 s). That is the assistant's own model and quota, so at most
+  `VISION_FALLBACK_PER_DAY` photos a day (20) go there; `VISION_FALLBACK=off` turns it off and
+  `VISION_PROVIDER=groq` swaps the two. The button is hidden when the chosen provider has no key.
 
 **Upgrading a database created before payments and Telegram?** Run this once. It keeps your data and is safe to re-run:
 
@@ -677,7 +778,7 @@ A token issued before the account's last password change or reset is refused (40
 |---|---|---|
 | GET | `/api/health` | API + database health check |
 | POST | `/api/auth/register` | `{ name, email, password, major?, graduationYear? }`. Only `@aupp.edu.kh` emails. Emails a 6-digit code; nobody is signed in yet |
-| POST | `/api/auth/login` | `{ email, password }` → `{ user, token }`. `403` until the email is verified |
+| POST | `/api/auth/login` | `{ email, password }` → `{ user, token }`. `403` until the email is verified. `429` after 10 wrong passwords for that email in 15 minutes (shared with resend-verification), even for the right one |
 | POST | `/api/auth/verify-email` | `{ email, code }` → `{ user }` and verifies the email, which unlocks signing in. The code works for 30 minutes and 5 tries (each try counts, the right one too); a wrong one answers 400 "That code is not right.", an expired one or the 5th failed try 400 "This code has expired. Sign in to get a new one." |
 | POST | `/api/auth/resend-verification` | `{ email, password }` → emails a new code (the old one stops working, and the 5 tries start again) |
 | POST | `/api/auth/forgot-password` | `{ email }` → always `{ requested: true }`, whether or not the account exists. Emails a `/reset-password?token=` link that works once, for 1 hour; at most one email per account every 2 minutes while its link is unused. `400` if not a `.edu.kh` email |
@@ -713,7 +814,7 @@ A token issued before the account's last password change or reset is refused (40
 | GET 🔒 | `/api/payments/khqr/:id` | Buyer only → `{ status: "paid" \| "pending" \| "expired" \| "refund_due" \| "unavailable" }`, checked with Bakong. `refund_due`: paid after the item was already sold or reserved for another buyer. `unavailable`: not paid, and the item has been sold or traded another way or reserved for another buyer, the seller changed the Bakong account this QR pays, or this buyer would now pay a different amount (see KHQR above), so the QR should not be paid |
 | GET | `/api/telegram` | `{ enabled, botUrl }`: whether Telegram alerts are switched on, and the link to the bot's chat (`null` when off). No sign-in needed |
 | GET 🔒 | `/api/users/me/telegram` | `{ enabled, connected }` |
-| POST 🔒 | `/api/users/me/telegram` | `{ link }`: one-time link that opens the bot |
+| POST 🔒 | `/api/users/me/telegram` | `{ link }`: one-time link that opens the bot, valid for 30 minutes |
 | DELETE 🔒 | `/api/users/me/telegram` | Disconnect Telegram |
 | GET 🔒 | `/api/users/me/saved` | `{ listings }`: my saved listings, most recently saved first, in any status (a sold one shows as sold) |
 | GET 🔒 | `/api/users/me/saved/ids` | `{ listingIds }`: which listings I saved, so a page can fill in the hearts on its cards |
@@ -724,12 +825,18 @@ A token issued before the account's last password change or reset is refused (40
 | PATCH 🔒 | `/api/users/me` | `{ name?, major?, graduationYear?, bio?, avatarUrl?, bakongAccountId? }`. `bakongAccountId` is `name@bank`; `""` or `null` removes it |
 | GET 🔒 | `/api/messages/conversations` | My chat threads, newest first: `{ listingId, partnerId, lastMessageAt, unreadCount, listingTitle, listingCategory, listingImageUrl, lastMessageBody, lastMessageIsMine }`. `listingImageUrl` is the cover photo, or `null` |
 | GET 🔒 | `/api/messages?listingId=&withUserId=` | One thread, oldest first |
-| POST 🔒 | `/api/messages` | `{ listingId, receiverId, body }` |
+| POST 🔒 | `/api/messages` | `{ listingId, receiverId, body }`. `400` when an id is not a UUID, `404` when the listing or the receiver does not exist |
 | PATCH 🔒 | `/api/messages/read` | `{ listingId, withUserId }` → mark a thread read |
-| POST 🔒 | `/api/uploads` | One photo per request: raw image bytes with `Content-Type: image/jpeg`, `png`, `webp` or `gif` (max 5 MB) → `{ url }` |
-| POST 🔒 | `/api/voice/transcribe` | Raw audio bytes with `Content-Type: audio/webm`, `ogg`, `mp4`, `mpeg` or `wav` (max 2 MB, about 60 s) → `{ text }` from Groq's Whisper (`GROQ_API_KEY`). Nothing is stored or logged. `415` wrong type, `503` while off or while Groq's free limit is used up, `502` if Groq fails |
+| GET 🔒 | `/api/messages/stream?listingId=&withUserId=` | Server-Sent Events: my new messages, live. Each is `event: message` with the same JSON as `POST /api/messages` returns (`toMessage`), sent to both the sender's and the receiver's streams. A meetup change comes as `event: meetup` with the meetup's JSON. With both params it gets only that thread and counts as watching it, so no new-message email or Telegram is sent while it is open; with neither (the inbox) it gets all of mine. `: connected` at once, then `: ping` every 25 s. `400` with only one param |
+| GET 🔒 | `/api/meetups?listingId=&withUserId=` | `{ meetup }`: the thread's newest meetup in any status, or `null`. A meetup is `{ id, listingId, proposerId, inviteeId, spot, meetAt, status, createdAt, updatedAt }`. Only ever one the signed-in student is part of |
+| POST 🔒 | `/api/meetups` | `{ listingId, withUserId, spot, meetAt }` → `201 { meetup }`. Replaces the thread's waiting proposal. `400` bad spot or time, `403` not the owner and someone who chatted with them, `404` no listing, `409` an accepted meetup is still to come (see Meetups), `429` 10 proposals by this student in the last hour |
+| PATCH 🔒 | `/api/meetups/:id` | `{ status: "accepted" \| "declined" \| "cancelled" }` → `{ meetup }`. Only the invitee accepts or declines; either person cancels. `403` not the invitee, `404` not yours, `409` already answered, or its time has passed |
+| POST 🔒 | `/api/uploads` | One photo per request: raw image bytes with `Content-Type: image/jpeg`, `png`, `webp` or `gif` (max 5 MB) → `{ url }`. The saved type comes from the file's first bytes, not the header (a PNG sent as `image/jpeg` is saved as `.png`). `400` "That file is not a real image." when the bytes are none of these types. `502` when Cloudinary refuses the bytes (not really an image) or is down |
+| POST 🔒 | `/api/voice/transcribe` | Raw audio bytes with `Content-Type: audio/webm`, `ogg`, `mp4`, `mpeg` or `wav` (max 2 MB, about 60 s) → `{ text }` from Groq's Whisper (`GROQ_API_KEY`). Nothing is stored or logged. `415` wrong type, `429` after 60 clips in an hour (per student), `503` while off or while Groq's free limit is used up, `502` if Groq fails |
 | GET | `/api/assistant/config` | `{ enabled }`: whether the shopping assistant is switched on (`GROQ_API_KEY` or `GEMINI_API_KEY` set) |
-| POST 🔒 | `/api/assistant` | `{ messages: [{ role: "user" \| "assistant", text }] }`, oldest first, at most 20, each 1 to 1000 characters, the last one the student's → `{ reply, listings, wantedDraft }`. `listings`: up to 4 full listings to show as cards. `wantedDraft`: `null` or `{ title, description, category, budget }` to fill in the new-listing form. `503` while switched off, `429` while the model's free limit for the minute or the day is used up, `502` if the model fails (see Ask UniSwap above) |
+| POST 🔒 | `/api/assistant` | `{ messages: [{ role: "user" \| "assistant", text }] }`, oldest first, at most 20, each 1 to 1000 characters, the last one the student's → `{ reply, listings, wantedDraft }`. `listings`: up to 4 full listings to show as cards. `wantedDraft`: `null` or `{ title, description, category, budget }` to fill in the new-listing form. `503` while switched off, `429` after 20 questions in an hour (per student) or while the model's free limit for the minute or the day is used up, `502` if the model fails (see Ask UniSwap above) |
+| GET | `/api/assistant/listing-draft` | `{ enabled }`: whether the sell form shows "Fill in from photo" (the vision provider has its key) |
+| POST 🔒 | `/api/assistant/listing-draft` | Raw photo bytes with `Content-Type: image/jpeg`, `png` or `webp` (max 2 MB) → `{ draft: { title, category, condition, description }, priceHint: { low, high, count, sold } \| null }`. A draft field is `""` when the model left it out or gave a value we do not allow. The price hint comes from similar UniSwap listings only (see Fill in from photo above). Nothing is stored or logged. `415` wrong type, `429` after 10 photos in an hour, `503` while off or busy, `502` if the answer cannot be read |
 
 Uploaded photos are saved in `backend/uploads/` (git-ignored) and served at `/uploads/<file>`.
 Put the returned `url` in a listing's `imageUrls` (at most 6; only URLs from this route are accepted).
@@ -742,14 +849,17 @@ Errors always look like `{ "error": "message", "details": { "field": "message" }
 - `npm test` runs the unit tests in `test/*.test.js`: validation, the search query builder, the
   payment amount rules, the Stripe and Cloudinary helpers, the KHQR builder and Bakong answers, and
   the shopping assistant's tool loop (with a scripted fake model) and its Groq and Gemini adapters
-  (with `fetch` replaced), and the tunnel address watcher. No database or network needed.
+  (with `fetch` replaced), the photo draft checks and closest-match rule of Fill in from photo, and the
+  tunnel address watcher. No database or network needed.
 - `npm run test:api` runs the API tests in `test/api/`. Each file starts the real app on a free port
   and sends it real HTTP requests, so routes, SQL and database rules are tested together: sign-up and
   verification, password reset and change, owner-only changes, messaging, bidding (including five
   bids at the same moment), payments with Stripe switched off, KHQR payments (with Bakong replaced by
   a fake), reviews, saved listings (including who gets a price-drop alert), listing photo rules,
   wanted-post matching and alerts, offers (including two accepted at the same moment), and the
-  shopping assistant (with Groq replaced by a fake that also checks no seller details are sent).
+  shopping assistant (with Groq replaced by a fake that also checks no seller details are sent), and
+  Fill in from photo (Gemini and Groq replaced by fakes: the checks, the rate limit, the fallback and
+  its cap, and the price hint).
 
 The API tests need their own database, because `test/api/reset-db.js` wipes it before every run.
 Create it once, then put its URL in `.env` as `TEST_DATABASE_URL` (see `.env.example`):
@@ -771,9 +881,12 @@ can check who would have been emailed, waiting with `waitFor` because notificati
 
 - **SQL injection:** every query uses `$1, $2, ...` parameters, never string concatenation.
 - **Passwords:** hashed with scrypt (Node's built-in `crypto`) plus a random salt; never returned by the API.
-- **Verified members only:** an account cannot sign in until the link sent to its `.edu.kh` address is opened, so a
+- **Verified members only:** an account cannot sign in until the 6-digit code emailed to its `@aupp.edu.kh` address is typed, so a
   made-up or borrowed email gets nowhere. An unverified sign-up is replaced if the email registers again, so a
   stranger cannot block the real owner. Every protected request re-checks that the account exists and is verified.
+- **Wrong-password limit:** 10 wrong passwords per email in 15 minutes, then login and resend-verification
+  answer 429 until the oldest try is 15 minutes old. Unknown emails count too, so it does not reveal
+  which accounts exist. A right password clears the count.
 - **Auth:** signed JWTs expire after 7 days; changing or resetting the password signs out every session
   started before it; listings can only be changed or deleted by their owner.
 - **Password reset:** the same answer for every campus email, only the token's hash is stored, the link
@@ -785,6 +898,9 @@ can check who would have been emailed, waiting with `waitFor` because notificati
   is only filled into the form for the student to check. Its instructions say listing text is data,
   never instructions, and its cards can only be listings its own searches returned. Neither Groq
   nor Gemini ever gets seller names or emails.
+- **Fill in from photo:** only the photo goes to the model. Its answer is checked in code (four fields,
+  our own category and condition values, cut to length), only fills empty fields, and is never posted
+  without the student. The price hint never comes from the model.
 - **Secrets:** live in `.env` (git-ignored). Nothing secret is committed.
 
 ## Progress

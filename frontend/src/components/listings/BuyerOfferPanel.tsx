@@ -1,7 +1,7 @@
 import { HandCoins } from "lucide-react";
 import { OfferActionButton } from "@/components/listings/OfferActionButton";
 import { OfferForm } from "@/components/listings/OfferForm";
-import { formatPrice } from "@/lib/utils";
+import { formatPrice, lowerPriceNote } from "@/lib/utils";
 import type { ListingWithSeller, Offer } from "@/types";
 
 interface BuyerOfferPanelProps {
@@ -46,7 +46,7 @@ function statusLine(listing: ListingWithSeller, offer: Offer | null): string {
   switch (offer?.status) {
     case "accepted":
       return listing.status === "reserved"
-        ? `${seller} accepted your offer of ${amount}. The item is reserved for you: pay online below if available, or message them to meet on campus.`
+        ? `${seller} accepted your offer of ${amount}.${lowerPriceNote(listing, offer.amount, "you pay")} The item is reserved for you: pay online below if available, or message them to meet on campus.`
         : `Your offer of ${amount} was accepted.`;
     case "pending":
       return `You offered ${amount}. Waiting for ${seller} to answer.`;

@@ -7,6 +7,8 @@ export interface FormPhoto {
   key: string;
   name: string;
   url: string | null;
+  /** The picked file, kept for "Fill in from photo" (use-photo-draft.ts). Missing for photos already on the server. */
+  file?: File;
 }
 
 /**
@@ -40,7 +42,7 @@ export function useListingPhotos(initialUrls: string[]) {
     setErrors(problems);
 
     const added = accepted.map((file) => ({ file, key: `new-${nextKey.current++}` }));
-    setItems((current) => [...current, ...added.map(({ file, key }) => ({ key, name: file.name, url: null }))]);
+    setItems((current) => [...current, ...added.map(({ file, key }) => ({ key, name: file.name, url: null, file }))]);
 
     const saved: string[] = [];
     // One at a time and in order: Next.js sends Server Actions one after another anyway.
@@ -74,6 +76,8 @@ export function useListingPhotos(initialUrls: string[]) {
 
   function remove(key: string) {
     setItems((current) => current.filter((photo) => photo.key !== key));
+    // The messages were about the last photos picked ("only 6 fit", "over 4 MB"); after a change they are stale.
+    setErrors([]);
   }
 
   /** Moves a photo to the front, which makes it the cover. */

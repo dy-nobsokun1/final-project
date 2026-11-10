@@ -11,7 +11,7 @@ buy, sell, trade, or give away items.
 Rules for AI coding agents working in this repo are in [`Agent.md`](Agent.md).
 Putting it online (Supabase, Render, Vercel, Cloudinary, Stripe, Telegram): [`memory/DEPLOY.md`](memory/DEPLOY.md).
 
-## Status (week 5)
+## Status (4 Nov 2026)
 
 ### Built
 
@@ -35,21 +35,32 @@ Putting it online (Supabase, Render, Vercel, Cloudinary, Stripe, Telegram): [`me
 - **Auctions:** a starting price, a minimum raise and an end time. Two bids placed at the same
   moment can never both win. When time runs out, the item is reserved for the highest bidder.
 - **Messaging:** a private thread per listing between its owner and each interested student, with
-  unread counts.
+  unread counts. New messages appear live, without a reload, on the other person's open thread and
+  in their inbox (Server-Sent Events, no package).
+- **Meetups:** from a chat, either person proposes a campus spot and a time (within 14 days); the
+  other accepts or declines, either cancels. Both get a reminder 30 minutes before.
+- **Fill in from photo:** on a new listing, one photo fills in the title, category, condition and
+  description (a Gemini vision model, with Groq once when Gemini is busy), with a price hint from
+  similar UniSwap listings. It only suggests: the student checks the form and posts it.
+- **Voice input:** a microphone button in the search box, Ask UniSwap and chat fills the box as you
+  speak (the browser's own speech recognition, or Groq's Whisper in Firefox, Opera and Brave).
+- **Profile:** your own profile shows what you earned and spent per month and by category, and the
+  items you bought, with a "Review seller" button. A paid listing shows a receipt to its buyer and seller.
+- **Dark mode:** the Sun/Moon button in the navbar (opt-in; the default look stays light).
 - **Reviews and ratings:** once a listing is sold or traded, its owner and the buyer (whoever paid
   online, won the auction or had their offer accepted; for other in-person deals, someone they
   chatted with) can rate each other (1 to 5 stars and a comment). Profiles show the average and
   every review.
 - **Notifications:** by email, and by Telegram for students who connect it in Settings: new
-  messages, being outbid, auction results, offers, payments, password changes, price drops on items
-  you saved, and a new listing that matches your wanted post.
+  messages, being outbid, auction results, offers, payments, meetups, password changes, price drops
+  on items you saved, and a new listing that matches your wanted post.
 - **Card payments (Stripe test mode):** pay for an item for sale or an auction you won. Live keys
   are refused, so no real card can ever be charged.
 - **KHQR payments (Bakong):** sellers add their Bakong account in Settings; buyers scan a QR with
   any Cambodian banking app and the money goes straight to the seller. UniSwap confirms the payment
   with the National Bank's Bakong API and marks the item sold.
 - **Ask UniSwap (shopping assistant):** the Ask page lets a student describe what they need in their own
-  words ("a bike under $50"). An AI model (Groq, with Gemini as a backup) searches the listings and
+  words ("a bike under $50"). An AI model (Groq, or Gemini when only its key is set) searches the listings and
   answers with the best matches as cards; when nothing fits, it offers to draft a wanted post, and on a
   yes opens the sell form filled in with what the student said, to check and post. It only reads
   listings, and it is switched off until `GROQ_API_KEY` or `GEMINI_API_KEY` is set (both free).
@@ -58,30 +69,44 @@ Putting it online (Supabase, Render, Vercel, Cloudinary, Stripe, Telegram): [`me
 
 ### Tested
 
-- `npm test` (in `backend/`): 47 unit tests for validation (including the photo rules), the search
+All pass on 4 Nov 2026.
+
+- `npm test` (in `backend/`): 99 unit tests for validation (including the photo rules), the search
   query and wanted-post matching, the payment amount rules, the Stripe and Cloudinary helpers, the
-  KHQR builder (checked against the National Bank's own library), and the shopping assistant's tool loop
-  and its Groq and Gemini adapters.
-- `npm run test:api` (in `backend/`): 102 tests that send real requests to the running API, covering
+  KHQR builder (checked against the National Bank's own library), the shopping assistant's tool loop
+  and its Groq and Gemini adapters, the Fill in from photo checks, meetups, notification messages,
+  the Telegram bot's screens and login tokens.
+- `npm run test:api` (in `backend/`): 164 tests that send real requests to the running API, covering
   sign-up and verification, password reset and change, owner-only changes, messaging, simultaneous
   bids, card and KHQR payments, reviews, saved listings, listing photos, wanted-post matching and
   alerts, offers (including two accepted at the same moment), and refusing to delete a listing whose
-  payments or reviews must stay, and the shopping assistant (with a fake Groq).
+  payments or reviews must stay, the shopping assistant (with a fake Groq), Fill in from photo,
+  voice input, meetups, profile stats and purchases, notifications and Telegram linking.
   They use a separate test database (see [Testing](backend/README.md#testing)).
 
 ### Not done yet
 
-- **Needs our own accounts and keys** (steps in [`memory/DEPLOY.md`](memory/DEPLOY.md)): the Supabase database,
-  Render and Vercel hosting, Cloudinary, Stripe test keys and the Telegram bot. Until their keys are
-  set, photos are saved on the server's disk, and payments and Telegram stay switched off.
+- **Hosting on Render and Vercel** (steps in [`memory/DEPLOY.md`](memory/DEPLOY.md)). The demo runs
+  the API and the website on a team laptop, with the Supabase database, Cloudinary photos, Stripe
+  test keys, KHQR, the Telegram bot, email and Groq switched on there. A fresh copy of the code has none
+  of these keys: photos are saved on the server's disk, and payments, Telegram, email and the AI
+  features stay switched off until their keys are set.
 - **KHQR on Render:** Bakong only answers Cambodian IP addresses, so KHQR works when the API runs
   in Cambodia (e.g. a laptop for the demo), not on Render.
 - **Ask UniSwap's free tier:** the model's free limits are shared by every student (Groq's
   `qwen/qwen3.8-27b`: about 3 questions a minute, 1,000 requests and 200,000 tokens a day), so it suits a
-  demo, not heavy use. Gemini is the backup (`ASSISTANT_PROVIDER=gemini`), with much lower limits.
-- **Possible next steps:** real-time chat, safe meetup spots, and notification settings.
+  demo, not heavy use. The API picks its model once, when it starts: Groq if `GROQ_API_KEY` is set,
+  else Gemini if `GEMINI_API_KEY` is set. It never switches while it runs; to use Gemini instead, set
+  `ASSISTANT_PROVIDER=gemini` and restart the API. Gemini's free limits are much lower.
+- **Possible next steps:** safe meetup spots chosen with the university (the four spot names are
+  placeholders), notification settings, and dark mode that follows the system setting.
 
 ### Known limitations (by design)
+
+- **The wrong-password limit is per account, not per device.** After 10 wrong passwords in 15 minutes
+  an account must wait, even with the right password. Only the website's server calls the API, so the
+  API sees one address for everyone and cannot tell devices apart. Someone could lock a demo account
+  for 15 minutes on purpose; restarting the API clears it (the count is kept in memory only).
 
 - **One buyer pays at a time.** While someone has a card checkout or KHQR open for an item (up to
   30 minutes), other buyers are told someone is paying. This is what stops two people paying for
@@ -132,13 +157,22 @@ Putting it online (Supabase, Render, Vercel, Cloudinary, Stripe, Telegram): [`me
 
 ## Run locally
 
-```bash
-# API on http://localhost:4000  (needs PostgreSQL; see backend/README.md)
-cd backend && npm install && cp .env.example .env && npm run db:setup && npm run db:seed && npm run dev
+Needs Node.js 20.9+ (Next.js 16 needs it) and PostgreSQL 13+ (local, in Docker, or a free Supabase
+database). First create an empty database, for example `createdb uniswap`.
 
-# Web app on http://localhost:3000 (talks to the API above)
+```bash
+# API on http://localhost:4000 (more in backend/README.md)
+cd backend && npm install && cp .env.example .env
+# Edit .env: set DATABASE_URL to your database (the example expects user postgres, password
+# postgres, port 5432) and JWT_SECRET to a long random string. Then:
+npm run db:setup && npm run db:seed && npm run dev
+
+# Web app on http://localhost:3000 (talks to the API above), in a second terminal
 cd frontend && npm install && npm run dev
 ```
+
+For the full demo data, also run `npm run db:samples` and then `npm run db:demo-deals` in `backend/`
+(60 more items, and 9 finished deals for chanrithorn's profile stats).
 
 The web app calls the API from the Next.js server, at `http://localhost:4000` by default. To use a
 different address, set `API_URL` in `frontend/.env.local`.

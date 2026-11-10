@@ -13,7 +13,7 @@ interface MessageComposerProps {
 
 /**
  * Chat input. Sends the draft through a Server Action; on success the action refreshes the
- * thread page, so the new message appears without a reload.
+ * thread page, so the new message appears without a reload. Enter sends; Shift+Enter adds a line.
  */
 export function MessageComposer({ listingId, receiverId }: MessageComposerProps) {
   const [draft, setDraft] = useState("");
@@ -52,6 +52,12 @@ export function MessageComposer({ listingId, receiverId }: MessageComposerProps)
             voice.clearError();
             setError(null);
             setDraft(event.target.value);
+          }}
+          onKeyDown={(event) => {
+            if (event.key !== "Enter" || event.shiftKey || event.nativeEvent.isComposing) return;
+            if (isSending || voice.status !== "idle") return;
+            event.preventDefault();
+            event.currentTarget.form?.requestSubmit();
           }}
           placeholder="Write a message..."
           className="flex-1 resize-none rounded-lg border border-input bg-card px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-ring focus:outline-none"

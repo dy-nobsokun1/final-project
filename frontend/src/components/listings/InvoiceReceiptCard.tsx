@@ -1,6 +1,6 @@
 "use client";
 
-import { CheckCircle2, Download, Printer, X } from "lucide-react";
+import { CheckCircle2, Printer, X } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import type { ListingWithSeller, PaymentReceipt } from "@/types";
@@ -18,7 +18,7 @@ export function InvoiceReceiptCard({ receipt, listing }: InvoiceReceiptCardProps
   });
 
   return (
-    <div className="relative overflow-hidden rounded-2xl border-2 border-primary/30 bg-card p-6 shadow-md transition-all">
+    <div className="light-surface relative overflow-hidden rounded-2xl border-2 border-primary/30 bg-card p-6 shadow-md transition-all">
       {/* Close button to dismiss invoice view */}
       <Link
         href={`/listings/${listing.id}`}
@@ -31,7 +31,7 @@ export function InvoiceReceiptCard({ receipt, listing }: InvoiceReceiptCardProps
 
       <div className="flex flex-col gap-6">
         {/* Header */}
-        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-border pb-4">
+        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-border pr-8 pb-4">
           <div className="flex items-center gap-3">
             <div className="flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
               <CheckCircle2 className="size-6" />
@@ -77,7 +77,7 @@ export function InvoiceReceiptCard({ receipt, listing }: InvoiceReceiptCardProps
           </div>
           <div>
             <span className="block text-xs text-muted-foreground">Total Paid</span>
-            <span className="font-mono text-base font-bold text-primary">
+            <span className="font-mono text-base font-bold text-foreground">
               ${receipt.amount.toFixed(2)} USD
             </span>
           </div>
@@ -112,16 +112,6 @@ export function InvoiceReceiptCard({ receipt, listing }: InvoiceReceiptCardProps
             >
               <Printer className="size-4" />
               <span>Print / Save as PDF</span>
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => window.print()}
-              className="gap-1.5"
-            >
-              <Download className="size-4" />
-              <span>Download</span>
             </Button>
           </div>
         </div>
