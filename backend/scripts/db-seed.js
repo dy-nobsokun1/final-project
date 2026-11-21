@@ -21,6 +21,14 @@ for (const [name, email, major, year, verified] of users) {
   ids.push(rows[0].id);
 }
 
+// The demo admin (users.role = 'admin', see middleware/admin.js), for GET /api/admin/... in Postman.
+// @demo.edu.kh is a demo domain that receives no email. On an older database: npm run db:make-admin.
+await pool.query(
+  `INSERT INTO users (name, email, password_hash, is_verified, role)
+   VALUES ('UniSwap Admin', 'admin@demo.edu.kh', $1, true, 'admin')`,
+  [passwordHash],
+);
+
 // Real photos: the first four are in frontend/public/listings/; the desk and jacket stay on
 // Wikimedia Commons (credits next to them), so no third-party images enter this repo.
 const DESK_PHOTO = // "(2) 4 drawer Steel desk with wood top", Bonner Springs Library, CC BY 2.0:
@@ -85,5 +93,5 @@ const { rows: [auction] } = await pool.query(
 );
 await pool.query("INSERT INTO bids (listing_id, bidder_id, amount) VALUES ($1, $2, 22)", [auction.id, ids[0]]);
 
-console.log(`Seeded ${ids.length} users, ${listingIds.length + 1} listings (1 auction), 2 messages, 1 bid, 1 saved listing, 1 offer.`);
+console.log(`Seeded ${ids.length} users + 1 admin, ${listingIds.length + 1} listings (1 auction), 2 messages, 1 bid, 1 saved listing, 1 offer.`);
 await pool.end();

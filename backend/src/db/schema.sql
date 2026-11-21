@@ -38,6 +38,9 @@ CREATE TABLE users (
   -- Login tokens issued before this moment are refused (middleware/auth.js), so changing or
   -- resetting the password signs out every older session. NULL: never changed.
   password_changed_at       TIMESTAMPTZ,
+  -- Two roles: every account is a 'student'; an 'admin' may also use /api/admin (middleware/admin.js
+  -- reads it from here on every request). Admins are made with `npm run db:make-admin`, never by sign-up.
+  role               TEXT NOT NULL DEFAULT 'student' CHECK (role IN ('student', 'admin')),
   created_at         TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
