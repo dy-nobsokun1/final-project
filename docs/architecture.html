@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>UniSwap architecture</title>
+<style>html,body{height:100%;margin:0}body{background:#f6faf3;color:#14201b;display:flex;align-items:center;justify-content:center;padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px));box-sizing:border-box}svg{display:block;width:100%;height:100%;max-height:100vh}</style>
+</head>
+<body>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 760" role="img" preserveAspectRatio="xMidYMid meet" aria-labelledby="t d" font-family="-apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, Helvetica, Arial, sans-serif">
+<title id="t">UniSwap architecture</title>
+<desc id="d">People use three ways in. The browser goes to the Next.js server on port 3000, which keeps the login cookie and calls the API. The iPhone app calls the API directly with a Bearer token. The Telegram app talks to Telegram's Bot API servers, and the API polls those servers. The Express API on port 4000 holds all the rules and reads and writes PostgreSQL on Supabase. The API calls out to Cloudinary, Stripe in test mode, Bakong KHQR, Gmail SMTP, Groq and Gemini. Nothing outside calls into the API.</desc>
+<defs><marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#1b3022"/></marker></defs>
+<rect width="1280" height="760" fill="#f6faf3"/>
+<text x="16" y="42" font-size="34" font-weight="800" fill="#14201b" text-anchor="start">UniSwap architecture</text>
+<text x="1268" y="42" font-size="24" font-weight="600" fill="#3c4f46" text-anchor="end">arrow = who sends the request</text>
+<text x="16" y="84" font-size="24" font-weight="800" fill="#3c4f46" text-anchor="start">People</text>
+<text x="208" y="84" font-size="24" font-weight="800" fill="#3c4f46" text-anchor="start">Ways in</text>
+<text x="454" y="84" font-size="24" font-weight="800" fill="#3c4f46" text-anchor="start">Gateway</text>
+<text x="720" y="84" font-size="24" font-weight="800" fill="#3c4f46" text-anchor="start">API and data</text>
+<text x="1050" y="84" font-size="24" font-weight="800" fill="#3c4f46" text-anchor="start">Outside services</text>
+<rect x="16" y="100" width="160" height="426" rx="14" fill="#eef5e9" stroke="#1b3022" stroke-width="2"/>
+<rect x="32" y="130" width="128" height="60" rx="30" fill="#1b3022" stroke="#1b3022" stroke-width="0"/>
+<text x="96" y="169" font-size="25" font-weight="700" fill="#ffffff" text-anchor="middle">Visitor</text>
+<rect x="32" y="250" width="128" height="60" rx="30" fill="#1b3022" stroke="#1b3022" stroke-width="0"/>
+<text x="96" y="289" font-size="25" font-weight="700" fill="#ffffff" text-anchor="middle">Student</text>
+<rect x="32" y="370" width="128" height="60" rx="30" fill="#1b3022" stroke="#1b3022" stroke-width="0"/>
+<text x="96" y="409" font-size="25" font-weight="700" fill="#ffffff" text-anchor="middle">Admin</text>
+<rect x="208" y="100" width="210" height="130" rx="14" fill="#ffffff" stroke="#1b3022" stroke-width="2"/>
+<text x="222" y="134" font-size="26" font-weight="800" fill="#14201b" text-anchor="start">Browser</text>
+<text x="222" y="164" font-size="24" font-weight="400" fill="#3c4f46" text-anchor="start">website pages</text>
+<rect x="208" y="260" width="210" height="130" rx="14" fill="#ffffff" stroke="#1b3022" stroke-width="2"/>
+<text x="222" y="294" font-size="26" font-weight="800" fill="#14201b" text-anchor="start">iPhone app</text>
+<text x="222" y="324" font-size="24" font-weight="400" fill="#3c4f46" text-anchor="start">Expo</text>
+<rect x="208" y="410" width="210" height="116" rx="14" fill="#ffffff" stroke="#1b3022" stroke-width="2"/>
+<text x="222" y="444" font-size="26" font-weight="800" fill="#14201b" text-anchor="start">Telegram app</text>
+<text x="222" y="474" font-size="24" font-weight="400" fill="#3c4f46" text-anchor="start">bot chat</text>
+<line x1="176" y1="165" x2="204" y2="165" stroke="#1b3022" stroke-width="3" marker-end="url(#arr)"/>
+<line x1="176" y1="325" x2="204" y2="325" stroke="#1b3022" stroke-width="3" marker-end="url(#arr)"/>
+<line x1="176" y1="468" x2="204" y2="468" stroke="#1b3022" stroke-width="3" marker-end="url(#arr)"/>
+<rect x="454" y="100" width="230" height="130" rx="14" fill="#e1efd7" stroke="#1b3022" stroke-width="3"/>
+<text x="468" y="134" font-size="26" font-weight="800" fill="#14201b" text-anchor="start">Next.js server</text>
+<text x="468" y="164" font-size="24" font-weight="400" fill="#14201b" text-anchor="start">port 3000</text>
+<text x="468" y="191" font-size="24" font-weight="400" fill="#14201b" text-anchor="start">keeps login cookie</text>
+<line x1="418" y1="165" x2="450" y2="165" stroke="#1b3022" stroke-width="3" marker-end="url(#arr)"/>
+<text x="569" y="300" font-size="24" font-weight="600" fill="#14201b" text-anchor="middle">straight to the API</text>
+<line x1="418" y1="325" x2="716" y2="325" stroke="#1b3022" stroke-width="3" marker-end="url(#arr)"/>
+<text x="569" y="360" font-size="24" font-weight="600" fill="#14201b" text-anchor="middle">Bearer token</text>
+<rect x="454" y="410" width="230" height="116" rx="14" fill="#fff4dc" stroke="#7a5200" stroke-width="2" stroke-dasharray="7 5"/>
+<text x="468" y="444" font-size="26" font-weight="800" fill="#14201b" text-anchor="start">Telegram</text>
+<text x="468" y="474" font-size="24" font-weight="400" fill="#3c4f46" text-anchor="start">Bot API servers</text>
+<text x="468" y="501" font-size="24" font-weight="400" fill="#3c4f46" text-anchor="start">the API polls it</text>
+<line x1="418" y1="468" x2="450" y2="468" stroke="#1b3022" stroke-width="3" marker-end="url(#arr)"/>
+<rect x="720" y="100" width="290" height="400" rx="14" fill="#e1efd7" stroke="#1b3022" stroke-width="3"/>
+<text x="734" y="136" font-size="28" font-weight="800" fill="#14201b" text-anchor="start">API · Express</text>
+<text x="734" y="166" font-size="24" font-weight="400" fill="#14201b" text-anchor="start">port 4000 · all the rules</text>
+<text x="744" y="206" font-size="24" font-weight="600" fill="#14201b" text-anchor="start">auth</text>
+<text x="880" y="206" font-size="24" font-weight="600" fill="#14201b" text-anchor="start">listings</text>
+<text x="744" y="236" font-size="24" font-weight="600" fill="#14201b" text-anchor="start">bids</text>
+<text x="880" y="236" font-size="24" font-weight="600" fill="#14201b" text-anchor="start">offers</text>
+<text x="744" y="266" font-size="24" font-weight="600" fill="#14201b" text-anchor="start">saved</text>
+<text x="880" y="266" font-size="24" font-weight="600" fill="#14201b" text-anchor="start">reviews</text>
+<text x="744" y="296" font-size="24" font-weight="600" fill="#14201b" text-anchor="start">users</text>
+<text x="880" y="296" font-size="24" font-weight="600" fill="#14201b" text-anchor="start">messages</text>
+<text x="744" y="326" font-size="24" font-weight="600" fill="#14201b" text-anchor="start">live chat</text>
+<text x="880" y="326" font-size="24" font-weight="600" fill="#14201b" text-anchor="start">meetups</text>
+<text x="744" y="356" font-size="24" font-weight="600" fill="#14201b" text-anchor="start">uploads</text>
+<text x="880" y="356" font-size="24" font-weight="600" fill="#14201b" text-anchor="start">payments</text>
+<text x="744" y="386" font-size="24" font-weight="600" fill="#14201b" text-anchor="start">KHQR</text>
+<text x="880" y="386" font-size="24" font-weight="600" fill="#14201b" text-anchor="start">assistant</text>
+<text x="744" y="416" font-size="24" font-weight="600" fill="#14201b" text-anchor="start">voice</text>
+<text x="880" y="416" font-size="24" font-weight="600" fill="#14201b" text-anchor="start">telegram</text>
+<text x="744" y="446" font-size="24" font-weight="600" fill="#14201b" text-anchor="start">admin</text>
+<text x="880" y="446" font-size="24" font-weight="600" fill="#14201b" text-anchor="start">health</text>
+<line x1="684" y1="165" x2="716" y2="165" stroke="#1b3022" stroke-width="3" marker-end="url(#arr)"/>
+<line x1="720" y1="468" x2="688" y2="468" stroke="#1b3022" stroke-width="3" marker-end="url(#arr)"/>
+<rect x="720" y="560" width="290" height="186" rx="14" fill="#ffffff" stroke="#1b3022" stroke-width="2"/>
+<text x="734" y="594" font-size="26" font-weight="800" fill="#14201b" text-anchor="start">PostgreSQL</text>
+<text x="734" y="624" font-size="24" font-weight="400" fill="#3c4f46" text-anchor="start">on Supabase</text>
+<text x="734" y="651" font-size="24" font-weight="400" fill="#3c4f46" text-anchor="start">9 tables · RLS on</text>
+<text x="734" y="678" font-size="24" font-weight="400" fill="#3c4f46" text-anchor="start">role: student or admin</text>
+<line x1="865" y1="500" x2="865" y2="556" stroke="#1b3022" stroke-width="3" marker-end="url(#arr)"/>
+<text x="878" y="538" font-size="24" font-weight="700" fill="#14201b" text-anchor="start">SQL</text>
+<rect x="1050" y="100" width="218" height="98" rx="14" fill="#fff4dc" stroke="#7a5200" stroke-width="2" stroke-dasharray="7 5"/>
+<text x="1064" y="134" font-size="26" font-weight="800" fill="#14201b" text-anchor="start">Cloudinary</text>
+<text x="1064" y="164" font-size="24" font-weight="400" fill="#3c4f46" text-anchor="start">stores photos</text>
+<rect x="1050" y="209" width="218" height="98" rx="14" fill="#fff4dc" stroke="#7a5200" stroke-width="2" stroke-dasharray="7 5"/>
+<text x="1064" y="243" font-size="26" font-weight="800" fill="#14201b" text-anchor="start">Stripe</text>
+<text x="1064" y="273" font-size="24" font-weight="400" fill="#3c4f46" text-anchor="start">card, test mode</text>
+<rect x="1050" y="318" width="218" height="98" rx="14" fill="#fff4dc" stroke="#7a5200" stroke-width="2" stroke-dasharray="7 5"/>
+<text x="1064" y="352" font-size="26" font-weight="800" fill="#14201b" text-anchor="start">Bakong KHQR</text>
+<text x="1064" y="382" font-size="24" font-weight="400" fill="#3c4f46" text-anchor="start">checks payments</text>
+<rect x="1050" y="427" width="218" height="98" rx="14" fill="#fff4dc" stroke="#7a5200" stroke-width="2" stroke-dasharray="7 5"/>
+<text x="1064" y="461" font-size="26" font-weight="800" fill="#14201b" text-anchor="start">Gmail SMTP</text>
+<text x="1064" y="491" font-size="24" font-weight="400" fill="#3c4f46" text-anchor="start">sends email</text>
+<rect x="1050" y="536" width="218" height="98" rx="14" fill="#fff4dc" stroke="#7a5200" stroke-width="2" stroke-dasharray="7 5"/>
+<text x="1064" y="570" font-size="26" font-weight="800" fill="#14201b" text-anchor="start">Groq</text>
+<text x="1064" y="600" font-size="24" font-weight="400" fill="#3c4f46" text-anchor="start">assistant, voice</text>
+<rect x="1050" y="645" width="218" height="98" rx="14" fill="#fff4dc" stroke="#7a5200" stroke-width="2" stroke-dasharray="7 5"/>
+<text x="1064" y="679" font-size="26" font-weight="800" fill="#14201b" text-anchor="start">Gemini</text>
+<text x="1064" y="709" font-size="24" font-weight="400" fill="#3c4f46" text-anchor="start">photo to listing</text>
+<line x1="1010" y1="300" x2="1030" y2="300" stroke="#1b3022" stroke-width="3"/>
+<line x1="1030" y1="149" x2="1030" y2="694" stroke="#1b3022" stroke-width="3"/>
+<line x1="1030" y1="149" x2="1046" y2="149" stroke="#1b3022" stroke-width="3" marker-end="url(#arr)"/>
+<line x1="1030" y1="258" x2="1046" y2="258" stroke="#1b3022" stroke-width="3" marker-end="url(#arr)"/>
+<line x1="1030" y1="367" x2="1046" y2="367" stroke="#1b3022" stroke-width="3" marker-end="url(#arr)"/>
+<line x1="1030" y1="476" x2="1046" y2="476" stroke="#1b3022" stroke-width="3" marker-end="url(#arr)"/>
+<line x1="1030" y1="585" x2="1046" y2="585" stroke="#1b3022" stroke-width="3" marker-end="url(#arr)"/>
+<line x1="1030" y1="694" x2="1046" y2="694" stroke="#1b3022" stroke-width="3" marker-end="url(#arr)"/>
+<text x="16" y="586" font-size="24" font-weight="400" fill="#14201b" text-anchor="start">Website address: uniswap.tailcff82d.ts.net</text>
+<text x="16" y="622" font-size="24" font-weight="400" fill="#14201b" text-anchor="start">Visitors browse without login. The bot is for students.</text>
+<text x="16" y="658" font-size="24" font-weight="400" fill="#14201b" text-anchor="start">Admin: /api/admin routes, shown in Postman.</text>
+<text x="16" y="694" font-size="24" font-weight="400" fill="#14201b" text-anchor="start">Live chat: the API streams new messages back.</text>
+<text x="16" y="730" font-size="24" font-weight="400" fill="#14201b" text-anchor="start">Nothing outside calls in: the API calls out.</text>
+</svg>
+</body>
+</html>
