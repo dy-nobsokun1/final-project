@@ -7,11 +7,12 @@ buy, sell, trade, or give away items.
 |---|---|---|
 | [`frontend/`](frontend/) | Next.js + React + TypeScript + Tailwind + shadcn/ui | Dy Nobsokun |
 | [`backend/`](backend/) | Node.js + Express REST API + PostgreSQL | Long Vathanak |
+| [`mobile/`](mobile/) | iPhone app: Expo (React Native + TypeScript), same API | Long Vathanak |
 
 Rules for AI coding agents working in this repo are in [`Agent.md`](Agent.md).
 Putting it online (Supabase, Render, Vercel, Cloudinary, Stripe, Telegram): [`memory/DEPLOY.md`](memory/DEPLOY.md).
 
-## Status (4 Nov 2026)
+## Status (26 Nov 2026)
 
 ### Built
 
@@ -64,25 +65,33 @@ Putting it online (Supabase, Render, Vercel, Cloudinary, Stripe, Telegram): [`me
   answers with the best matches as cards; when nothing fits, it offers to draft a wanted post, and on a
   yes opens the sell form filled in with what the student said, to check and post. It only reads
   listings, and it is switched off until `GROQ_API_KEY` or `GEMINI_API_KEY` is set (both free).
+- **iPhone app (`mobile/`):** the same marketplace in five tabs: Browse (with search), Sell, Inbox
+  (with an unread badge), Saved and Account. Students sign up with the emailed 6-digit code, sign in,
+  open an item, save it, message the seller and chat live, and post an item for sale, a giveaway, a
+  trade (with a cash top-up) or a wanted post, with photos from the phone. Account shows their deals,
+  earnings and spending, their listings and their recent purchases. It talks to the same API, and its
+  login token is kept in the phone's secure storage. Paying, bidding, offers and meetups stay on the
+  website.
 - **Security:** parameterized SQL everywhere, hashed passwords, verified accounts only, owner-only
   changes, a password change signs out stolen sessions, and no secrets in the repository.
 
 ### Tested
 
-All pass on 4 Nov 2026.
+All pass: the unit tests and the iPhone app's type check on 26 Nov 2026, the API tests on 5 Nov 2026.
 
-- `npm test` (in `backend/`): 99 unit tests for validation (including the photo rules), the search
+- `npm test` (in `backend/`): 107 unit tests for validation (including the photo rules), the search
   query and wanted-post matching, the payment amount rules, the Stripe and Cloudinary helpers, the
   KHQR builder (checked against the National Bank's own library), the shopping assistant's tool loop
   and its Groq and Gemini adapters, the Fill in from photo checks, meetups, notification messages,
   the Telegram bot's screens and login tokens.
-- `npm run test:api` (in `backend/`): 164 tests that send real requests to the running API, covering
+- `npm run test:api` (in `backend/`): 171 tests that send real requests to the running API, covering
   sign-up and verification, password reset and change, owner-only changes, messaging, simultaneous
   bids, card and KHQR payments, reviews, saved listings, listing photos, wanted-post matching and
   alerts, offers (including two accepted at the same moment), and refusing to delete a listing whose
   payments or reviews must stay, the shopping assistant (with a fake Groq), Fill in from photo,
   voice input, meetups, profile stats and purchases, notifications and Telegram linking.
   They use a separate test database (see [Testing](backend/README.md#testing)).
+- `npx tsc --noEmit` (in `mobile/`): the iPhone app type-checks with no errors.
 
 ### Not done yet
 
@@ -98,6 +107,9 @@ All pass on 4 Nov 2026.
   demo, not heavy use. The API picks its model once, when it starts: Groq if `GROQ_API_KEY` is set,
   else Gemini if `GEMINI_API_KEY` is set. It never switches while it runs; to use Gemini instead, set
   `ASSISTANT_PROVIDER=gemini` and restart the API. Gemini's free limits are much lower.
+- **The iPhone app is not in the App Store.** It runs in Expo Go on a phone on the same Wi-Fi as the
+  computer running the API (see [mobile/README.md](mobile/README.md)). It was built and tested for
+  iPhone only, not Android.
 - **Possible next steps:** safe meetup spots chosen with the university (the four spot names are
   placeholders), notification settings, and dark mode that follows the system setting.
 
@@ -133,9 +145,10 @@ All pass on 4 Nov 2026.
 - **A KHQR payment confirmed more than 24 hours late is not recorded automatically.** That only
   happens if Bakong cannot be reached for a whole day. The money still reached the seller's account,
   so the buyer and seller settle it between them.
-- **No limit on password guesses.** Sign-in and change-password do not slow down repeated wrong
-  passwords; that would need a package or extra state. Every account is a verified campus student,
-  and passwords need at least 8 characters.
+- **Change password has no guess limit.** Sign-in and "resend code" stop after 10 wrong passwords
+  (above), but the Settings form that changes a password does not count wrong current passwords.
+  Only someone already signed in to that account can reach it, and passwords need at least 8
+  characters.
 - **"Forgot your password?" has no per-IP limit.** Anyone who knows a student's email can ask for
   a reset link for it every 2 minutes (the per-account limit), from any computer, and each new link
   replaces the one before. So someone could flood a student with reset emails and keep cancelling
@@ -173,6 +186,8 @@ cd frontend && npm install && npm run dev
 
 For the full demo data, also run `npm run db:samples` and then `npm run db:demo-deals` in `backend/`
 (60 more items, and 9 finished deals for chanrithorn's profile stats).
+
+The iPhone app is in `mobile/`; see [mobile/README.md](mobile/README.md) to run it.
 
 The web app calls the API from the Next.js server, at `http://localhost:4000` by default. To use a
 different address, set `API_URL` in `frontend/.env.local`.

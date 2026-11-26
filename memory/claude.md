@@ -41,6 +41,32 @@ is public); state a plan before multi-file changes; explain every change so the 
     (database snake_case → API camelCase, matching the frontend types).
   - The full API table is in `backend/README.md`. Keep it updated when routes change.
 
+## Mobile app (12-13 Nov)
+
+- **What:** an iPhone app in `mobile/`, Expo SDK 58 (React Native + TypeScript, Expo Router). Phase 1
+  (12 Nov): log in, sign up with the 6-digit code, browse and search, the item page (auction read only),
+  saved items. Phase 2 (13 Nov): five tabs (Browse, Sell, Inbox with an unread badge, Saved, Account),
+  live chat and Message seller, the Sell form (sale, giveaway, trade + cash top-up, wanted; no auctions),
+  and Account as the profile (deals/earned/spent totals, My listings with status pills, Recent purchases).
+  No payments, bids, offers or meetups in the app.
+- **How it talks to the API:** directly, with `Authorization: Bearer` (`src/lib/api.ts`), on
+  `EXPO_PUBLIC_API_URL` (default `http://localhost:4000`). It needed no change in `frontend/` or `backend/`.
+  Types, labels and colours are copied from `frontend/` (Metro cannot import outside `mobile/`).
+- **Live chat:** `use-message-stream.ts` reads `GET /api/messages/stream` with `expo/fetch` (it streams on
+  iOS; no SSE package). The stream is open only while the chat screen has focus AND the app is active
+  (`AppState`): an open stream counts as watching and turns off that thread's email/Telegram alerts. On an
+  error it waits 3 s, reopens (5 tries) and reloads the thread. Messages merge by id.
+- **Sell photos:** picked with `expo-image-picker` as base64 JPEG (quality 0.6), checked against the API's 5 MB,
+  uploaded one by one to `POST /api/uploads` with `expo/fetch`; only the URLs are posted.
+- **Run:** API first, then in `mobile/`: `npm install`, `cp .env.example .env`, `npx expo start`, press `i`
+  (iPhone simulator; Expo Go installs itself). Real phone: Expo Go on the same Wi-Fi, with
+  `EXPO_PUBLIC_API_URL=http://<laptop-ip>:4000`. See `mobile/README.md`.
+- **Rules:** the token lives only in `expo-secure-store` (key `uniswap_token`). `mobile/.env` holds only
+  `EXPO_PUBLIC_API_URL` (built into the app; git-ignored). Packages: the Expo starter,
+  `expo-secure-store` and `expo-image-picker`, always with `npx expo install`; do not update `expo` to
+  58.0.25 yet. Gate: `npx tsc --noEmit` in `mobile/` (never `npx expo lint`, it installs ESLint). Light
+  mode, iPhone simulator only (no Android SDK on the team laptop).
+
 ## Commands
 
 ```bash
