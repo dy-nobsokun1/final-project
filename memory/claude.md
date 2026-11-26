@@ -77,7 +77,6 @@ npm run test:api     # API tests: real HTTP against TEST_DATABASE_URL (a separat
 npm run db:setup     # recreate tables: WIPES ALL DATA
 npm run db:seed      # demo data
 npm run db:samples   # +60 sample items: hand-written with Commons/Flickr photos (credits in the JSON), Open Library textbooks, and five $1–$5 items for trying payments (-- --remove to undo)
-npm run db:make-admin -- admin@demo.edu.kh "UniSwap Admin"  # promote an account, or create a @demo.edu.kh admin
 npm run db:demo-deals # 9 finished deals for chanrithorn, for the profile stats (-- --remove to undo)
 npm run db:reset-sold # revert test-bought items back to active (-- --all to reset demo deals too)
 npm run email:test -- someone@aupp.edu.kh
@@ -90,7 +89,6 @@ npx tsc --noEmit
 
 Demo users (password `password123`): `sokunth@aupp.edu.kh` and `chanrithorn@aupp.edu.kh` are
 verified. `dara@aupp.edu.kh` is **unverified**, so its login returns 403 (useful for testing that flow).
-`admin@demo.edu.kh` ("UniSwap Admin") is the demo **admin** (`npm run db:make-admin`, see Admin role).
 
 **Cloud sessions** (claude.ai/code, the Claude app): `.claude/settings.json` runs `.claude/cloud-setup.sh`
 at start and resume (it does nothing locally). It installs npm packages, starts the VM's PostgreSQL
@@ -393,19 +391,6 @@ when `uniswap` has none, so an older `uniswap` database needs the upgrade SQL (b
   `SimilarItems` (same category via `getListings`, not this one or wanted posts, 4 max, in Suspense with
   `ListingGridSkeleton count={4}`, hidden when empty) and `PaymentBanner` (moved out of the page as is). The
   photo zooms 3% on hover (`photo-zoom`) and the right column rises in with `card-in` (`rise(i)` in the page).
-- **Admin role (22 Nov), backend only:** `users.role` is `student` (default) or `admin` (CHECK; README
-  "Admin role" has the upgrade block; the API starts without it, the admin routes need it). Two roles: a student does everything on
-  the site; an admin also gets `routes/admin.js`: `GET /api/admin/overview` (counts), `GET /api/admin/users`
-  (`?limit=` 1-100, with emails) and `DELETE /api/admin/listings/:id` (moderation). No admin page on the
-  website: shown in Postman (`postman/`).
-  - `requireAdmin` (`middleware/admin.js`) sits on the whole admin router after `requireAuth` and reads the
-    role FROM THE DATABASE each request (never the token): 403 "Admins only.", and removing the role works at once.
-  - Moderation and the owner's delete share `deleteListingWithRules` (`db/deleteListing.js`): same 409s,
-    same row lock, so the rules cannot drift.
-  - `toUser(..., { includePrivate: true })` adds `role` (login, `/api/auth/me`); public profiles never show it.
-  - Demo admin `admin@demo.edu.kh` / `password123`: `npm run db:make-admin -- <email> [name]` promotes an
-    account, or creates a verified one for `@demo.edu.kh` only; `db:seed` creates it too.
-    `db:samples -- --remove` deletes it with the other `@demo.edu.kh` accounts: run `db:make-admin` again.
 - **Recent purchases:** `GET /api/users/me/purchases` (`db/purchases.js`), shown on your own `/profile`
   as `RecentPurchases` + `PurchaseCard` (hidden until the first purchase).
   - **Who bought it:** it shares `CLOSED_DEALS_SQL` with the stats below, so the two always agree: the

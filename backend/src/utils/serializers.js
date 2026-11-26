@@ -16,7 +16,6 @@ export function toUser(row, { includePrivate = false } = {}) {
   if (includePrivate) {
     user.email = row.email;
     user.bakongAccountId = row.bakong_account_id;
-    user.role = row.role; // "student" or "admin"
   }
   return user;
 }

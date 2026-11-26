@@ -180,10 +180,9 @@ The web app calls the API from the Next.js server, at `http://localhost:4000` by
 different address, set `API_URL` in `frontend/.env.local`.
 
 Demo accounts (created by `npm run db:seed`, password `password123` for all):
-`sokunth@aupp.edu.kh`, `chanrithorn@aupp.edu.kh`, `dara@aupp.edu.kh` (unverified on purpose, to
-show that sign-in is refused), and the admin `admin@demo.edu.kh` (role `admin`, for the admin API; on an
-older database add it with `npm run db:make-admin -- admin@demo.edu.kh "UniSwap Admin"`). New accounts
-need an `@aupp.edu.kh` email and cannot sign in until the 6-digit code emailed to it is typed on the site; the code is printed in the API's log until email sending is set up.
+`sokunth@aupp.edu.kh`, `chanrithorn@aupp.edu.kh`, and `dara@aupp.edu.kh` (unverified on purpose, to
+show that sign-in is refused). New accounts need an `@aupp.edu.kh` email and cannot sign in until the 6-digit
+code emailed to it is typed on the site; the code is printed in the API's log until email sending is set up.
 The same goes for the link that "Forgot your password?" sends, except in production
 (`NODE_ENV=production`), where neither is ever printed.
 

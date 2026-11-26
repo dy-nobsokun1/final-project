@@ -157,10 +157,6 @@ works, and each one is safe to re-run:
    every chat thread page reads it, so without it threads fail to open. The block also turns on row
    level security for the table.
 
-8. [Admin role](#admin-role) (22 Nov): adds `users.role`. The API starts without it, but every
-   `/api/admin` route then fails and `/api/auth/me` leaves out `role`. Then run
-   `npm run db:make-admin -- admin@demo.edu.kh "UniSwap Admin"` for the demo admin.
-
 Also recommended: [Photos](#photos), which adds the database's own limit of 6 photos per listing. The
 API already enforces that limit, so the new API starts without it.
 
@@ -205,44 +201,6 @@ ALTER TABLE saved_listings ENABLE ROW LEVEL SECURITY;
 ```
 
 `meetups` (added 4 Nov) gets the same line in its own upgrade block (see Meetups).
-
-### Admin role
-
-UniSwap has two roles, in `users.role`:
-
-- **student** (every account; the default): browse, sell, buy, chat, save, review, everything on the site.
-- **admin**: everything a student can do, plus the admin API (`src/routes/admin.js`): the marketplace in
-  numbers (`GET /api/admin/overview`), every account with its email (`GET /api/admin/users`), and
-  moderation (`DELETE /api/admin/listings/:id`). There is no admin page on the website; the admin API is
-  used from Postman (`postman/` at the repo root).
-
-How it is kept safe:
-
-- Nobody becomes an admin by signing up: `npm run db:make-admin -- <email> [name]` promotes an existing
-  account, or creates a verified one with the demo password `password123`, but only for an
-  `@demo.edu.kh` address (a demo domain that receives no email). `npm run db:seed` creates the demo
-  admin `admin@demo.edu.kh` ("UniSwap Admin").
-- `requireAdmin` (`src/middleware/admin.js`) runs after `requireAuth` on the whole admin router and
-  reads the role **from the database** on every request, never from the token. Students get 403
-  "Admins only.", and taking the role away works at once.
-- Moderation follows exactly the owner's delete rules: both routes call `deleteListingWithRules`
-  (`src/db/deleteListing.js`), so sold, traded, reserved, reviewed or paid-for listings stay (409).
-- The role is shown only to its owner (`/api/auth/me`, login), never on public profiles.
-- `npm run db:samples -- --remove` deletes every `@demo.edu.kh` account, the demo admin too: run
-  `db:make-admin` again afterwards.
-
-Upgrade block (added 22 Nov; the API starts without it, but the admin routes need it). Safe to re-run:
-
-```sql
-ALTER TABLE users ADD COLUMN IF NOT EXISTS role TEXT NOT NULL DEFAULT 'student';
-DO $$
-BEGIN
-  IF NOT EXISTS (SELECT 1 FROM pg_constraint
-                 WHERE conname = 'users_role_check' AND conrelid = 'users'::regclass) THEN
-    ALTER TABLE users ADD CONSTRAINT users_role_check CHECK (role IN ('student', 'admin'));
-  END IF;
-END $$;
-```
 
 ### Passwords
 
@@ -826,7 +784,7 @@ A token issued before the account's last password change or reset is refused (40
 | POST | `/api/auth/forgot-password` | `{ email }` → always `{ requested: true }`, whether or not the account exists. Emails a `/reset-password?token=` link that works once, for 1 hour; at most one email per account every 2 minutes while its link is unused. `400` if not a `.edu.kh` email |
 | POST | `/api/auth/reset-password` | `{ token, password }` → `{ reset: true }`. 8+ characters. Signs out every session and verifies the email. `400` if the link is invalid, used or expired |
 | POST 🔒 | `/api/auth/change-password` | `{ currentPassword, newPassword }` → `{ token }` for this device; every other session is signed out. `400` if the current password is wrong |
-| GET 🔒 | `/api/auth/me` | The logged-in user, with `role` (`student` or `admin`); public profiles never show the role |
+| GET 🔒 | `/api/auth/me` | The logged-in user |
 | GET | `/api/listings` | Browse and search (ranked, typo tolerant; see Search above). Query: `query`, `category`, `condition`, `type`, `minPrice`, `maxPrice`, `status` (default `active`), `limit` (1 to 100, default 100) |
 | GET | `/api/listings/:id` | One listing, with seller info |
 | POST 🔒 | `/api/listings` | `{ title, category, condition, description?, listingType?, price?, cashTopup?, imageUrls?, auctionEndsAt?, minIncrement? }`. `imageUrls`: up to 6 URLs from `POST /api/uploads`, the first is the cover (see Photos above). `auctionEndsAt` (ISO date) is required for an auction. For a wanted post, `price` is the budget (0 = any price). A new item alerts students whose wanted posts it matches (see Wanted matches above) |
@@ -879,15 +837,6 @@ A token issued before the account's last password change or reset is refused (40
 | POST 🔒 | `/api/assistant` | `{ messages: [{ role: "user" \| "assistant", text }] }`, oldest first, at most 20, each 1 to 1000 characters, the last one the student's → `{ reply, listings, wantedDraft }`. `listings`: up to 4 full listings to show as cards. `wantedDraft`: `null` or `{ title, description, category, budget }` to fill in the new-listing form. `503` while switched off, `429` after 20 questions in an hour (per student) or while the model's free limit for the minute or the day is used up, `502` if the model fails (see Ask UniSwap above) |
 | GET | `/api/assistant/listing-draft` | `{ enabled }`: whether the sell form shows "Fill in from photo" (the vision provider has its key) |
 | POST 🔒 | `/api/assistant/listing-draft` | Raw photo bytes with `Content-Type: image/jpeg`, `png` or `webp` (max 2 MB) → `{ draft: { title, category, condition, description }, priceHint: { low, high, count, sold } \| null }`. A draft field is `""` when the model left it out or gave a value we do not allow. The price hint comes from similar UniSwap listings only (see Fill in from photo above). Nothing is stored or logged. `415` wrong type, `429` after 10 photos in an hour, `503` while off or busy, `502` if the answer cannot be read |
-
-
-Admin routes (🛡️ = 🔒 plus the `admin` role, read from the database; a student gets `403` "Admins only."; see Admin role above):
-
-| Method | Path | Description |
-|---|---|---|
-| GET 🛡️ | `/api/admin/overview` | `{ overview: { users: { verified, unverified, admins }, listings: { total, byStatus, byType }, messages, payments: { paid, paidTotal }, lastSevenDays: { newUsers, newListings } } }`: the marketplace in numbers. `paidTotal` sums `paid` payments only |
-| GET 🛡️ | `/api/admin/users` | `?limit=` (1–100, default 50) → `{ users }`, newest first: `{ id, name, email, isVerified, role, createdAt, listingCount }`. The only route that shows other people's emails |
-| DELETE 🛡️ | `/api/admin/listings/:id` | Moderation: removes any student's listing → `204`, under exactly the owner's delete rules (the same `409`s as `DELETE /api/listings/:id`). `404` if it does not exist |
 
 Uploaded photos are saved in `backend/uploads/` (git-ignored) and served at `/uploads/<file>`.
 Put the returned `url` in a listing's `imageUrls` (at most 6; only URLs from this route are accepted).
